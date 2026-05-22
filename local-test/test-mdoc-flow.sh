@@ -136,7 +136,7 @@ ISSUE_PAYLOAD=$(jq -n \
         un_distinguishing_sign: "USA"
       }
     },
-    x5Chain: [$dsCertPem, $iacaCertPem],
+    x5Chain: [$dsCertPem],
     authenticationMethod: "PRE_AUTHORIZED"
   }')
 
@@ -229,27 +229,39 @@ REQUEST_URI_LOCAL=$(echo "$REQUEST_URI" | sed 's/host\.docker\.internal/localhos
 info "Fetching request JWT from: $REQUEST_URI_LOCAL"
 REQUEST_JWT=$(curl -s "$REQUEST_URI_LOCAL")
 PRESENTATION_DEF=$(echo "$REQUEST_JWT" | python3 -c "
-import sys, json, base64
+import sys, json, base64, zlib
 jwt = sys.stdin.read().strip()
 parts = jwt.split('.')
-if len(parts) >= 2:
-    p = parts[1] + '=' * (4 - len(parts[1]) % 4)
-    payload = json.loads(base64.urlsafe_b64decode(p))
-    print(json.dumps(payload.get('presentation_definition', {})))
-else:
-    obj = json.loads(jwt)
-    print(json.dumps(obj.get('presentation_definition', {})))
+result = {}
+try:
+    if len(parts) >= 2:
+        p = parts[1] + '=' * (4 - len(parts[1]) % 4)
+        raw = base64.urlsafe_b64decode(p)
+        try:
+            payload = json.loads(raw)
+        except (UnicodeDecodeError, ValueError):
+            # Try deflate decompression (zip: DEF header)
+            payload = json.loads(zlib.decompress(raw, -15))
+        result = payload.get('presentation_definition', {})
+    else:
+        result = json.loads(jwt).get('presentation_definition', {})
+except Exception:
+    pass  # verifier2 uses dcql_query; presentation_definition will be absent
+print(json.dumps(result))
 ")
 echo "$PRESENTATION_DEF" | jq .
 
-MATCHING_CREDS=$(curl -s -X POST \
-  "$WALLET_API/wallet/$WALLET_ID/exchange/matchCredentialsForPresentationDefinition" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -H "authorization: Bearer $TOKEN" \
-  -d "$PRESENTATION_DEF")
-echo "$MATCHING_CREDS" | jq .
-CRED_ID=$(echo "$MATCHING_CREDS" | jq -r '.[0].id // empty')
+CRED_ID=""
+if [[ "$PRESENTATION_DEF" != "{}" && -n "$PRESENTATION_DEF" ]]; then
+  MATCHING_CREDS=$(curl -s -X POST \
+    "$WALLET_API/wallet/$WALLET_ID/exchange/matchCredentialsForPresentationDefinition" \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -H "authorization: Bearer $TOKEN" \
+    -d "$PRESENTATION_DEF")
+  echo "$MATCHING_CREDS" | jq .
+  CRED_ID=$(echo "$MATCHING_CREDS" | jq -r '.[0].id // empty' 2>/dev/null || true)
+fi
 if [[ -z "$CRED_ID" ]]; then
   info "Credential matching returned empty (mso_mdoc not indexed); using claimed credential ID"
   CRED_ID="$CLAIMED_CRED_ID"
