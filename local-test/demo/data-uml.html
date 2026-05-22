@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Walt.id — Data UML</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0a0f1e;
+  color: #e2e8f0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header {
+  padding: 10px 20px 8px;
+  background: #111827;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+header h1 { font-size: 0.95rem; font-weight: 600; color: #f1f5f9; }
+header p  { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.tabs { display: flex; gap: 4px; }
+.tab {
+  padding: 4px 13px;
+  border-radius: 5px;
+  border: 1px solid #1e293b;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.73rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.tab:hover  { background: #1e293b; color: #cbd5e1; }
+.tab.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+
+.legend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 0.64rem; color: #64748b; }
+
+.svc-badges { display: flex; gap: 5px; align-items: center; }
+.svc-badge { padding: 2px 7px; border-radius: 3px; font-size: 0.61rem; font-weight: 600; font-family: monospace; }
+.svc-W { background: #1e3a8a; color: #93c5fd; border: 1px solid #2563eb; }
+.svc-I { background: #064e3b; color: #6ee7b7; border: 1px solid #059669; }
+.svc-V { background: #78350f; color: #fcd34d; border: 1px solid #d97706; }
+.svc-L { background: #1f2937; color: #9ca3af; border: 1px solid #374151; }
+
+.zoom-controls { display: flex; gap: 4px; margin-left: auto; }
+.zoom-btn {
+  padding: 3px 9px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  background: #111827;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: all 0.12s;
+}
+.zoom-btn:hover { background: #1e293b; color: #e2e8f0; }
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.layout { display: flex; flex: 1; min-height: 0; }
+
+/* ── Graph pane ──────────────────────────────────────────────────────────── */
+.graph-pane {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  border-right: 1px solid #1e293b;
+  background-color: #060b14;
+  background-image: radial-gradient(circle, #1e293b55 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.graph-pane:active { cursor: grabbing; }
+
+.canvas-container {
+  position: absolute;
+  top: 0; left: 0;
+  transform-origin: 0 0;
+}
+.node-layer, .edge-layer {
+  position: absolute;
+  top: 0; left: 0;
+}
+.edge-layer { pointer-events: none; overflow: visible; }
+
+/* ── UML node box ────────────────────────────────────────────────────────── */
+.uml-node {
+  position: absolute;
+  width: 178px;
+  border: 1.5px solid;
+  border-radius: 5px;
+  background: #0f172a;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+  user-select: none;
+}
+.uml-node:hover { z-index: 10; }
+.uml-node.selected { z-index: 20; }
+.uml-node.faded { opacity: 0.12 !important; }
+.uml-node.highlighted { z-index: 15; }
+
+/* UML stereotype compartment */
+.node-stereotype {
+  padding: 4px 8px 3px;
+  font-size: 0.58rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  border-radius: 3px 3px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* UML name compartment */
+.node-name-row {
+  padding: 5px 8px 5px;
+  border-top: 1px solid;
+}
+.node-bash {
+  font-family: 'SF Mono','Fira Code','Courier New',monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.node-friendly {
+  font-size: 0.6rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* UML attribute / step compartment */
+.node-step-row {
+  padding: 3px 8px 5px;
+  border-top: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.step-badge-sm {
+  font-size: 0.57rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.step-title-sm {
+  font-size: 0.59rem;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Port dots at left/right edges */
+.port {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid #0f172a;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  transition: opacity 0.15s;
+}
+.port-in  { left: -4px; }
+.port-out { right: -4px; }
+
+/* ── Detail pane ─────────────────────────────────────────────────────────── */
+.detail-pane {
+  width: 340px;
+  min-width: 300px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: #111827;
+}
+
+.empty-detail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+  color: #334155;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.detail-header { padding: 14px 16px 10px; border-bottom: 1px solid #1e293b; }
+.detail-var-name { font-size: 0.85rem; font-weight: 700; font-family: monospace; margin-bottom: 2px; }
+.detail-bash { font-size: 0.72rem; font-family: monospace; color: #94a3b8; background: #0d1424; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 4px; }
+.detail-desc { font-size: 0.73rem; color: #94a3b8; margin-top: 7px; line-height: 1.5; }
+
+.detail-section { padding: 10px 16px; border-bottom: 1px solid #0f172a; }
+.detail-section-title { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: #475569; margin-bottom: 7px; }
+
+.extract-code {
+  font-family: 'SF Mono','Fira Code','Courier New',monospace;
+  font-size: 0.68rem;
+  color: #7dd3fc;
+  background: #0a0f1e;
+  padding: 7px 10px;
+  border-radius: 5px;
+  border: 1px solid #1e293b;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.55;
+}
+
+.dep-list { display: flex; flex-direction: column; gap: 4px; }
+.dep-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid #1e293b;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-family: monospace;
+  transition: background 0.1s;
+}
+.dep-item:hover { background: #1e293b; }
+.dep-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dep-step-badge { font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; background: #1e293b; color: #64748b; font-family: monospace; margin-left: auto; }
+
+.step-chain { display: flex; flex-direction: column; gap: 3px; }
+.chain-item { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; }
+.chain-step-num { font-family: monospace; font-size: 0.65rem; min-width: 26px; text-align: center; padding: 1px 4px; border-radius: 3px; background: #1e293b; color: #64748b; }
+.chain-step-title { font-size: 0.68rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chain-marker { font-size: 0.7rem; min-width: 14px; text-align: center; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Walt.id Identity Stack — Data UML</h1>
+  <p>UML class-diagram style dependency graph: each node is a data variable; arrows show data flow (source variable feeds into dependent variable).</p>
+  <div class="header-row">
+    <div class="tabs" id="flow-tabs">
+      <button class="tab active" data-flow="jwtvc">W3C JWT VC</button>
+      <button class="tab" data-flow="sdjwt">SD-JWT VC</button>
+      <button class="tab" data-flow="mdoc">ISO 18013-5 mDL</button>
+    </div>
+    <div class="legend">
+      <div class="leg-item">
+        <svg width="22" height="10" style="overflow:visible">
+          <line x1="0" y1="5" x2="14" y2="5" stroke="#64748b" stroke-width="1.5"/>
+          <polygon points="14,2 20,5 14,8" fill="#64748b"/>
+        </svg>
+        Data dependency
+      </div>
+      <div class="svc-badges">
+        <span class="svc-badge svc-W">wallet-api :7001</span>
+        <span class="svc-badge svc-I">issuer-api :7002</span>
+        <span class="svc-badge svc-V">verifier-api :7003</span>
+      </div>
+    </div>
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="btn-zoom-out" title="Zoom out (−)">−</button>
+      <button class="zoom-btn" id="btn-zoom-in"  title="Zoom in (+)">+</button>
+      <button class="zoom-btn" id="btn-fit"       title="Fit to view (f)">Fit</button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="graph-pane" id="graph-pane">
+    <div class="canvas-container" id="canvas-container">
+      <svg class="edge-layer" id="edge-layer"></svg>
+      <div class="node-layer" id="node-layer"></div>
+    </div>
+  </div>
+  <div class="detail-pane" id="detail-pane">
+    <div class="empty-detail">← Click a variable node<br>to see its dependency detail</div>
+  </div>
+</div>
+
+<script>
+// ─── Service definitions ──────────────────────────────────────────────────────
+const SVC = {
+  W: { label: 'wallet-api',   short: 'wallet',   color: '#2563eb', dim: '#1e3a8a' },
+  I: { label: 'issuer-api',   short: 'issuer',   color: '#059669', dim: '#064e3b' },
+  V: { label: 'verifier-api', short: 'verifier', color: '#d97706', dim: '#78350f' },
+  L: { label: 'local',        short: '—',        color: '#4b5563', dim: '#1f2937' },
+};
+
+// ─── Category definitions ─────────────────────────────────────────────────────
+const CAT = {
+  input:    { label: 'Input',                       color: '#64748b', stereo: '«input»' },
+  auth:     { label: 'Authentication',              color: '#3b82f6', stereo: '«authentication»' },
+  pki:      { label: 'Issuer PKI (mDL)',            color: '#8b5cf6', stereo: '«PKI certificate»' },
+  issuer:   { label: 'Issuer Identity',             color: '#10b981', stereo: '«issuer identity»' },
+  issuance: { label: 'Credential Issuance',         color: '#f59e0b', stereo: '«credential»' },
+  verif:    { label: 'Presentation / Verification', color: '#f97316', stereo: '«presentation»' },
+  result:   { label: 'Result',                      color: '#22c55e', stereo: '«result»' },
+};
+
+// ─── Step definitions ─────────────────────────────────────────────────────────
+const STEPS = {
+  jwtvc: [
+    { id:'input',  num:'',      svc:'L', title:'Script Input',              url:'CLI args' },
+    { id:'0',      num:'0',     svc:'W', title:'Register Account',           url:'/auth/register' },
+    { id:'1',      num:'1',     svc:'W', title:'Login',                      url:'/auth/login' },
+    { id:'2',      num:'2',     svc:'W', title:'Get Wallet ID',              url:'/accounts/wallets' },
+    { id:'3',      num:'3',     svc:'W', title:'List Keys',                  url:'/wallet/{id}/keys' },
+    { id:'4',      num:'4',     svc:'W', title:'Retrieve DID',               url:'/wallet/{id}/dids' },
+    { id:'5',      num:'5',     svc:'I', title:'Issuer Well-Known',          url:'/.well-known/openid-configuration' },
+    { id:'6',      num:'6',     svc:'I', title:'Onboard Issuer',             url:'/onboard/issuer' },
+    { id:'7',      num:'7',     svc:'I', title:'Create Credential Offer',    url:'/openid4vc/jwt/issue' },
+    { id:'8/9',    num:'8/9',   svc:'I', title:'Inspect Offer Content',      url:'/draft13/credentialOffer' },
+    { id:'10',     num:'10',    svc:'W', title:'Claim Credential',           url:'/exchange/useOfferRequest' },
+    { id:'11',     num:'11',    svc:'V', title:'Create VP Auth Request',     url:'/openid4vc/verify' },
+    { id:'12a',    num:'12a',   svc:'V', title:'Fetch Presentation Def',     url:'/openid4vc/pd/{state}' },
+    { id:'12b',    num:'12b',   svc:'W', title:'Match Credentials',          url:'/exchange/matchCredentials…' },
+    { id:'13',     num:'13',    svc:'W', title:'Resolve VP Request',         url:'/exchange/resolvePresentation…' },
+    { id:'14',     num:'14',    svc:'W', title:'Fulfill VP Request',         url:'/exchange/usePresentationRequest' },
+    { id:'15',     num:'15',    svc:'V', title:'Check Verification Result',  url:'/openid4vc/session/{state}' },
+  ],
+  sdjwt: [
+    { id:'input',  num:'',      svc:'L', title:'Script Input',              url:'CLI args' },
+    { id:'0',      num:'0',     svc:'W', title:'Register Account',           url:'/auth/register' },
+    { id:'1',      num:'1',     svc:'W', title:'Login',                      url:'/auth/login' },
+    { id:'2',      num:'2',     svc:'W', title:'Get Wallet ID',              url:'/accounts/wallets' },
+    { id:'3',      num:'3',     svc:'W', title:'List Keys',                  url:'/wallet/{id}/keys' },
+    { id:'4',      num:'4',     svc:'W', title:'Retrieve DID',               url:'/wallet/{id}/dids' },
+    { id:'5',      num:'5',     svc:'I', title:'Issuer Well-Known',          url:'/.well-known/openid-configuration' },
+    { id:'6',      num:'6',     svc:'I', title:'Onboard Issuer',             url:'/onboard/issuer' },
+    { id:'7',      num:'7',     svc:'I', title:'Create SD-JWT Offer',        url:'/openid4vc/sdjwt/issue' },
+    { id:'8/9',    num:'8/9',   svc:'I', title:'Inspect Offer Content',      url:'/draft13/credentialOffer' },
+    { id:'10',     num:'10',    svc:'W', title:'Claim SD-JWT VC',            url:'/exchange/useOfferRequest' },
+    { id:'11',     num:'11',    svc:'V', title:'Create VP Auth Request',     url:'/openid4vc/verify' },
+    { id:'12a',    num:'12a',   svc:'V', title:'Fetch Presentation Def',     url:'/openid4vc/pd/{state}' },
+    { id:'12b',    num:'12b',   svc:'W', title:'Match Credentials',          url:'/exchange/matchCredentials…' },
+    { id:'13',     num:'13',    svc:'W', title:'Resolve VP Request',         url:'/exchange/resolvePresentation…' },
+    { id:'14',     num:'14',    svc:'W', title:'Fulfill VP Request',         url:'/exchange/usePresentationRequest' },
+    { id:'15',     num:'15',    svc:'V', title:'Check Verification Result',  url:'/openid4vc/session/{state}' },
+  ],
+  mdoc: [
+    { id:'input',  num:'',      svc:'L', title:'Script Input',              url:'CLI args' },
+    { id:'0',      num:'0',     svc:'W', title:'Register Account',           url:'/auth/register' },
+    { id:'1',      num:'1',     svc:'W', title:'Login',                      url:'/auth/login' },
+    { id:'2',      num:'2',     svc:'W', title:'Get Wallet ID',              url:'/accounts/wallets' },
+    { id:'3',      num:'3',     svc:'I', title:'Create IACA Certificate',    url:'/onboard/iso-mdl/iacas' },
+    { id:'4',      num:'4',     svc:'I', title:'Create DS Certificate',      url:'/onboard/iso-mdl/document-signers' },
+    { id:'5',      num:'5',     svc:'I', title:'Issuer Well-Known',          url:'/.well-known/openid-configuration' },
+    { id:'6',      num:'6',     svc:'I', title:'Create mDL Offer',           url:'/openid4vc/mdoc/issue' },
+    { id:'7',      num:'7',     svc:'I', title:'Inspect Offer Content',      url:'/draft13/credentialOffer' },
+    { id:'8',      num:'8',     svc:'W', title:'Claim mDL Credential',       url:'/exchange/useOfferRequest' },
+    { id:'9',      num:'9',     svc:'V', title:'Create mDL Auth Request',    url:'/openid4vc/verify (ISO_18013_7)' },
+    { id:'10a',    num:'10a',   svc:'V', title:'Fetch JAR JWT (request_uri)',url:'/openid4vc/jar/{state}' },
+    { id:'10b',    num:'10b',   svc:'W', title:'Match Credentials',          url:'/exchange/matchCredentials…' },
+    { id:'11',     num:'11',    svc:'W', title:'Resolve VP Request',         url:'/exchange/resolvePresentation…' },
+    { id:'12',     num:'12',    svc:'W', title:'Fulfill VP Request',         url:'/exchange/usePresentationRequest' },
+    { id:'13',     num:'13',    svc:'V', title:'Check Verification Result',  url:'/openid4vc/session/{state}' },
+  ],
+};
+
+// ─── Variable definitions ─────────────────────────────────────────────────────
+const VARS = {
+  jwtvc: [
+    { id:'creds',        name:'email / password',    bash:'$EMAIL, $PASSWORD',
+      cat:'input',    color:'#94a3b8',
+      desc:'Wallet account credentials — entry point for the entire flow.',
+      extract:'Command-line arguments:\n  ./test-vc-vp-flow.sh [email] [password]\nDefaults: test@email.com / test',
+      produced:'input', consumed:['0','1'], deps:[] },
+
+    { id:'token',        name:'token',               bash:'$TOKEN',
+      cat:'auth',     color:'#60a5fa',
+      desc:'JWT Bearer token returned by /auth/login. Sent as Authorization: Bearer $TOKEN header on every subsequent wallet-api call.',
+      extract:"TOKEN=$(echo \"$LOGIN\" | jq -r '.token // empty')\n← step 1 response body",
+      produced:'1', consumed:['2','3','4','10','12b','13','14'], deps:['creds'] },
+
+    { id:'wallet_id',    name:'wallet_id',            bash:'$WALLET_ID',
+      cat:'auth',     color:'#38bdf8',
+      desc:"UUID of the user's wallet, embedded in every wallet-api endpoint path.",
+      extract:"WALLET_ID=$(echo \"$WALLETS\" | jq -r '.wallets[0].id // empty')\n← step 2 response body",
+      produced:'2', consumed:['3','4','10','12b','13','14'], deps:['token'] },
+
+    { id:'key_id',       name:'key_id',               bash:'$KEY_ID',
+      cat:'auth',     color:'#7dd3fc',
+      desc:"ID of the wallet's secp256r1 cryptographic key. Informational in this flow — the wallet uses it internally when signing VPs.",
+      extract:"KEY_ID=$(echo \"$KEYS\" | jq -r '.[0].keyId.id // empty')\n← step 3 response body",
+      produced:'3', consumed:[], deps:['token','wallet_id'] },
+
+    { id:'holder_did',   name:'holder_did',           bash:'$DID',
+      cat:'auth',     color:'#a5b4fc',
+      desc:'Holder DID (did:jwk with secp256r1 public key). Used as credentialSubject.id in the issued VC via the <subjectDid> mapping placeholder.',
+      extract:"DID=$(echo \"$DIDS\" | jq -r '.[0].did // empty')\n← step 4 response body",
+      produced:'4', consumed:['7'], deps:['token','wallet_id'] },
+
+    { id:'issuer_key',   name:'issuer_key',           bash:'$ISSUER_KEY',
+      cat:'issuer',   color:'#34d399',
+      desc:'Ephemeral issuer JWK key pair (secp256r1), created fresh every run. Used to sign the issued credential.',
+      extract:"ISSUER_KEY=$(echo \"$ISSUER\" | jq -c '.issuerKey // empty')\n← step 6 response body",
+      produced:'6', consumed:['7'], deps:[] },
+
+    { id:'issuer_did',   name:'issuer_did',           bash:'$ISSUER_DID',
+      cat:'issuer',   color:'#6ee7b7',
+      desc:'Issuer DID (did:jwk) derived from the issuer key. Set as vc.issuer.id and used to verify the credential signature.',
+      extract:"ISSUER_DID=$(echo \"$ISSUER\" | jq -r '.issuerDid // empty')\n← step 6 response body",
+      produced:'6', consumed:['7'], deps:[] },
+
+    { id:'offer_uri',    name:'offer_uri',            bash:'$OFFER_URI',
+      cat:'issuance', color:'#fbbf24',
+      desc:'OID4VCI credential offer URI (openid-credential-offer://...). Wallet-api resolves this URI to perform the OID4VCI exchange (pre-authorized code flow, Draft 13). localhost is rewritten to host.docker.internal for Docker networking.',
+      extract:'OFFER_URI=$(curl ... POST /openid4vc/jwt/issue)\n← step 7 raw response body (string URI)',
+      produced:'7', consumed:['8/9','10'], deps:['issuer_key','issuer_did','holder_did'] },
+
+    { id:'cred_id',      name:'cred_id',              bash:'$CRED_ID',
+      cat:'issuance', color:'#fcd34d',
+      desc:'URN of the claimed and stored credential (urn:uuid:…). The wallet assigns this when the VC is added to the wallet store.',
+      extract:"CRED_ID=$(echo \"$MATCHING_CREDS\" | jq -r '.[0].id // empty')\n← step 12b — matched credential ID",
+      produced:'10', consumed:['12b','14'], deps:['token','wallet_id','offer_uri'] },
+
+    { id:'auth_request', name:'auth_request',         bash:'$AUTH_REQUEST',
+      cat:'verif',    color:'#fb923c',
+      desc:'OID4VP authorization request URI (openid4vp://authorize?...). Contains response_type, client_id, nonce, state, and presentation_definition_uri query params.',
+      extract:'AUTH_REQUEST=$(curl ... POST /openid4vc/verify)\n← step 11 raw response body (string URI)',
+      produced:'11', consumed:['12a','13','14'], deps:[] },
+
+    { id:'state',        name:'state',                bash:'$STATE',
+      cat:'verif',    color:'#f87171',
+      desc:'Verifier session ID extracted from the auth_request URI query string. Used to poll the verification result after the VP is submitted.',
+      extract:"STATE=$(echo \"$AUTH_REQUEST\" | grep -oE 'state=[^&]+' | head -1 | cut -d= -f2)\n← step 11 auth_request URI query param",
+      produced:'11', consumed:['15'], deps:['auth_request'] },
+
+    { id:'pres_def',     name:'presentation_def',     bash:'$PRESENTATION_DEF',
+      cat:'verif',    color:'#e879f9',
+      desc:'DIF Presentation Definition object — specifies which credential type and fields the verifier requires. Retrieved from the presentation_definition_uri in the auth_request.',
+      extract:'PRESENTATION_DEF=$(curl GET $PD_URI)\n← step 12a GET response (presentation_definition_uri decoded from auth_request)',
+      produced:'12a', consumed:['12b','13'], deps:['auth_request'] },
+
+    { id:'resolved_req', name:'resolved_request',     bash:'$RESOLVED_REQUEST',
+      cat:'verif',    color:'#c084fc',
+      desc:'Wallet-resolved VP request URI — the auth_request with localhost rewritten to host.docker.internal so the wallet-api (in Docker) can reach the verifier.',
+      extract:'RESOLVED_REQUEST=$(curl POST /exchange/resolvePresentationRequest)\n← step 13 response body',
+      produced:'13', consumed:['14'], deps:['token','wallet_id','auth_request'] },
+
+    { id:'verify_result',name:'verify_result',        bash:'$VERIFY_RESULT',
+      cat:'result',   color:'#4ade80',
+      desc:'Final verification outcome — "true" means the VP signature was valid and all VP/VC policies (signature, not-expired) passed.',
+      extract:"VERIFY_RESULT=$(echo \"$VERIFICATION\" | jq -r '.verificationResult // empty')\n← step 15 GET /openid4vc/session/{state} response",
+      produced:'15', consumed:[], deps:['state'] },
+  ],
+
+  sdjwt: [], // populated below by cloning jwtvc with overrides
+
+  mdoc: [
+    { id:'creds',        name:'email / password',         bash:'$EMAIL, $PASSWORD',
+      cat:'input',    color:'#94a3b8',
+      desc:'Wallet account credentials — entry point for the entire flow.',
+      extract:'Command-line arguments:\n  ./test-mdoc-flow.sh [email] [password]\nDefaults: test@email.com / test',
+      produced:'input', consumed:['0','1'], deps:[] },
+
+    { id:'token',        name:'token',                    bash:'$TOKEN',
+      cat:'auth',     color:'#60a5fa',
+      desc:'JWT Bearer token from /auth/login. Authorises all wallet-api calls.',
+      extract:"TOKEN=$(echo \"$LOGIN\" | jq -r '.token // empty')  ← step 1",
+      produced:'1', consumed:['2','8','10b','11','12'], deps:['creds'] },
+
+    { id:'wallet_id',    name:'wallet_id',                bash:'$WALLET_ID',
+      cat:'auth',     color:'#38bdf8',
+      desc:'UUID of the wallet, embedded in every wallet-api endpoint path.',
+      extract:"WALLET_ID=$(echo \"$WALLETS\" | jq -r '.wallets[0].id // empty')  ← step 2",
+      produced:'2', consumed:['8','10b','11','12'], deps:['token'] },
+
+    { id:'iaca_cert',    name:'iaca_key + iaca_cert_pem', bash:'$IACA_KEY, $IACA_CERT_PEM',
+      cat:'pki',      color:'#a78bfa',
+      desc:'Issuing Authority CA (IACA) — root of the mDL PKI chain. The IACA private key signs the Document Signer cert (step 4). The IACA PEM is also passed to the verifier as a trusted root CA.',
+      extract:"IACA_KEY=$(echo \"$IACA\" | jq -c '.iacaKey // empty')\nIACA_CERT_PEM=$(echo \"$IACA\" | jq -r '.certificatePEM // empty')\n← step 3 POST /onboard/iso-mdl/iacas",
+      produced:'3', consumed:['4','6','9'], deps:[] },
+
+    { id:'ds_cert',      name:'ds_key + ds_cert_pem',     bash:'$DS_KEY, $DS_CERT_PEM',
+      cat:'pki',      color:'#8b5cf6',
+      desc:'Document Signer (DS) — signed by the IACA, certifies the key that signs individual mDoc credentials. DS key is the issuerKey for mDL issuance; DS cert goes in the x5Chain.',
+      extract:"DS_KEY=$(echo \"$DS\" | jq -c '.documentSignerKey // empty')\nDS_CERT_PEM=$(echo \"$DS\" | jq -r '.certificatePEM // empty')\n← step 4 POST /onboard/iso-mdl/document-signers",
+      produced:'4', consumed:['6'], deps:['iaca_cert'] },
+
+    { id:'offer_uri',    name:'offer_uri',                bash:'$OFFER_URI',
+      cat:'issuance', color:'#fbbf24',
+      desc:'OID4VCI credential offer URI for the mDL credential. The issuer embeds the DS certificate (x5Chain) and mDoc data fields (org.iso.18013.5.1 namespace).',
+      extract:'OFFER_URI=$(curl ... POST /openid4vc/mdoc/issue)\n← step 6 raw response body (string URI)',
+      produced:'6', consumed:['7','8'], deps:['ds_cert','iaca_cert'] },
+
+    { id:'cred_id',      name:'cred_id',                  bash:'$CRED_ID',
+      cat:'issuance', color:'#fcd34d',
+      desc:'URN of the claimed mDL in the wallet. Falls back to CLAIMED_CRED_ID if PD matching returns empty (mso_mdoc documents are not indexed by the PD matcher).',
+      extract:"CRED_ID from matchCredentials or fallback to:\nCLAIMED_CRED_ID=$(echo \"$CREDENTIAL_RESPONSE\" | jq -r '.[0].id')\n← step 8",
+      produced:'8', consumed:['10b','12'], deps:['token','wallet_id','offer_uri'] },
+
+    { id:'auth_request', name:'auth_request',             bash:'$AUTH_REQUEST',
+      cat:'verif',    color:'#fb923c',
+      desc:'OID4VP authorization request (ISO 18013-7 profile). Uses request_uri (JAR / JWT-secured Auth Request) instead of presentation_definition_uri. Includes trusted_root_cas (IACA PEM).',
+      extract:'AUTH_REQUEST=$(curl ... POST /openid4vc/verify)\n← step 9 raw response body (openid4vp:// URI)',
+      produced:'9', consumed:['10a','11','12'], deps:['iaca_cert'] },
+
+    { id:'state',        name:'state',                    bash:'$STATE',
+      cat:'verif',    color:'#f87171',
+      desc:'Verifier session ID — derived from the last path segment of the request_uri (ISO 18013-7 uses request_uri, not presentation_definition_uri).',
+      extract:"REQUEST_URI_ENC=$(echo \"$AUTH_REQUEST\" | grep -oE 'request_uri=[^&]+')\nSTATE=$(basename \"$REQUEST_URI\")\n← decoded request_uri path in auth_request",
+      produced:'9', consumed:['13'], deps:['auth_request'] },
+
+    { id:'request_jwt',  name:'request_jwt',              bash:'$REQUEST_JWT',
+      cat:'verif',    color:'#e879f9',
+      desc:'JAR (JWT Authorization Request) from the verifier. The wallet-api fetches this at the request_uri and decodes the payload to extract the embedded presentation_definition.',
+      extract:"REQUEST_JWT=$(curl GET \"$REQUEST_URI_LOCAL\")\n← step 10a GET request_uri (from auth_request)",
+      produced:'10a', consumed:['10b'], deps:['auth_request'] },
+
+    { id:'resolved_req', name:'resolved_request',         bash:'$RESOLVED_REQUEST',
+      cat:'verif',    color:'#c084fc',
+      desc:'Wallet-resolved VP request — auth_request with localhost rewritten to host.docker.internal for Docker networking.',
+      extract:'RESOLVED_REQUEST=$(curl POST /exchange/resolvePresentationRequest)\n← step 11 response',
+      produced:'11', consumed:['12'], deps:['token','wallet_id','auth_request'] },
+
+    { id:'verify_result',name:'verify_result',            bash:'$VERIFY_RESULT',
+      cat:'result',   color:'#4ade80',
+      desc:'Final verification result — "true" means mDL signature chain (DS cert → IACA) and VP policies passed.',
+      extract:"VERIFY_RESULT=$(echo \"$VERIFICATION\" | jq -r '.verificationResult // empty')\n← step 13 GET /openid4vc/session/{state}",
+      produced:'13', consumed:[], deps:['state'] },
+  ],
+};
+
+// SD-JWT: clone jwtvc with targeted overrides
+VARS.sdjwt = VARS.jwtvc.map(v => {
+  const overrides = {
+    creds:        { extract: 'Command-line arguments:\n  ./test-sd-jwt.sh [email] [password]\nDefaults: test@email.com / test' },
+    holder_did:   { desc: 'Holder DID (did:jwk). Used internally by the wallet when constructing the SD-JWT VP; not directly embedded in the SD-JWT credential itself.' },
+    offer_uri:    { desc: 'OID4VCI credential offer URI for the SD-JWT VC. The issuer applies selective disclosure — birthdate and family_name are SD-hashed, given_name is always disclosed.',
+                    extract: 'OFFER_URI=$(curl ... POST /openid4vc/sdjwt/issue)\n← step 7 raw response body (string URI)' },
+    cred_id:      { desc: 'URN of the claimed SD-JWT VC. If PD matching returns empty, falls back to CLAIMED_CRED_ID extracted directly from the useOfferRequest response.',
+                    extract: "CLAIMED_CRED_ID=$(echo \"$CREDENTIAL_RESPONSE\" | jq -r '.[0].id // empty')\nCRED_ID = CLAIMED_CRED_ID fallback\n← step 10" },
+    auth_request: { desc: 'OID4VP authorization request. Step 11 requests birthdate and given_name from the SD-JWT VC with limit_disclosure: required — the wallet will create a selective disclosure proof.' },
+  };
+  return overrides[v.id] ? { ...v, ...overrides[v.id] } : { ...v };
+});
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function computeRdeps(flowVars) {
+  const map = {};
+  flowVars.forEach(v => { map[v.id] = []; });
+  flowVars.forEach(v => { (v.deps||[]).forEach(d => { if (map[d]) map[d].push(v.id); }); });
+  return map;
+}
+
+// cellLayout mirrors data-mapping.html (for step lifecycle chain in detail panel)
+function cellLayout(v, stepId, stepIds) {
+  const si = stepIds.indexOf(stepId);
+  const pi = stepIds.indexOf(v.produced);
+  const cis = (v.consumed||[]).map(s => stepIds.indexOf(s)).filter(i => i >= 0);
+  const last = cis.length > 0 ? Math.max(...cis) : pi;
+  if (pi < 0) return { type:'none' };
+  const alive = si >= pi && si <= last;
+  if (!alive) return { type:'none' };
+  const isProduced = si === pi;
+  const isConsumed = (v.consumed||[]).includes(stepId);
+  let type = 'transit';
+  if (isProduced && isConsumed) type = 'both';
+  else if (isProduced) type = 'produced';
+  else if (isConsumed) type = 'consumed';
+  return { type };
+}
+
+// ─── Layout constants ─────────────────────────────────────────────────────────
+const NODE_W     = 178;
+const NODE_H_EST = 88;   // estimated height for initial layout spacing
+const COL_GAP    = 68;
+const ROW_GAP    = 22;
+const CANVAS_PAD = 50;
+
+const CAT_ORDER = ['input','auth','pki','issuer','issuance','verif','result'];
+
+function computeLayout(flow) {
+  const steps    = STEPS[flow];
+  const flowVars = VARS[flow];
+  const stepIds  = steps.map(s => s.id);
+
+  // Group variables by production step
+  const colVars = {};
+  flowVars.forEach(v => {
+    if (!colVars[v.produced]) colVars[v.produced] = [];
+    colVars[v.produced].push(v);
+  });
+
+  // Sort production-step columns by step order
+  const sortedCols = Object.keys(colVars).sort(
+    (a, b) => stepIds.indexOf(a) - stepIds.indexOf(b)
+  );
+
+  // Within each column sort by category order
+  sortedCols.forEach(col => {
+    colVars[col].sort((a, b) => CAT_ORDER.indexOf(a.cat) - CAT_ORDER.indexOf(b.cat));
+  });
+
+  // Assign column X positions
+  const colX = {};
+  let x = CANVAS_PAD;
+  for (const col of sortedCols) {
+    colX[col] = x;
+    x += NODE_W + COL_GAP;
+  }
+
+  // Assign node (x, y) positions
+  const positions = {};
+  for (const col of sortedCols) {
+    let y = CANVAS_PAD;
+    colVars[col].forEach(v => {
+      positions[v.id] = { x: colX[col], y };
+      y += NODE_H_EST + ROW_GAP;
+    });
+  }
+
+  const totalW = x - COL_GAP + CANVAS_PAD;
+  const totalH = Math.max(...Object.values(positions).map(p => p.y)) + NODE_H_EST + CANVAS_PAD;
+
+  return { positions, sortedCols, colVars, colX, totalW, totalH };
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentFlow  = 'jwtvc';
+let selectedVarId = null;
+let layoutCache  = null;
+
+// ─── Render nodes ─────────────────────────────────────────────────────────────
+function renderNodes(flow, positions) {
+  const steps    = STEPS[flow];
+  const flowVars = VARS[flow];
+  const stepMap  = Object.fromEntries(steps.map(s => [s.id, s]));
+  const nodeLayer = document.getElementById('node-layer');
+  nodeLayer.innerHTML = '';
+
+  // Compute which variables are connected to selected (for fading)
+  const rdeps = computeRdeps(flowVars);
+  const varMap = Object.fromEntries(flowVars.map(v => [v.id, v]));
+  let connected = new Set();
+  if (selectedVarId && varMap[selectedVarId]) {
+    connected.add(selectedVarId);
+    (varMap[selectedVarId].deps || []).forEach(d => connected.add(d));
+    (rdeps[selectedVarId] || []).forEach(r => connected.add(r));
+  }
+
+  flowVars.forEach(v => {
+    const pos  = positions[v.id];
+    if (!pos) return;
+    const step = stepMap[v.produced];
+    const cat  = CAT[v.cat];
+    const svcKey = step ? step.svc : 'L';
+
+    const el = document.createElement('div');
+    el.className = 'uml-node';
+    el.id = `node-${v.id}`;
+    el.style.left        = pos.x + 'px';
+    el.style.top         = pos.y + 'px';
+    el.style.borderColor = v.color;
+    el.style.color       = v.color; // for currentColor in port dots
+
+    if (selectedVarId) {
+      if (v.id === selectedVarId) {
+        el.classList.add('selected');
+        el.style.boxShadow = `0 0 0 2px ${v.color}, 0 0 18px ${v.color}44`;
+      } else if (connected.has(v.id)) {
+        el.classList.add('highlighted');
+        el.style.boxShadow = `0 0 0 1px ${v.color}88`;
+      } else {
+        el.classList.add('faded');
+      }
+    } else {
+      el.style.boxShadow = `0 2px 12px #00000066`;
+    }
+
+    // Step number for top-right corner
+    const stepNum = step ? (step.num || '·') : '·';
+
+    el.innerHTML = `
+      <div class="node-stereotype" style="background:${v.color}15;color:${cat.color};border-bottom:1px solid ${v.color}30">
+        ${escHtml(cat.stereo)}
+      </div>
+      <div class="node-name-row" style="border-top-color:${v.color}30">
+        <div class="node-bash" style="color:${v.color}">${escHtml(v.bash)}</div>
+        <div class="node-friendly">${escHtml(v.name)}</div>
+      </div>
+      <div class="node-step-row" style="border-top-color:${v.color}20">
+        <span class="step-badge-sm svc-${svcKey}" title="${escHtml(step?.url||'')}">${escHtml(stepNum)}</span>
+        <span class="step-title-sm">${escHtml(step?.title||'')}</span>
+      </div>
+      <div class="port port-in"  style="background:${v.color};border-color:#0f172a"></div>
+      <div class="port port-out" style="background:${v.color};border-color:#0f172a"></div>`;
+
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      selectedVarId = selectedVarId === v.id ? null : v.id;
+      renderGraph();
+    });
+
+    nodeLayer.appendChild(el);
+  });
+}
+
+// ─── Draw edges ───────────────────────────────────────────────────────────────
+function drawEdges(flow) {
+  const flowVars = VARS[flow];
+  const varMap   = Object.fromEntries(flowVars.map(v => [v.id, v]));
+  const svg      = document.getElementById('edge-layer');
+
+  // Compute which var sets are relevant for highlighting
+  const rdeps = computeRdeps(flowVars);
+  const hlEdges = new Set(); // "srcId→tgtId" strings for highlighted edges
+  if (selectedVarId && varMap[selectedVarId]) {
+    (varMap[selectedVarId].deps || []).forEach(d => hlEdges.add(`${d}→${selectedVarId}`));
+    (rdeps[selectedVarId] || []).forEach(r => hlEdges.add(`${selectedVarId}→${r}`));
+  }
+
+  // Collect unique colors and build markers
+  const colors = [...new Set(flowVars.map(v => v.color))];
+  let defs = '<defs>';
+  colors.forEach(color => {
+    const cid = color.replace('#','c');
+    defs += `<marker id="a-${cid}"    markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="${color}" opacity="0.45"/></marker>`;
+    defs += `<marker id="a-hi-${cid}" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0,7 3,0 6" fill="${color}"/></marker>`;
+  });
+  defs += '</defs>';
+
+  let paths = '';
+
+  flowVars.forEach(v => {
+    (v.deps || []).forEach(depId => {
+      const dep = varMap[depId];
+      if (!dep) return;
+
+      const srcEl = document.getElementById(`node-${dep.id}`);
+      const tgtEl = document.getElementById(`node-${v.id}`);
+      if (!srcEl || !tgtEl) return;
+
+      // Use offsetLeft/Top (relative to node-layer = canvas-container)
+      const x1 = srcEl.offsetLeft + srcEl.offsetWidth;
+      const y1 = srcEl.offsetTop  + srcEl.offsetHeight / 2;
+      const x2 = tgtEl.offsetLeft;
+      const y2 = tgtEl.offsetTop  + tgtEl.offsetHeight / 2;
+
+      const cid        = dep.color.replace('#','c');
+      const edgeKey    = `${dep.id}→${v.id}`;
+      const isHighlighted = hlEdges.has(edgeKey);
+      const hasSel     = selectedVarId !== null;
+      const opacity    = hasSel ? (isHighlighted ? 0.9 : 0.06) : 0.42;
+      const sw         = isHighlighted ? 2.2 : 1.4;
+      const marker     = isHighlighted ? `url(#a-hi-${cid})` : `url(#a-${cid})`;
+
+      let d;
+      const dx = x2 - x1;
+      if (dx > 30) {
+        // Forward edge: horizontal cubic bezier
+        const cx = dx * 0.48;
+        d = `M${x1},${y1} C${x1+cx},${y1} ${x2-cx},${y2} ${x2},${y2}`;
+      } else {
+        // Same-column or near-same: arc to the right and back
+        const arc = Math.max(60, Math.abs(y2 - y1) * 0.6);
+        const mx  = Math.max(x1, x2) + arc;
+        d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+      }
+
+      paths += `<path d="${d}" fill="none" stroke="${dep.color}" stroke-width="${sw}" stroke-opacity="${opacity}" marker-end="${marker}" class="edge"/>`;
+    });
+  });
+
+  svg.innerHTML = defs + paths;
+}
+
+// ─── Pan / zoom ───────────────────────────────────────────────────────────────
+let panScale = 1, panTx = 40, panTy = 40;
+let isPanning = false, panStart = null;
+
+function applyTransform() {
+  const cc = document.getElementById('canvas-container');
+  cc.style.transform = `translate(${panTx}px,${panTy}px) scale(${panScale})`;
+}
+
+function fitToView() {
+  const { totalW, totalH } = layoutCache || computeLayout(currentFlow);
+  const gp   = document.getElementById('graph-pane');
+  const gpW  = gp.offsetWidth;
+  const gpH  = gp.offsetHeight;
+  const s    = Math.min(gpW / totalW, gpH / totalH, 1) * 0.88;
+  panScale   = s;
+  panTx      = (gpW - totalW * s) / 2;
+  panTy      = (gpH - totalH * s) / 2;
+  applyTransform();
+}
+
+const gp = document.getElementById('graph-pane');
+
+gp.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 0.89;
+  const newS   = Math.max(0.15, Math.min(3, panScale * factor));
+  // Zoom toward mouse pointer
+  const rect   = gp.getBoundingClientRect();
+  const mx     = e.clientX - rect.left;
+  const my     = e.clientY - rect.top;
+  panTx        = mx - (mx - panTx) * (newS / panScale);
+  panTy        = my - (my - panTy) * (newS / panScale);
+  panScale     = newS;
+  applyTransform();
+}, { passive: false });
+
+gp.addEventListener('mousedown', e => {
+  if (e.target.closest('.uml-node')) return;
+  isPanning = true;
+  panStart  = { x: e.clientX - panTx, y: e.clientY - panTy };
+  gp.style.cursor = 'grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  panTx = e.clientX - panStart.x;
+  panTy = e.clientY - panStart.y;
+  applyTransform();
+});
+window.addEventListener('mouseup', () => {
+  if (!isPanning) return;
+  isPanning = false;
+  gp.style.cursor = 'grab';
+});
+
+// Click on empty canvas → deselect
+gp.addEventListener('click', e => {
+  if (e.target.closest('.uml-node')) return;
+  if (selectedVarId) { selectedVarId = null; renderGraph(); }
+});
+
+document.getElementById('btn-zoom-in').addEventListener('click',  () => { panScale = Math.min(3, panScale * 1.25); applyTransform(); });
+document.getElementById('btn-zoom-out').addEventListener('click', () => { panScale = Math.max(0.15, panScale / 1.25); applyTransform(); });
+document.getElementById('btn-fit').addEventListener('click', fitToView);
+
+// ─── Main render ──────────────────────────────────────────────────────────────
+function renderGraph() {
+  if (!layoutCache) layoutCache = computeLayout(currentFlow);
+  const { totalW, totalH, positions } = layoutCache;
+
+  const cc  = document.getElementById('canvas-container');
+  const svg = document.getElementById('edge-layer');
+  cc.style.width  = totalW + 'px';
+  cc.style.height = totalH + 'px';
+  svg.setAttribute('width',  totalW);
+  svg.setAttribute('height', totalH);
+
+  renderNodes(currentFlow, positions);
+
+  requestAnimationFrame(() => {
+    drawEdges(currentFlow);
+    renderDetail();
+  });
+}
+
+// ─── Render detail panel ──────────────────────────────────────────────────────
+function renderDetail() {
+  const pane = document.getElementById('detail-pane');
+  if (!selectedVarId) {
+    pane.innerHTML = '<div class="empty-detail">← Click a variable node<br>to see its dependency detail</div>';
+    return;
+  }
+
+  const flowVars = VARS[currentFlow];
+  const steps    = STEPS[currentFlow];
+  const stepIds  = steps.map(s => s.id);
+  const rdeps    = computeRdeps(flowVars);
+  const varMap   = Object.fromEntries(flowVars.map(v => [v.id, v]));
+  const v        = varMap[selectedVarId];
+  if (!v) { pane.innerHTML = '<div class="empty-detail">Not found.</div>'; return; }
+
+  const cat = CAT[v.cat];
+
+  const depsHtml = (v.deps||[]).length === 0
+    ? '<div style="color:#334155;font-size:0.7rem">None — created independently.</div>'
+    : (v.deps||[]).map(d => {
+        const dep = varMap[d];
+        if (!dep) return '';
+        return `<div class="dep-item" data-var="${escHtml(d)}">
+          <div class="dep-dot" style="background:${dep.color}"></div>
+          <span style="color:${dep.color}">${escHtml(dep.bash)}</span>
+          <span class="dep-step-badge">step ${escHtml(dep.produced)}</span>
+        </div>`;
+      }).join('');
+
+  const rdepsArr = rdeps[v.id] || [];
+  const rdepsHtml = rdepsArr.length === 0
+    ? '<div style="color:#334155;font-size:0.7rem">Nothing — terminal value.</div>'
+    : rdepsArr.map(r => {
+        const dep = varMap[r];
+        if (!dep) return '';
+        return `<div class="dep-item" data-var="${escHtml(r)}">
+          <div class="dep-dot" style="background:${dep.color}"></div>
+          <span style="color:${dep.color}">${escHtml(dep.bash)}</span>
+          <span class="dep-step-badge">step ${escHtml(dep.produced)}</span>
+        </div>`;
+      }).join('');
+
+  const chainHtml = steps.map(s => {
+    const lay = cellLayout(v, s.id, stepIds);
+    if (lay.type === 'none') return '';
+    let marker = '<span style="color:#1e293b">─</span>', cls = 'transit-here';
+    if (lay.type === 'produced' || lay.type === 'both') {
+      marker = `<span style="color:${v.color}">●</span>`; cls = 'produced-here';
+    } else if (lay.type === 'consumed') {
+      marker = `<span style="color:${v.color}">◆</span>`; cls = 'consumed-here';
+    }
+    const numStyle = cls !== 'transit-here' ? `style="background:#1d4ed833;color:${v.color}"` : '';
+    return `<div class="chain-item ${cls}">
+      <div class="chain-step-num" ${numStyle}>${escHtml(s.num)||'·'}</div>
+      <div class="chain-marker">${marker}</div>
+      <div class="chain-step-title" style="${cls==='transit-here'?'color:#1e293b':'color:#94a3b8'}">${escHtml(s.title)}</div>
+    </div>`;
+  }).join('');
+
+  pane.innerHTML = `
+    <div class="detail-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:12px;height:12px;border-radius:50%;background:${v.color};flex-shrink:0"></div>
+        <div class="detail-var-name" style="color:${v.color}">${escHtml(v.name)}</div>
+      </div>
+      <span class="detail-bash">${escHtml(v.bash)}</span>
+      <div style="margin-top:5px">
+        <span style="font-size:0.62rem;color:${cat.color};background:${cat.color}22;border:1px solid ${cat.color}55;padding:1px 7px;border-radius:3px">${escHtml(cat.stereo)}</span>
+      </div>
+      <div class="detail-desc">${escHtml(v.desc)}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">How to extract</div>
+      <div class="extract-code">${escHtml(v.extract)}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Depends on (required inputs)</div>
+      <div class="dep-list">${depsHtml}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Feeds into (downstream variables)</div>
+      <div class="dep-list">${rdepsHtml}</div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Step-by-step lifecycle</div>
+      <div class="step-chain">${chainHtml}</div>
+    </div>`;
+
+  pane.querySelectorAll('.dep-item[data-var]').forEach(el => {
+    el.addEventListener('click', () => {
+      selectedVarId = el.dataset.var;
+      renderGraph();
+      // Scroll to the selected node
+      const nodeEl = document.getElementById(`node-${selectedVarId}`);
+      if (nodeEl) scrollToNode(nodeEl);
+    });
+  });
+}
+
+// ─── Scroll-to-node helper ────────────────────────────────────────────────────
+function scrollToNode(el) {
+  const gpEl  = document.getElementById('graph-pane');
+  const nx    = el.offsetLeft  + NODE_W / 2;
+  const ny    = el.offsetTop   + NODE_H_EST / 2;
+  const gpW   = gpEl.offsetWidth;
+  const gpH   = gpEl.offsetHeight;
+  panTx = gpW / 2 - nx * panScale;
+  panTy = gpH / 2 - ny * panScale;
+  applyTransform();
+}
+
+// ─── Flow tab switching ───────────────────────────────────────────────────────
+document.querySelectorAll('#flow-tabs .tab').forEach(t => {
+  t.addEventListener('click', () => {
+    if (t.dataset.flow === currentFlow) return;
+    currentFlow  = t.dataset.flow;
+    selectedVarId = null;
+    layoutCache  = null;
+    document.querySelectorAll('#flow-tabs .tab').forEach(x => x.classList.toggle('active', x === t));
+    renderGraph();
+    requestAnimationFrame(fitToView);
+  });
+});
+
+// ─── Keyboard navigation ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const flowVars = VARS[currentFlow];
+  const ids  = flowVars.map(v => v.id);
+  const idx  = ids.indexOf(selectedVarId);
+
+  if (e.key === 'ArrowDown' || e.key === 'j') {
+    e.preventDefault();
+    selectedVarId = ids[Math.min(ids.length - 1, Math.max(0, idx + 1))];
+    renderGraph();
+    const nodeEl = document.getElementById(`node-${selectedVarId}`);
+    if (nodeEl) scrollToNode(nodeEl);
+  } else if (e.key === 'ArrowUp' || e.key === 'k') {
+    e.preventDefault();
+    selectedVarId = ids[Math.max(0, idx - 1)];
+    renderGraph();
+    const nodeEl = document.getElementById(`node-${selectedVarId}`);
+    if (nodeEl) scrollToNode(nodeEl);
+  } else if (e.key === 'Escape') {
+    selectedVarId = null;
+    renderGraph();
+  } else if (e.key === 'f' || e.key === 'F') {
+    fitToView();
+  } else if (e.key === '+' || e.key === '=') {
+    panScale = Math.min(3, panScale * 1.25); applyTransform();
+  } else if (e.key === '-') {
+    panScale = Math.max(0.15, panScale / 1.25); applyTransform();
+  }
+});
+
+// ─── Initial render ───────────────────────────────────────────────────────────
+renderGraph();
+requestAnimationFrame(() => { fitToView(); });
+</script>
+</body>
+</html>
