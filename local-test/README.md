@@ -66,6 +66,48 @@ bash test-mdoc-flow.sh [email] [password]
 
 ---
 
+## `test-sd-jwt.sh` — SD-JWT VC end-to-end test
+
+Tests issuance and verification of an **IETF SD-JWT VC** (`vc+sd-jwt` format) identity credential
+with selective disclosure, using OID4VCI (PRE_AUTHORIZED) and OID4VP (Presentation Exchange).
+
+### Usage
+
+```bash
+cd local-test
+bash test-sd-jwt.sh [email] [password]
+# defaults: test@email.com / test
+```
+
+### Step-by-step breakdown
+
+| Step | Description |
+|------|-------------|
+| 0 | Register wallet account (skips if already exists) |
+| 1 | Login and obtain bearer token |
+| 2 | Retrieve wallet ID |
+| 3 | List wallet keys |
+| 4 | Retrieve wallet DID |
+| 5 | Fetch issuer `/.well-known/openid-configuration` |
+| 6 | Onboard issuer (generates key + DID) via `POST /onboard/issuer` |
+| 7 | Issue SD-JWT VC offer via `POST /openid4vc/sdjwt/issue` — `credentialConfigurationId: identity_credential_vc+sd-jwt`; `birthdate` and `family_name` are selectively disclosable (`sd: true`); `given_name` is always revealed |
+| 8/9 | Inspect the raw credential offer |
+| 10 | Claim the credential into the wallet via `POST /wallet/{id}/exchange/useOfferRequest` |
+| 11 | Create an OID4VP authorization request via `POST /openid4vc/verify` — requests `birthdate` and `given_name` from a `vc+sd-jwt` credential using Presentation Exchange; `vp_policies` includes `signature_sd-jwt-vc` |
+| 12 | Fetch presentation definition from `presentation_definition_uri`; match wallet credentials |
+| 13 | Resolve the presentation request (`resolvePresentationRequest`) |
+| 14 | Fulfill the presentation request (`usePresentationRequest`) |
+| 15 | Poll verifier session and assert `verificationResult == true` |
+
+### Key implementation details
+
+- **Issuance endpoint**: `POST /openid4vc/sdjwt/issue` (distinct from `/jwt/issue` used for plain W3C JWT VCs)
+- **Credential configuration**: `identity_credential_vc+sd-jwt` maps to `vct = http://host.docker.internal:7002/identity_credential` (defined in `docker-compose/issuer-api/config/credential-issuer-metadata.conf`)
+- **Selective disclosure**: fields with `sd: true` are individually disclosable; the wallet creates per-field disclosures at presentation time
+- **VP policies**: `signature_sd-jwt-vc` validates the SD-JWT VC signature and SD hash binding. `presentation-definition` is intentionally omitted — the wallet generates a `descriptor_map` using the presentation definition's own id instead of the input descriptor id, which causes a PE match failure in the verifier.
+
+---
+
 ## `test-vc-vp-flow.sh` — W3C VC/VP end-to-end test
 
 Tests W3C Verifiable Credential issuance and Verifiable Presentation verification.
