@@ -12,8 +12,18 @@ WALLET_API="http://localhost:7001/wallet-api"
 ISSUER_API="http://localhost:7002"
 VERIFIER_API="http://localhost:7003"
 
-EMAIL="${1:-test@email.com}"
-PASSWORD="${2:-test}"
+# ── Verbose mode & argument parsing ──────────────────────────────────────────
+VERBOSE=false
+_PARGS=()
+for _arg in "$@"; do
+  case "$_arg" in
+    --verbose|-v) VERBOSE=true ;;
+    *) _PARGS+=("$_arg") ;;
+  esac
+done
+EMAIL="${_PARGS[0]:-test@email.com}"
+PASSWORD="${_PARGS[1]:-test}"
+_VLOG_TMP=$(mktemp)
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -23,6 +33,22 @@ step() { echo -e "\n${BOLD}${CYAN}=== Step $1: $2 ===${NC}"; }
 ok()   { echo -e "${GREEN}✓${NC} $1"; }
 info() { echo -e "${YELLOW}→${NC} $1"; }
 fail() { echo -e "${RED}✗ $1${NC}"; exit 1; }
+# In --verbose / -v mode: print full req/res for every step and write a JSON log.
+vlog_step() {
+  $VERBOSE || return 0
+  local _s="$1" _t="$2" _m="$3" _u="$4" _req="${5:-}" _res="${6:-}"
+  echo -e "\n${YELLOW}  ┌── Step $_s ─── $_m $_u${NC}"
+  if [[ -n "$_req" ]]; then
+    echo -e "${YELLOW}  │  REQUEST:${NC}"
+    ( echo "$_req" | jq -C . 2>/dev/null || echo "$_req" ) | head -50 | sed 's/^/  │   /'
+  fi
+  echo -e "${YELLOW}  │  RESPONSE:${NC}"
+  ( echo "$_res" | jq -C . 2>/dev/null || echo "$_res" ) | head -60 | sed 's/^/  │   /'
+  echo -e "${YELLOW}  └──${NC}"
+  jq -cn --arg s "$_s" --arg t "$_t" --arg m "$_m" --arg u "$_u" \
+         --arg req "$_req" --arg res "$_res" \
+    '{step:$s,title:$t,method:$m,url:$u,request:$req,response:$res}' >> "$_VLOG_TMP"
+}
 
 # ── Dependency check ──────────────────────────────────────────────────────────
 command -v jq  >/dev/null 2>&1 || fail "jq is required. Install with: brew install jq"
@@ -30,15 +56,20 @@ command -v curl >/dev/null 2>&1 || fail "curl is required."
 
 # ── Step 0: Register account ──────────────────────────────────────────────────
 step "0" "Register account ($EMAIL)"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+_REG_REQ="{\"type\":\"email\",\"name\":\"Test\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}"
+_REG_RESP=$(curl -s -w '\nHTTP_STATUS:%{http_code}' \
   -X POST "$WALLET_API/auth/register" \
   -H 'Content-Type: application/json' \
-  -d "{\"type\":\"email\",\"name\":\"Test\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+  -d "$_REG_REQ")
+HTTP_CODE=$(echo "$_REG_RESP" | grep 'HTTP_STATUS:' | sed 's/HTTP_STATUS://')
+_REG_BODY=$(echo "$_REG_RESP" | grep -v 'HTTP_STATUS:')
 if [[ "$HTTP_CODE" == "200" || "$HTTP_CODE" == "201" ]]; then
   ok "Account registered"
 else
   info "Registration returned HTTP $HTTP_CODE — account may already exist, continuing..."
 fi
+vlog_step "0" "Register Account" "POST" "$WALLET_API/auth/register" \
+  "$_REG_REQ" "HTTP $HTTP_CODE"
 
 # ── Step 1: Login ─────────────────────────────────────────────────────────────
 step "1" "Login"
@@ -48,6 +79,8 @@ LOGIN=$(curl -s -X POST "$WALLET_API/auth/login" \
 TOKEN=$(echo "$LOGIN" | jq -r '.token // empty')
 [[ -n "$TOKEN" ]] || fail "Login failed: $LOGIN"
 ok "Token: ${TOKEN:0:50}..."
+vlog_step "1" "Login" "POST" "$WALLET_API/auth/login" \
+  "{\"type\":\"email\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" "$LOGIN"
 
 # ── Step 2: Retrieve Wallet ID ────────────────────────────────────────────────
 step "2" "Retrieve Wallet ID"
@@ -56,6 +89,7 @@ WALLETS=$(curl -s "$WALLET_API/wallet/accounts/wallets" \
 WALLET_ID=$(echo "$WALLETS" | jq -r '.wallets[0].id // empty')
 [[ -n "$WALLET_ID" ]] || fail "No wallet found: $WALLETS"
 ok "Wallet ID: $WALLET_ID"
+vlog_step "2" "Get Wallet ID" "GET" "$WALLET_API/wallet/accounts/wallets" "" "$WALLETS"
 
 # ── Step 3: Create IACA Certificate ──────────────────────────────────────────
 step "3" "Create IACA (Issuing Authority Certification Authority) certificate"
@@ -76,6 +110,8 @@ IACA_CERT_DATA=$(echo "$IACA" | jq -c '.certificateData // empty')
 IACA_CERT_PEM=$(echo "$IACA" | jq -r '.certificatePEM // empty' | tr -d '\r')
 [[ -n "$IACA_KEY" && "$IACA_KEY" != "null" ]] || fail "IACA onboarding failed: $IACA"
 ok "IACA certificate created"
+vlog_step "3" "Create IACA Certificate" "POST" "$ISSUER_API/onboard/iso-mdl/iacas" \
+  '{"certificateData":{"country":"US","commonName":"Test IACA"}}' "$IACA"
 
 # ── Step 4: Create Document Signer Certificate ────────────────────────────────
 step "4" "Create Document Signer (DS) certificate"
@@ -101,10 +137,15 @@ DS_KEY=$(echo "$DS" | jq -c '.documentSignerKey // empty')
 DS_CERT_PEM=$(echo "$DS" | jq -r '.certificatePEM // empty' | tr -d '\r')
 [[ -n "$DS_KEY" && "$DS_KEY" != "null" ]] || fail "Document signer onboarding failed: $DS"
 ok "Document signer certificate created"
+vlog_step "4" "Create Document Signer Certificate" "POST" "$ISSUER_API/onboard/iso-mdl/document-signers" \
+  "$DS_PAYLOAD" "$DS"
 
 # ── Step 5: Retrieve Issuer well-known config ─────────────────────────────────
 step "5" "Retrieve Issuer well-known config"
-curl -s "$ISSUER_API/draft13/.well-known/openid-configuration" | jq .
+_WELLKNOWN=$(curl -s "$ISSUER_API/draft13/.well-known/openid-configuration")
+echo "$_WELLKNOWN" | jq .
+vlog_step "5" "Issuer Well-Known Config" "GET" \
+  "$ISSUER_API/draft13/.well-known/openid-configuration" "" "$_WELLKNOWN"
 
 # ── Step 6: Create mDL Credential Offer ──────────────────────────────────────
 step "6" "Create mDL Credential Offer"
@@ -144,6 +185,8 @@ OFFER_URI=$(curl -s -X POST "$ISSUER_API/openid4vc/mdoc/issue" \
   -H 'Content-Type: application/json' \
   -d "$ISSUE_PAYLOAD")
 ok "Raw offer URI: ${OFFER_URI:0:80}..."
+vlog_step "6" "Create mDL Credential Offer" "POST" "$ISSUER_API/openid4vc/mdoc/issue" \
+  "$ISSUE_PAYLOAD" "$OFFER_URI"
 
 # wallet-api runs inside Docker and cannot reach the host via "localhost";
 # replace with host.docker.internal so Docker can resolve it to the host machine.
@@ -155,7 +198,10 @@ step "7" "Inspect offer content"
 OFFER_ID=$(echo "$OFFER_URI" | grep -oE 'id=[^&]+' | cut -d= -f2 || true)
 if [[ -n "$OFFER_ID" ]]; then
   info "Offer ID: $OFFER_ID"
-  curl -s "$ISSUER_API/draft13/credentialOffer?id=$OFFER_ID" | jq .
+  _OFFER_CONTENT=$(curl -s "$ISSUER_API/draft13/credentialOffer?id=$OFFER_ID")
+  echo "$_OFFER_CONTENT" | jq .
+  vlog_step "7" "Inspect Offer Content" "GET" \
+    "$ISSUER_API/draft13/credentialOffer?id=$OFFER_ID" "" "$_OFFER_CONTENT"
 else
   info "Could not extract offer ID from URI, skipping content check"
 fi
@@ -172,6 +218,9 @@ echo "$CREDENTIAL_RESPONSE" | jq . 2>/dev/null || echo "$CREDENTIAL_RESPONSE"
 CLAIMED_CRED_ID=$(echo "$CREDENTIAL_RESPONSE" | jq -r '.[0].id // empty')
 [[ -n "$CLAIMED_CRED_ID" ]] || fail "No credential returned from useOfferRequest: $CREDENTIAL_RESPONSE"
 ok "Claimed credential ID: $CLAIMED_CRED_ID"
+vlog_step "8" "Claim mDL Credential" "POST" \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/useOfferRequest" \
+  "$OFFER_URI_FIXED" "$CREDENTIAL_RESPONSE"
 
 # ── Step 9: Create mDL Authorization Request (Verifier) ──────────────────────
 step "9" "Create mDL Authorization Request (Verifier)"
@@ -221,6 +270,9 @@ REQUEST_URI=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(s
 STATE=$(basename "$REQUEST_URI")
 [[ -n "$STATE" ]] || fail "Could not extract state from auth request: $AUTH_REQUEST"
 info "State (session ID): $STATE"
+vlog_step "9" "Create mDL Auth Request" "POST" "$VERIFIER_API/openid4vc/verify" \
+  '{"openid_profile":"ISO_18013_7_MDOC","request_credentials":[{"id":"mDL-request"}]}' \
+  "$AUTH_REQUEST"
 
 # ── Step 10: Match Credentials for Presentation Definition ───────────────────
 step "10" "Match Credentials for Presentation Definition"
@@ -267,6 +319,10 @@ if [[ -z "$CRED_ID" ]]; then
   CRED_ID="$CLAIMED_CRED_ID"
 fi
 ok "Using credential ID: $CRED_ID"
+vlog_step "10a" "Fetch JAR JWT (Request Object)" "GET" "$REQUEST_URI_LOCAL" "" "$REQUEST_JWT"
+vlog_step "10b" "Match Credentials for PD" "POST" \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/matchCredentialsForPresentationDefinition" \
+  "$PRESENTATION_DEF" "${MATCHING_CREDS:-}"
 
 # ── Step 11: Resolve Presentation Request ────────────────────────────────────
 step "11" "Resolve Presentation Request"
@@ -279,6 +335,9 @@ RESOLVED_REQUEST=$(curl -s -X POST \
   -H "authorization: Bearer $TOKEN" \
   --data-raw "$AUTH_REQUEST_FIXED")
 info "Resolved: ${RESOLVED_REQUEST:0:80}..."
+vlog_step "11" "Resolve Presentation Request" "POST" \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/resolvePresentationRequest" \
+  "$AUTH_REQUEST_FIXED" "$RESOLVED_REQUEST"
 
 # ── Step 12: Fulfill mDL Presentation Request ────────────────────────────────
 step "12" "Fulfill mDL Presentation Request (usePresentationRequest)"
@@ -294,6 +353,9 @@ PRESENT_RESPONSE=$(curl -s -X POST \
   -H "authorization: Bearer $TOKEN" \
   -d "$PRESENT_PAYLOAD")
 echo "$PRESENT_RESPONSE" | jq . 2>/dev/null || echo "$PRESENT_RESPONSE"
+vlog_step "12" "Fulfill mDL Presentation Request" "POST" \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/usePresentationRequest" \
+  "$PRESENT_PAYLOAD" "$PRESENT_RESPONSE"
 
 # ── Step 13: Verify mDL Presentation ─────────────────────────────────────────
 step "13" "Verify mDL Presentation"
@@ -301,7 +363,17 @@ VERIFICATION=$(curl -s -X GET "$VERIFIER_API/openid4vc/session/$STATE" \
   -H 'accept: */*')
 echo "$VERIFICATION" | jq .
 VERIFY_RESULT=$(echo "$VERIFICATION" | jq -r '.verificationResult // empty')
+vlog_step "13" "Check Verification Result" "GET" "$VERIFIER_API/openid4vc/session/$STATE" \
+  "" "$VERIFICATION"
 [[ "$VERIFY_RESULT" == "true" ]] && ok "Verification SUCCESS" || fail "Verification failed: $VERIFY_RESULT"
 
 # ── Done ─────────────────────────────────────────────────────────────────────
+if $VERBOSE; then
+  _VLOG_DIR="$(dirname "${BASH_SOURCE[0]}")/demo"
+  mkdir -p "$_VLOG_DIR"
+  _VLOG_OUT="$_VLOG_DIR/mdoc-steps.json"
+  jq -s '.' "$_VLOG_TMP" > "$_VLOG_OUT"
+  ok "Verbose step data written to: $_VLOG_OUT"
+fi
+rm -f "$_VLOG_TMP"
 echo -e "\n${BOLD}${GREEN}All steps completed.${NC}"
