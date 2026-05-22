@@ -10,6 +10,7 @@ set -euo pipefail
 
 WALLET_API="http://localhost:7001/wallet-api"
 ISSUER_API="http://localhost:7002"
+VERIFIER_API="http://localhost:7003"
 
 EMAIL="${1:-test@email.com}"
 PASSWORD="${2:-test}"
@@ -151,6 +152,76 @@ CREDENTIAL_RESPONSE=$(curl -s -X POST \
   -d "$OFFER_URI_FIXED")
 
 echo "$CREDENTIAL_RESPONSE" | jq . 2>/dev/null || echo "$CREDENTIAL_RESPONSE"
+
+# ── Step 11: Create Authorization Request ───────────────────────────────────
+step "11" "Create Authorization Request (Verifier)"
+AUTH_REQUEST=$(curl -s -X POST "$VERIFIER_API/openid4vc/verify" \
+  -H 'accept: */*' \
+  -H 'authorizeBaseUrl: openid4vp://authorize' \
+  -H 'responseMode: direct_post' \
+  -H 'Content-Type: application/json' \
+  -d '{"request_credentials": [{"type": "UniversityDegree", "format": "jwt_vc_json"}]}')
+ok "Auth request: ${AUTH_REQUEST:0:80}..."
+
+STATE=$(echo "$AUTH_REQUEST" | grep -oE 'state=[^&]+' | head -1 | cut -d= -f2)
+[[ -n "$STATE" ]] || fail "Could not extract state from auth request: $AUTH_REQUEST"
+info "State: $STATE"
+
+# ── Step 12: Match Credentials for Presentation Definition ──────────────────
+step "12" "Match Credentials for Presentation Definition"
+PD_URI_ENC=$(echo "$AUTH_REQUEST" | grep -oE 'presentation_definition_uri=[^&]+' | cut -d= -f2-)
+PD_URI=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))" "$PD_URI_ENC")
+PD_URI=$(echo "$PD_URI" | sed 's/host\.docker\.internal/localhost/g')
+info "Presentation definition URI: $PD_URI"
+
+PRESENTATION_DEF=$(curl -s "$PD_URI")
+echo "$PRESENTATION_DEF" | jq .
+
+MATCHING_CREDS=$(curl -s -X POST \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/matchCredentialsForPresentationDefinition" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -H "authorization: Bearer $TOKEN" \
+  -d "$PRESENTATION_DEF")
+echo "$MATCHING_CREDS" | jq .
+CRED_ID=$(echo "$MATCHING_CREDS" | jq -r '.[0].id // empty')
+[[ -n "$CRED_ID" ]] || fail "No matching credentials found: $MATCHING_CREDS"
+ok "Matching credential ID: $CRED_ID"
+
+# ── Step 13: Resolve Presentation Request ───────────────────────────────────
+step "13" "Resolve Presentation Request"
+AUTH_REQUEST_FIXED=$(echo "$AUTH_REQUEST" | sed 's/localhost/host.docker.internal/g')
+
+RESOLVED_REQUEST=$(curl -s -X POST \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/resolvePresentationRequest" \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: text/plain' \
+  -H "authorization: Bearer $TOKEN" \
+  --data-raw "$AUTH_REQUEST_FIXED")
+info "Resolved: ${RESOLVED_REQUEST:0:80}..."
+
+# ── Step 14: Fulfill Presentation Request ───────────────────────────────────
+step "14" "Fulfill Presentation Request (usePresentationRequest)"
+PRESENT_PAYLOAD=$(jq -n \
+  --arg pr "$RESOLVED_REQUEST" \
+  --arg cid "$CRED_ID" \
+  '{"presentationRequest": $pr, "selectedCredentials": [$cid]}')
+
+PRESENT_RESPONSE=$(curl -s -X POST \
+  "$WALLET_API/wallet/$WALLET_ID/exchange/usePresentationRequest" \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -H "authorization: Bearer $TOKEN" \
+  -d "$PRESENT_PAYLOAD")
+echo "$PRESENT_RESPONSE" | jq . 2>/dev/null || echo "$PRESENT_RESPONSE"
+
+# ── Step 15: Verify Credential Presentation ─────────────────────────────────
+step "15" "Verify Credential Presentation"
+VERIFICATION=$(curl -s -X GET "$VERIFIER_API/openid4vc/session/$STATE" \
+  -H 'accept: */*')
+echo "$VERIFICATION" | jq .
+VERIFY_RESULT=$(echo "$VERIFICATION" | jq -r '.verificationResult // empty')
+[[ "$VERIFY_RESULT" == "true" ]] && ok "Verification SUCCESS" || fail "Verification failed: $VERIFY_RESULT"
 
 # ── Done ─────────────────────────────────────────────────────────────────────
 echo -e "\n${BOLD}${GREEN}All steps completed.${NC}"
