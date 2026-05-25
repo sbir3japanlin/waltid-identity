@@ -18,18 +18,89 @@
 
 ## Flow Overview
 
+```mermaid
+sequenceDiagram
+    actor User
+    participant W as Wallet API<br/>:7001
+    participant I as Issuer API<br/>:7002
+    participant V as Verifier API<br/>:7003
+
+    rect rgb(230, 240, 255)
+        note over User,W: Setup — Steps 0–4
+        User->>W: POST /auth/register (email, password)
+        W-->>User: 200 OK / 409 already exists
+        User->>W: POST /auth/login
+        W-->>User: JWT Bearer token
+        User->>W: GET /wallet/accounts/wallets
+        W-->>User: wallet_id
+        User->>W: GET /wallet/{id}/keys
+        W-->>User: secp256r1 key_id
+        User->>W: GET /wallet/{id}/dids
+        W-->>User: did:jwk (holder DID)
+    end
+
+    rect rgb(230, 255, 235)
+        note over User,I: Issuance — Steps 5–10 (OID4VCI pre-authorized)
+        User->>I: GET /.well-known/openid-configuration
+        I-->>User: credential_configurations_supported
+        User->>I: POST /onboard/issuer {keyType: secp256r1}
+        I-->>User: issuerKey + issuerDid
+        User->>I: POST /openid4vc/sdjwt/issue\n(credentialData, selectiveDisclosure)
+        I-->>User: openid-credential-offer:// URI
+        note right of I: birthdate & family_name → _sd hashes<br/>given_name → plaintext in JWT
+        User->>I: GET /draft13/credentialOffer?id=...
+        I-->>User: {credential_configuration_ids, pre-authorized_code}
+        User->>W: POST /exchange/useOfferRequest (offer URI)
+        W->>I: token exchange (pre-auth code → access token)
+        W->>I: POST /draft13/credential
+        I-->>W: SD-JWT VC
+        W-->>User: stored credential (id, document, disclosures)
+    end
+
+    rect rgb(255, 245, 220)
+        note over User,V: Verification — Steps 11–15 (OID4VP + Presentation Exchange)
+        User->>V: POST /openid4vc/verify\n(request birthdate + given_name)
+        V-->>User: openid4vp://authorize?...&state=S
+        User->>V: GET /openid4vc/pd/{id}
+        V-->>User: Presentation Definition
+        User->>W: POST /exchange/matchCredentialsForPresentationDefinition
+        W-->>User: matching credential list
+        User->>W: POST /exchange/resolvePresentationRequest (openid4vp URI)
+        W-->>User: resolved request object
+        User->>W: POST /exchange/usePresentationRequest\n(presentationRequest, selectedCredentials)
+        note right of W: Discloses: birthdate + given_name<br/>Withholds: family_name<br/>Signs KB-JWT with holder key
+        W->>V: POST response_uri (vp_token, presentation_submission)
+        V-->>W: 200 OK
+        User->>V: GET /openid4vc/session/{state}
+        V-->>User: verificationResult: true ✓
+    end
 ```
-Register/Login → Get Wallet → Get Key/DID
-     ↓
-Onboard Issuer → Create SD-JWT VC Offer (OID4VCI pre-auth)
-     ↓
-Wallet claims credential via useOfferRequest
-     ↓
-Verifier creates OID4VP Authorization Request
-     ↓
-Wallet matches → resolves → presents (selective disclosure)
-     ↓
-Verifier checks session → verificationResult: true
+
+---
+
+## Selective Disclosure Detail
+
+```mermaid
+flowchart LR
+    subgraph SD-JWT VC Token
+        direction TB
+        JWT["JWT Body (always visible)\n──────────────────\ngiven_name: John\nemail: johndoe@example.com\nphone_number: +1-202-555-0101\naddress: {...}\nis_over_18: true\nis_over_21: true\nis_over_65: true\n──────────────────\n_sd: [hash1, hash2]\ncnf.jwk: holder public key\nvct, iss, iat, nbf, exp"]
+        D1["Disclosure 1\n[salt, 'family_name', 'Doe']"]
+        D2["Disclosure 2\n[salt, 'birthdate', '1940-01-01']"]
+    end
+
+    subgraph Presentation to Verifier
+        direction TB
+        P1["JWT Body\n(unchanged)"]
+        P2["Disclosure: birthdate ✓\n(requested by verifier)"]
+        P3["given_name always visible ✓"]
+        P4["family_name omitted ✗\n(not requested)"]
+        KB["KB-JWT\n(signed by holder key)\naud, nonce, sd_hash"]
+    end
+
+    JWT -->|"include only requested disclosures"| P1
+    D2 -->|"revealed"| P2
+    D1 -.->|"withheld"| P4
 ```
 
 ---
