@@ -20,59 +20,63 @@
 
 ```mermaid
 sequenceDiagram
-    participant User
+    actor User
     participant W as Wallet API :7001
     participant I as Issuer API :7002
     participant V as Verifier API :7003
 
-    Note over User,W: SETUP Steps 0-4
-    User->>W: POST /auth/register
-    W-->>User: 200 OK or 409 already exists
-    User->>W: POST /auth/login
-    W-->>User: JWT Bearer token
-    User->>W: GET /wallet/accounts/wallets
-    W-->>User: wallet_id
-    User->>W: GET /wallet/id/keys
-    W-->>User: secp256r1 key_id
-    User->>W: GET /wallet/id/dids
-    W-->>User: did:jwk holder DID
+    rect rgb(220, 235, 255)
+        Note over User,W: SETUP (Steps 0-4)
+        User->>W: POST /auth/register
+        W-->>User: 200 OK or 409 already exists
+        User->>W: POST /auth/login
+        W-->>User: JWT Bearer token
+        User->>W: GET /wallet/accounts/wallets
+        W-->>User: wallet_id
+        User->>W: GET /wallet/{id}/keys
+        W-->>User: secp256r1 key_id
+        User->>W: GET /wallet/{id}/dids
+        W-->>User: did:jwk (holder DID)
+    end
 
-    Note over User,I: ISSUANCE Steps 5-10 - OID4VCI pre-authorized
-    User->>I: GET /.well-known/openid-configuration
-    I-->>User: credential_configurations_supported
-    User->>I: POST /onboard/issuer
-    I-->>User: issuerKey + issuerDid
-    User->>I: POST /openid4vc/sdjwt/issue
-    Note right of I: birthdate and family_name become _sd hashes
-    Note right of I: given_name stays plaintext in JWT body
-    I-->>User: openid-credential-offer URI
-    User->>I: GET /draft13/credentialOffer?id=...
-    I-->>User: pre-authorized_code
-    User->>W: POST /exchange/useOfferRequest
-    W->>I: exchange pre-auth code for access token
-    W->>I: POST /draft13/credential
-    I-->>W: SD-JWT VC
-    W-->>User: stored credential id + document + disclosures
+    rect rgb(220, 255, 230)
+        Note over User,I: ISSUANCE (Steps 5-10) - OID4VCI pre-authorized
+        User->>I: GET /.well-known/openid-configuration
+        I-->>User: credential_configurations_supported
+        User->>I: POST /onboard/issuer
+        I-->>User: issuerKey + issuerDid
+        User->>I: POST /openid4vc/sdjwt/issue
+        Note right of I: birthdate and family_name become _sd hashes
+        Note right of I: given_name stays plaintext in JWT body
+        I-->>User: openid-credential-offer:// URI
+        User->>I: GET /draft13/credentialOffer?id=...
+        I-->>User: pre-authorized_code
+        User->>W: POST /exchange/useOfferRequest
+        W->>I: exchange pre-auth code for access token
+        W->>I: POST /draft13/credential
+        I-->>W: SD-JWT VC
+        W-->>User: stored credential (id, document, disclosures)
+    end
 
-    Note over User,V: VERIFICATION Steps 11-15 - OID4VP + Presentation Exchange
-    User->>V: POST /openid4vc/verify - request birthdate and given_name
-    V-->>User: openid4vp://authorize URI + state
-    User->>V: GET /openid4vc/pd/id
-    V-->>User: Presentation Definition
-    User->>W: POST /exchange/matchCredentialsForPresentationDefinition
-    W-->>User: matching credentials
-    User->>W: POST /exchange/resolvePresentationRequest
-    W-->>User: resolved request object
-    User->>W: POST /exchange/usePresentationRequest
-    Note right of W: Reveals birthdate + given_name only
-    Note right of W: Withholds family_name
-    Note right of W: Signs KB-JWT with holder key
-    W->>V: POST response_uri with vp_token
-    V-->>W: 200 OK
-    User->>V: GET /openid4vc/session/state
-    V-->>User: verificationResult true
-
-    Note over User,W: END
+    rect rgb(255, 245, 210)
+        Note over User,V: VERIFICATION (Steps 11-15) - OID4VP + Presentation Exchange
+        User->>V: POST /openid4vc/verify
+        V-->>User: openid4vp://authorize URI + state
+        User->>V: GET /openid4vc/pd/{id}
+        V-->>User: Presentation Definition
+        User->>W: POST /exchange/matchCredentialsForPresentationDefinition
+        W-->>User: matching credentials
+        User->>W: POST /exchange/resolvePresentationRequest
+        W-->>User: resolved request object
+        User->>W: POST /exchange/usePresentationRequest
+        Note right of W: Reveals: birthdate + given_name only
+        Note right of W: Withholds: family_name
+        Note right of W: Signs KB-JWT with holder key
+        W->>V: POST response_uri (vp_token)
+        V-->>W: 200 OK
+        User->>V: GET /openid4vc/session/{state}
+        V-->>User: verificationResult: true
+    end
 ```
 
 ---
@@ -80,19 +84,21 @@ sequenceDiagram
 ## Selective Disclosure Detail
 
 ```mermaid
-graph LR
+flowchart LR
     subgraph TOKEN[SD-JWT VC Token stored in wallet]
-        JWT[JWT Body: given_name email phone address is_over_18 id iat exp vct iss cnf.jwk _sd-hashes]
-        D1[Disclosure 1: salt + family_name + Doe]
-        D2[Disclosure 2: salt + birthdate + 1940-01-01]
+        direction TB
+        JWT["JWT Body - always visible:\ngiven_name, email, phone,\naddress, is_over_18/21/65,\nid, iat, nbf, exp, vct, iss,\ncnf.jwk - holder public key,\n_sd - hashes of hidden claims"]
+        D1["Disclosure 1:\nsalt + family_name + Doe"]
+        D2["Disclosure 2:\nsalt + birthdate + 1940-01-01"]
     end
 
     subgraph VP[Verifiable Presentation sent to verifier]
+        direction TB
         P1[JWT Body unchanged]
-        P2[birthdate disclosed]
-        P3[given_name visible always in JWT]
-        P4[family_name withheld]
-        KB[KB-JWT signed by holder key]
+        P2[birthdate - disclosed]
+        P3[given_name - always visible]
+        P4[family_name - withheld]
+        KB["KB-JWT signed by holder key:\naud + nonce + sd_hash"]
     end
 
     JWT -->|copied as-is| P1
