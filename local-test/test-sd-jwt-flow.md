@@ -20,7 +20,7 @@
 
 ```mermaid
 sequenceDiagram
-    actor User
+    participant User
     participant W as Wallet API :7001
     participant I as Issuer API :7002
     participant V as Verifier API :7003
@@ -80,26 +80,24 @@ sequenceDiagram
 ## Selective Disclosure Detail
 
 ```mermaid
-flowchart LR
-    subgraph TOKEN["SD-JWT VC Token (stored in wallet)"]
-        direction TB
-        JWT["JWT Body - always visible claims:\ngiven_name, email, phone_number,\naddress, is_over_18/21/65,\nid, iat, nbf, exp, vct, iss,\ncnf.jwk - holder public key,\n_sd - hashes of hidden claims"]
-        D1["Disclosure 1:\nsalt + family_name + Doe"]
-        D2["Disclosure 2:\nsalt + birthdate + 1940-01-01"]
+graph LR
+    subgraph TOKEN[SD-JWT VC Token stored in wallet]
+        JWT[JWT Body: given_name email phone address is_over_18 id iat exp vct iss cnf.jwk _sd-hashes]
+        D1[Disclosure 1: salt + family_name + Doe]
+        D2[Disclosure 2: salt + birthdate + 1940-01-01]
     end
 
-    subgraph VP["Verifiable Presentation (sent to verifier)"]
-        direction TB
-        P1["JWT Body - unchanged"]
-        P2["birthdate disclosed - requested by verifier"]
-        P3["given_name visible - always in JWT body"]
-        P4["family_name withheld - not requested"]
-        KB["KB-JWT - signed by holder key\ncontains: aud, nonce, sd_hash"]
+    subgraph VP[Verifiable Presentation sent to verifier]
+        P1[JWT Body unchanged]
+        P2[birthdate disclosed]
+        P3[given_name visible always in JWT]
+        P4[family_name withheld]
+        KB[KB-JWT signed by holder key]
     end
 
-    JWT -->|"copied as-is"| P1
-    D2 -->|"included"| P2
-    D1 -.->|"omitted"| P4
+    JWT -->|copied as-is| P1
+    D2 -->|included| P2
+    D1 -.->|omitted| P4
     P1 --- KB
 ```
 
