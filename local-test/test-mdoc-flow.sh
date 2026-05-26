@@ -28,6 +28,8 @@ _VLOG_TMP=$(mktemp)
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
+# Disable colors when stdout is not a terminal (e.g. redirected to a file)
+[ -t 1 ] || { RED=''; GREEN=''; YELLOW=''; CYAN=''; BOLD=''; NC=''; }
 
 step() { echo -e "\n${BOLD}${CYAN}=== Step $1: $2 ===${NC}"; }
 ok()   { echo -e "${GREEN}✓${NC} $1"; }
@@ -40,10 +42,10 @@ vlog_step() {
   echo -e "\n${YELLOW}  ┌── Step $_s ─── $_m $_u${NC}"
   if [[ -n "$_req" ]]; then
     echo -e "${YELLOW}  │  REQUEST:${NC}"
-    ( echo "$_req" | jq -C . 2>/dev/null || echo "$_req" ) | head -50 | sed 's/^/  │   /'
+    ( echo "$_req" | jq . 2>/dev/null || echo "$_req" ) | head -50 | sed 's/^/  │   /'
   fi
   echo -e "${YELLOW}  │  RESPONSE:${NC}"
-  ( echo "$_res" | jq -C . 2>/dev/null || echo "$_res" ) | head -60 | sed 's/^/  │   /'
+  ( echo "$_res" | jq . 2>/dev/null || echo "$_res" ) | head -60 | sed 's/^/  │   /'
   echo -e "${YELLOW}  └──${NC}"
   jq -cn --arg s "$_s" --arg t "$_t" --arg m "$_m" --arg u "$_u" \
          --arg req "$_req" --arg res "$_res" \
