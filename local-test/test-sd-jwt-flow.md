@@ -2,7 +2,8 @@
 
 **Script:** `test-sd-jwt-flow.sh`  
 **Spec:** IETF SD-JWT VC (draft-ietf-oauth-sd-jwt-vc), OID4VCI (pre-authorized code), OID4VP (Presentation Exchange)  
-**Run command:** `./test-sd-jwt-flow.sh [--verbose|-v] [email] [password]`
+**Run command:** `./test-sd-jwt-flow.sh [--verbose|-v] [email] [password]`  
+**Log file:** `test-sd-jwt-flow.log` — captured with `./test-sd-jwt-flow.sh --verbose > test-sd-jwt-flow.log 2>&1`
 
 ---
 
@@ -757,6 +758,14 @@ Run with `--verbose` or `-v` to enable per-step request/response logging:
 ```bash
 ./test-sd-jwt-flow.sh --verbose
 ```
+
+To capture all output to a plain-text log file:
+
+```bash
+./test-sd-jwt-flow.sh --verbose > test-sd-jwt-flow.log 2>&1
+```
+
+> Colors are automatically disabled when stdout is redirected, so the log file contains clean plain text.
 
 Each step prints:
 ```

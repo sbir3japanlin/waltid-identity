@@ -42,10 +42,10 @@ vlog_step() {
   echo -e "\n${YELLOW}  ┌── Step $_s ─── $_m $_u${NC}"
   if [[ -n "$_req" ]]; then
     echo -e "${YELLOW}  │  REQUEST:${NC}"
-    ( echo "$_req" | jq . 2>/dev/null || echo "$_req" ) | head -50 | sed 's/^/  │   /'
+    ( echo "$_req" | jq . 2>/dev/null || echo "$_req" ) | head -50 | sed 's/^/  │   /' || true
   fi
   echo -e "${YELLOW}  │  RESPONSE:${NC}"
-  ( echo "$_res" | jq . 2>/dev/null || echo "$_res" ) | head -60 | sed 's/^/  │   /'
+  ( echo "$_res" | jq . 2>/dev/null || echo "$_res" ) | head -60 | sed 's/^/  │   /' || true
   echo -e "${YELLOW}  └──${NC}"
   jq -cn --arg s "$_s" --arg t "$_t" --arg m "$_m" --arg u "$_u" \
          --arg req "$_req" --arg res "$_res" \

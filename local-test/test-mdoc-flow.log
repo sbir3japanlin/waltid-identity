@@ -1,0 +1,2285 @@
+
+=== Step 0: Register account (test@email.com) ===
+→ Registration returned HTTP 409 — account may already exist, continuing...
+
+  ┌── Step 0 ─── POST http://localhost:7001/wallet-api/auth/register
+  │  REQUEST:
+  │   {
+  │     "type": "email",
+  │     "name": "Test",
+  │     "email": "test@email.com",
+  │     "password": "test"
+  │   }
+  │  RESPONSE:
+  │   HTTP 409
+  └──
+
+=== Step 1: Login ===
+✓ Token: eyJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3Nzk3NjM0ODYsImV4c...
+
+  ┌── Step 1 ─── POST http://localhost:7001/wallet-api/auth/login
+  │  REQUEST:
+  │   {
+  │     "type": "email",
+  │     "email": "test@email.com",
+  │     "password": "test"
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "id": "c798f9a8-32e1-40ec-b75a-67c3e21e332f",
+  │     "token": "eyJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3Nzk3NjM0ODYsImV4cCI6MTc4MjM1NTQ4NiwiaWF0IjoxNzc5NzYzNDg2LCJqdGkiOiIyYjliMjIwYS00OWZhLTQ1MmYtOGQ0NS04MjBkMzBhZGQ0MmUiLCJpc3MiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6NzAwMSIsImF1ZCI6Imh0dHA6Ly9ob3N0LmRvY2tlci5pbnRlcm5hbDo3MDAxIiwic3ViIjoiYzc5OGY5YTgtMzJlMS00MGVjLWI3NWEtNjdjM2UyMWUzMzJmIn0.uTaQuBxHkLlXeAvw3FbSIQmERGk5_hrfAFZUcpR1tVQ",
+  │     "username": "test@email.com"
+  │   }
+  └──
+
+=== Step 2: Retrieve Wallet ID ===
+✓ Wallet ID: c3419873-07be-419c-89ad-0b7a352f2d70
+
+  ┌── Step 2 ─── GET http://localhost:7001/wallet-api/wallet/accounts/wallets
+  │  RESPONSE:
+  │   {
+  │     "account": "c798f9a8-32e1-40ec-b75a-67c3e21e332f",
+  │     "wallets": [
+  │       {
+  │         "id": "c3419873-07be-419c-89ad-0b7a352f2d70",
+  │         "name": "Wallet of Test",
+  │         "createdOn": "2026-05-22T05:26:11.760032Z",
+  │         "addedOn": "2026-05-22T05:26:11.762275Z",
+  │         "permission": "ADMINISTRATE"
+  │       }
+  │     ]
+  │   }
+  └──
+
+=== Step 3: Create IACA (Issuing Authority Certification Authority) certificate ===
+{
+  "commonName": "Test IACA",
+  "notBefore": "2026-05-26T02:44:46Z",
+  "notAfter": "2046-05-21T02:44:46Z"
+}
+✓ IACA certificate created
+
+  ┌── Step 3 ─── POST http://localhost:7002/onboard/iso-mdl/iacas
+  │  REQUEST:
+  │   {
+  │     "certificateData": {
+  │       "country": "US",
+  │       "commonName": "Test IACA"
+  │     }
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "iacaKey": {
+  │       "type": "jwk",
+  │       "jwk": {
+  │         "kty": "EC",
+  │         "d": "XB_ncKmiUDa5VpVpcJ3IY8c79KdgqzYR6FbL8xbgefI",
+  │         "crv": "P-256",
+  │         "kid": "t_CmUsW3IxG9koNLSHujbrA-RhlO_XTt8f-0614GPn4",
+  │         "x": "sziXR9sl5aVbxQeRN5EK_zAZ15kPXXkDSDMzoBMeAE8",
+  │         "y": "3HrWRfHgD0d25b2b0oP3WV2uU8MfN7ABuo_cv79Id-k"
+  │       }
+  │     },
+  │     "certificatePEM": "-----BEGIN CERTIFICATE-----\r\nMIIBrjCCAVSgAwIBAgIUBYkaCIoB6OBJKLft4icP2Y+hp2IwCgYIKoZIzj0EAwIw\r\nITELMAkGA1UEBhMCVVMxEjAQBgNVBAMMCVRlc3QgSUFDQTAeFw0yNjA1MjYwMjQ0\r\nNDZaFw00NjA1MjEwMjQ0NDZaMCExCzAJBgNVBAYTAlVTMRIwEAYDVQQDDAlUZXN0\r\nIElBQ0EwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASzOJdH2yXlpVvFB5E3kQr/\r\nMBnXmQ9deQNIMzOgEx4AT9x61kXx4A9HduW9m9KD91ldrlPDHzewAbqP3L+/SHfp\r\no2owaDAdBgNVHQ4EFgQUFpxh7Nc/i0Ui00rHYvkzdOjuNxAwEgYDVR0TAQH/BAgw\r\nBgEB/wIBADAjBgNVHRIEHDAahhhodHRwczovL2lhY2EuZXhhbXBsZS5jb20wDgYD\r\nVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMCA0gAMEUCIQCGt60Yt6tbC1qvuOERowa8\r\nRdwQxnhvZD+v1HrDc+F5owIgA5IYI1jQWpjbKrZ2Ff1wYAhfdKZ3YiTo1ekfY2cC\r\nA4g=\r\n-----END CERTIFICATE-----",
+  │     "certificateData": {
+  │       "country": "US",
+  │       "commonName": "Test IACA",
+  │       "notBefore": "2026-05-26T02:44:46Z",
+  │       "notAfter": "2046-05-21T02:44:46Z",
+  │       "issuerAlternativeNameConf": {
+  │         "uri": "https://iaca.example.com"
+  │       }
+  │     }
+  │   }
+  └──
+
+=== Step 4: Create Document Signer (DS) certificate ===
+{
+  "commonName": "Test DS",
+  "notBefore": "2026-05-26T02:44:47Z",
+  "notAfter": "2027-08-26T02:44:47Z"
+}
+✓ Document signer certificate created
+
+  ┌── Step 4 ─── POST http://localhost:7002/onboard/iso-mdl/document-signers
+  │  REQUEST:
+  │   {
+  │     "iacaSigner": {
+  │       "iacaKey": {
+  │         "type": "jwk",
+  │         "jwk": {
+  │           "kty": "EC",
+  │           "d": "XB_ncKmiUDa5VpVpcJ3IY8c79KdgqzYR6FbL8xbgefI",
+  │           "crv": "P-256",
+  │           "kid": "t_CmUsW3IxG9koNLSHujbrA-RhlO_XTt8f-0614GPn4",
+  │           "x": "sziXR9sl5aVbxQeRN5EK_zAZ15kPXXkDSDMzoBMeAE8",
+  │           "y": "3HrWRfHgD0d25b2b0oP3WV2uU8MfN7ABuo_cv79Id-k"
+  │         }
+  │       },
+  │       "certificateData": {
+  │         "country": "US",
+  │         "commonName": "Test IACA",
+  │         "notBefore": "2026-05-26T02:44:46Z",
+  │         "notAfter": "2046-05-21T02:44:46Z",
+  │         "issuerAlternativeNameConf": {
+  │           "uri": "https://iaca.example.com"
+  │         }
+  │       }
+  │     },
+  │     "certificateData": {
+  │       "country": "US",
+  │       "commonName": "Test DS",
+  │       "crlDistributionPointUri": "https://iaca.example.com/crl"
+  │     }
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "documentSignerKey": {
+  │       "type": "jwk",
+  │       "jwk": {
+  │         "kty": "EC",
+  │         "d": "UxmzAka7XTeAOwQTrCJdNGx1kZ-KlIBll4dBwjQee3Y",
+  │         "crv": "P-256",
+  │         "kid": "tUuj3Ai-eRQ_uA6qTb8qBopDfZuy2ESQKDIaI71FqKU",
+  │         "x": "XnOLKIpLeDyVOK6H0gvW4EpVQBBE_cjMQTIn3IWV1Yo",
+  │         "y": "rlTGCoEoWRB7inL8f4IgS7fEQMQiVt9EulFiYXqSmcM"
+  │       }
+  │     },
+  │     "certificatePEM": "-----BEGIN CERTIFICATE-----\r\nMIICATCCAaegAwIBAgIUU7+T3z0mqhBqKeFkHw4zB7uMz+owCgYIKoZIzj0EAwIw\r\nITELMAkGA1UEBhMCVVMxEjAQBgNVBAMMCVRlc3QgSUFDQTAeFw0yNjA1MjYwMjQ0\r\nNDdaFw0yNzA4MjYwMjQ0NDdaMB8xCzAJBgNVBAYTAlVTMRAwDgYDVQQDDAdUZXN0\r\nIERTMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXnOLKIpLeDyVOK6H0gvW4EpV\r\nQBBE/cjMQTIn3IWV1YquVMYKgShZEHuKcvx/giBLt8RAxCJW30S6UWJhepKZw6OB\r\nvjCBuzAfBgNVHSMEGDAWgBQWnGHs1z+LRSLTSsdi+TN06O43EDAdBgNVHQ4EFgQU\r\nJfB0/CpkgoLV0YFCvae3gGvcEUEwDgYDVR0PAQH/BAQDAgeAMCMGA1UdEgQcMBqG\r\nGGh0dHBzOi8vaWFjYS5leGFtcGxlLmNvbTAVBgNVHSUBAf8ECzAJBgcogYxdBQEC\r\nMC0GA1UdHwQmMCQwIqAgoB6GHGh0dHBzOi8vaWFjYS5leGFtcGxlLmNvbS9jcmww\r\nCgYIKoZIzj0EAwIDSAAwRQIhAJyz9niJImYxbtWQrl1YBKAVXAgKq3RV1luh0WcF\r\npJ9AAiAXDqsweQEipFZPwEB5aDEb5JiyOhrmHVg0JxLqkB5cbw==\r\n-----END CERTIFICATE-----",
+  │     "certificateData": {
+  │       "country": "US",
+  │       "commonName": "Test DS",
+  │       "notBefore": "2026-05-26T02:44:47Z",
+  │       "notAfter": "2027-08-26T02:44:47Z",
+  │       "crlDistributionPointUri": "https://iaca.example.com/crl"
+  │     }
+  │   }
+  └──
+
+=== Step 5: Retrieve Issuer well-known config ===
+{
+  "issuer": "http://host.docker.internal:7002/draft13",
+  "authorization_endpoint": "http://host.docker.internal:7002/draft13/authorize",
+  "token_endpoint": "http://host.docker.internal:7002/draft13/token",
+  "jwks_uri": "http://host.docker.internal:7002/draft13/jwks",
+  "scopes_supported": [
+    "openid",
+    "org.iso.23220.photoid.1"
+  ],
+  "response_types_supported": [
+    "code",
+    "vp_token",
+    "id_token"
+  ],
+  "response_modes_supported": [
+    "query",
+    "fragment"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "ES256"
+  ],
+  "code_challenge_methods_supported": [
+    "S256"
+  ],
+  "credential_issuer": "http://host.docker.internal:7002/draft13",
+  "credential_endpoint": "http://host.docker.internal:7002/draft13/credential",
+  "batch_credential_endpoint": "http://host.docker.internal:7002/draft13/batch_credential",
+  "deferred_credential_endpoint": "http://host.docker.internal:7002/draft13/credential_deferred",
+  "authorization_servers": [
+    "http://host.docker.internal:7002/draft13"
+  ]
+}
+
+  ┌── Step 5 ─── GET http://localhost:7002/draft13/.well-known/openid-configuration
+  │  RESPONSE:
+  │   {
+  │     "issuer": "http://host.docker.internal:7002/draft13",
+  │     "authorization_endpoint": "http://host.docker.internal:7002/draft13/authorize",
+  │     "token_endpoint": "http://host.docker.internal:7002/draft13/token",
+  │     "jwks_uri": "http://host.docker.internal:7002/draft13/jwks",
+  │     "scopes_supported": [
+  │       "openid",
+  │       "org.iso.23220.photoid.1"
+  │     ],
+  │     "response_types_supported": [
+  │       "code",
+  │       "vp_token",
+  │       "id_token"
+  │     ],
+  │     "response_modes_supported": [
+  │       "query",
+  │       "fragment"
+  │     ],
+  │     "grant_types_supported": [
+  │       "authorization_code",
+  │       "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+  │     ],
+  │     "subject_types_supported": [
+  │       "public"
+  │     ],
+  │     "id_token_signing_alg_values_supported": [
+  │       "ES256"
+  │     ],
+  │     "code_challenge_methods_supported": [
+  │       "S256"
+  │     ],
+  │     "credential_issuer": "http://host.docker.internal:7002/draft13",
+  │     "credential_endpoint": "http://host.docker.internal:7002/draft13/credential",
+  │     "batch_credential_endpoint": "http://host.docker.internal:7002/draft13/batch_credential",
+  │     "deferred_credential_endpoint": "http://host.docker.internal:7002/draft13/credential_deferred",
+  │     "authorization_servers": [
+  │       "http://host.docker.internal:7002/draft13"
+  │     ]
+  │   }
+  └──
+
+=== Step 6: Create mDL Credential Offer ===
+✓ Raw offer URI: openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.interna...
+
+  ┌── Step 6 ─── POST http://localhost:7002/openid4vc/mdoc/issue
+  │  REQUEST:
+  │   {
+  │     "issuerKey": {
+  │       "type": "jwk",
+  │       "jwk": {
+  │         "kty": "EC",
+  │         "d": "UxmzAka7XTeAOwQTrCJdNGx1kZ-KlIBll4dBwjQee3Y",
+  │         "crv": "P-256",
+  │         "kid": "tUuj3Ai-eRQ_uA6qTb8qBopDfZuy2ESQKDIaI71FqKU",
+  │         "x": "XnOLKIpLeDyVOK6H0gvW4EpVQBBE_cjMQTIn3IWV1Yo",
+  │         "y": "rlTGCoEoWRB7inL8f4IgS7fEQMQiVt9EulFiYXqSmcM"
+  │       }
+  │     },
+  │     "credentialConfigurationId": "org.iso.18013.5.1.mDL",
+  │     "mdocData": {
+  │       "org.iso.18013.5.1": {
+  │         "family_name": "Doe",
+  │         "given_name": "John",
+  │         "birth_date": "1986-03-22",
+  │         "issue_date": "2019-10-20",
+  │         "expiry_date": "2030-10-20",
+  │         "issuing_country": "US",
+  │         "issuing_authority": "US DMV",
+  │         "document_number": "123456789",
+  │         "portrait": [
+  │           141,
+  │           182,
+  │           121,
+  │           111,
+  │           238,
+  │           50,
+  │           120,
+  │           94,
+  │           54,
+  │           111,
+  │           113,
+  │           13,
+  │           241,
+  │           12,
+  │           12
+  │         ],
+  │         "driving_privileges": [
+  │           {
+  │             "vehicle_category_code": "B",
+  │             "issue_date": "2019-10-20",
+  │             "expiry_date": "2030-10-20"
+  │           }
+  │         ],
+  │         "un_distinguishing_sign": "USA"
+  │       }
+  │     },
+  │  RESPONSE:
+  │   openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.internal%3A7002%2Fdraft13%2FcredentialOffer%3Fid%3Dcb0ddd30-4a53-49b3-a2b6-3a99eb8499c1
+  └──
+→ Fixed offer URI: openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.interna...
+
+=== Step 7: Inspect offer content ===
+→ Could not extract offer ID from URI, skipping content check
+
+=== Step 8: Claim mDL credential (useOfferRequest) ===
+[
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "20bc83f6-f5c7-4d08-93fc-588d09fa5ddb",
+    "document": "a267646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6c6973737565725369676e6564a26a6e616d65537061636573a1716f72672e69736f2e31383031332e352e318bd8185852a4686469676573744944006672616e646f6d50e09b63dec05a391d0949754225c5406771656c656d656e744964656e7469666965726b66616d696c795f6e616d656c656c656d656e7456616c756563446f65d8185852a4686469676573744944016672616e646f6d507a91dcf82dd766e0184136655c500a2b71656c656d656e744964656e7469666965726a676976656e5f6e616d656c656c656d656e7456616c7565644a6f686ed8185858a4686469676573744944026672616e646f6d50288578e5c68eea29f6cfe8982dd2a9b971656c656d656e744964656e7469666965726a62697274685f646174656c656c656d656e7456616c75656a313938362d30332d3232d8185858a4686469676573744944036672616e646f6d50f500e73cf8587b3766421b111c174e1271656c656d656e744964656e7469666965726a69737375655f646174656c656c656d656e7456616c75656a323031392d31302d3230d8185859a4686469676573744944046672616e646f6d500fefa1e78d770d0165064b1363a3f70b71656c656d656e744964656e7469666965726b6578706972795f646174656c656c656d656e7456616c75656a323033302d31302d3230d8185855a4686469676573744944056672616e646f6d505dc1f5555e309ae63988d94db482fff871656c656d656e744964656e7469666965726f69737375696e675f636f756e7472796c656c656d656e7456616c7565625553d818585ba4686469676573744944066672616e646f6d5058ec1a1c8edef6994e4f1bd73299d78c71656c656d656e744964656e7469666965727169737375696e675f617574686f726974796c656c656d656e7456616c756566555320444d56d818585ca4686469676573744944076672616e646f6d5032df5128330ab579e20d5799da3889fe71656c656d656e744964656e7469666965726f646f63756d656e745f6e756d6265726c656c656d656e7456616c756569313233343536373839d8185867a4686469676573744944086672616e646f6d5057ce17e657242e7aec433c830ed7daac71656c656d656e744964656e74696669657268706f7274726169746c656c656d656e7456616c75658f188d18b61879186f18ee18321878185e1836186f18710d18f10c0cd818589ca4686469676573744944096672616e646f6d501f0ed87b57bc2cbc0659223ec9ab49f071656c656d656e744964656e7469666965727264726976696e675f70726976696c656765736c656c656d656e7456616c756581a37576656869636c655f63617465676f72795f636f646561426a69737375655f646174656a323031392d31302d32306b6578706972795f646174656a323033302d31302d3230d818585da46864696765737449440a6672616e646f6d505229c734e32cb251ad4c6e5354a648da71656c656d656e744964656e74696669657276756e5f64697374696e6775697368696e675f7369676e6c656c656d656e7456616c7565635553416a697373756572417574688443a10126a1182159020530820201308201a7a003020102021453bf93df3d26aa106a29e1641f0e3307bb8ccfea300a06082a8648ce3d0403023021310b30090603550406130255533112301006035504030c09546573742049414341301e170d3236303532363032343434375a170d3237303832363032343434375a301f310b30090603550406130255533110300e06035504030c07546573742044533059301306072a8648ce3d020106082a8648ce3d030107034200045e738b288a4b783c9538ae87d20bd6e04a55401044fdc8cc413227dc8595d58aae54c60a812859107b8a72fc7f82204bb7c440c42256df44ba5162617a9299c3a381be3081bb301f0603551d23041830168014169c61ecd73f8b4522d34ac762f93374e8ee3710301d0603551d0e0416041425f074fc2a648282d5d18142bda7b7806bdc1141300e0603551d0f0101ff04040302078030230603551d12041c301a861868747470733a2f2f696163612e6578616d706c652e636f6d30150603551d250101ff040b3009060728818c5d050102302d0603551d1f042630243022a020a01e861c68747470733a2f2f696163612e6578616d706c652e636f6d2f63726c300a06082a8648ce3d04030203480030450221009cb3f678892266316ed590ae5d5804a0155c080aab7455d65ba1d16705a49f400220170eab30790122a4564fc0407968311be498b23a1ae61d58342712ea901e5c6f5902dbd8185902d6a66776657273696f6e63312e306f646967657374416c676f726974686d675348412d3235366c76616c756544696765737473a1716f72672e69736f2e31383031332e352e31ab00582004ce048cf575851e5efeab0cbcbad1a91cad0e412b98eabb2bb8b0c8fcb7dbb8015820a6045efc8baebc8dabb45ace45d412075db530537188717ccda9eae4230fb3f40258208b4529f2bfbcf3dc705b22dc9da4e7c107f62fe7bbbfda50248e13ee1e7e25250358209b95272cd371d1956a61e8097df59b3ca954425a012f14cefb2fb99945b4c7ee045820171cec89f1080c0a8480c9bbe0cda3380251f6af0f2b6c917a42da340c714175055820b50539c2debb3559113770dc982e5821486ac2476fd1cf433788d73e721ff64d065820eb40f55d33eb33c9742e79beb4c700f5d8c58aa5dad1c0978660ddd73eba8c080758206dcc2d586eb5d1f5cea09be65cb63a669bf2eaa60ead0002cc9fa2a373be1ef308582053a1ba482622ab002d06ae712f85a487972e57fc39c32fe52cc019eaff20b0c20958206c2a040e36f91214d5e4b731209ef9d74c984266606598d670f2204bd4cc8e990a582093de803d36839ee01035ab6a5cd540aca54548ebd8a842c90e81c709500a783a6d6465766963654b6579496e666fa1696465766963654b6579a4010220012158204f488690a836649871f1554d2d7aa7595d6d8a9f9f5cadc2bc405c8d0c37341f22582006acf40cc99684a09094eb798f657a0fbfe1761790971058200488020a5067fc67646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6c76616c6964697479496e666fa3667369676e6564c0781e323032362d30352d32365430323a34343a34372e3339363733333035335a6976616c696446726f6dc0781e323032362d30352d32365430323a34343a34372e3339363733333932385a6a76616c6964556e74696cc0781e323032372d30352d32365430323a34343a34372e3339363733333937305a5840ecd5855acf8708e9e62a9d5a3cf9220ac507fa2a7afb93553247456c9c85c905de34ba8bf7467c6f00ab14123690f2444f0c5b4e2cd004e5bfb289c598402a64",
+    "addedOn": "2026-05-26T02:44:47.402908928Z",
+    "pending": false,
+    "format": "mso_mdoc",
+    "parsedDocument": {
+      "docType": "org.iso.18013.5.1.mDL",
+      "issuerSigned": {
+        "nameSpaces": {
+          "org.iso.18013.5.1": [
+            {
+              "digestID": 0,
+              "random": [
+                -32,
+                -101,
+                99,
+                -34,
+                -64,
+                90,
+                57,
+                29,
+                9,
+                73,
+                117,
+                66,
+                37,
+                -59,
+                64,
+                103
+              ],
+              "elementIdentifier": "family_name",
+              "elementValue": "Doe"
+            },
+            {
+              "digestID": 1,
+              "random": [
+                122,
+                -111,
+                -36,
+                -8,
+                45,
+                -41,
+                102,
+                -32,
+                24,
+                65,
+                54,
+                101,
+                92,
+                80,
+                10,
+                43
+              ],
+              "elementIdentifier": "given_name",
+              "elementValue": "John"
+            },
+            {
+              "digestID": 2,
+              "random": [
+                40,
+                -123,
+                120,
+                -27,
+                -58,
+                -114,
+                -22,
+                41,
+                -10,
+                -49,
+                -24,
+                -104,
+                45,
+                -46,
+                -87,
+                -71
+              ],
+              "elementIdentifier": "birth_date",
+              "elementValue": "1986-03-22"
+            },
+            {
+              "digestID": 3,
+              "random": [
+                -11,
+                0,
+                -25,
+                60,
+                -8,
+                88,
+                123,
+                55,
+                102,
+                66,
+                27,
+                17,
+                28,
+                23,
+                78,
+                18
+              ],
+              "elementIdentifier": "issue_date",
+              "elementValue": "2019-10-20"
+            },
+            {
+              "digestID": 4,
+              "random": [
+                15,
+                -17,
+                -95,
+                -25,
+                -115,
+                119,
+                13,
+                1,
+                101,
+                6,
+                75,
+                19,
+                99,
+                -93,
+                -9,
+                11
+              ],
+              "elementIdentifier": "expiry_date",
+              "elementValue": "2030-10-20"
+            },
+            {
+              "digestID": 5,
+              "random": [
+                93,
+                -63,
+                -11,
+                85,
+                94,
+                48,
+                -102,
+                -26,
+                57,
+                -120,
+                -39,
+                77,
+                -76,
+                -126,
+                -1,
+                -8
+              ],
+              "elementIdentifier": "issuing_country",
+              "elementValue": "US"
+            },
+            {
+              "digestID": 6,
+              "random": [
+                88,
+                -20,
+                26,
+                28,
+                -114,
+                -34,
+                -10,
+                -103,
+                78,
+                79,
+                27,
+                -41,
+                50,
+                -103,
+                -41,
+                -116
+              ],
+              "elementIdentifier": "issuing_authority",
+              "elementValue": "US DMV"
+            },
+            {
+              "digestID": 7,
+              "random": [
+                50,
+                -33,
+                81,
+                40,
+                51,
+                10,
+                -75,
+                121,
+                -30,
+                13,
+                87,
+                -103,
+                -38,
+                56,
+                -119,
+                -2
+              ],
+              "elementIdentifier": "document_number",
+              "elementValue": "123456789"
+            },
+            {
+              "digestID": 8,
+              "random": [
+                87,
+                -50,
+                23,
+                -26,
+                87,
+                36,
+                46,
+                122,
+                -20,
+                67,
+                60,
+                -125,
+                14,
+                -41,
+                -38,
+                -84
+              ],
+              "elementIdentifier": "portrait",
+              "elementValue": [
+                141,
+                182,
+                121,
+                111,
+                238,
+                50,
+                120,
+                94,
+                54,
+                111,
+                113,
+                13,
+                241,
+                12,
+                12
+              ]
+            },
+            {
+              "digestID": 9,
+              "random": [
+                31,
+                14,
+                -40,
+                123,
+                87,
+                -68,
+                44,
+                -68,
+                6,
+                89,
+                34,
+                62,
+                -55,
+                -85,
+                73,
+                -16
+              ],
+              "elementIdentifier": "driving_privileges",
+              "elementValue": [
+                {
+                  "vehicle_category_code": "B",
+                  "issue_date": "2019-10-20",
+                  "expiry_date": "2030-10-20"
+                }
+              ]
+            },
+            {
+              "digestID": 10,
+              "random": [
+                82,
+                41,
+                -57,
+                52,
+                -29,
+                44,
+                -78,
+                81,
+                -83,
+                76,
+                110,
+                83,
+                84,
+                -90,
+                72,
+                -38
+              ],
+              "elementIdentifier": "un_distinguishing_sign",
+              "elementValue": "USA"
+            }
+          ]
+        },
+        "issuerAuth": [
+          [
+            -95,
+            1,
+            38
+          ],
+          {
+            "33": [
+              48,
+              -126,
+              2,
+              1,
+              48,
+              -126,
+              1,
+              -89,
+              -96,
+              3,
+              2,
+              1,
+              2,
+              2,
+              20,
+              83,
+              -65,
+              -109,
+              -33,
+              61,
+              38,
+              -86,
+              16,
+              106,
+              41,
+              -31,
+              100,
+              31,
+              14,
+              51,
+              7,
+              -69,
+              -116,
+              -49,
+              -22,
+              48,
+              10,
+              6,
+              8,
+              42,
+              -122,
+              72,
+              -50,
+              61,
+              4,
+              3,
+              2,
+              48,
+              33,
+              49,
+              11,
+              48,
+              9,
+              6,
+              3,
+              85,
+              4,
+              6,
+              19,
+              2,
+              85,
+              83,
+              49,
+              18,
+              48,
+              16,
+              6,
+              3,
+              85,
+              4,
+              3,
+              12,
+              9,
+              84,
+              101,
+              115,
+              116,
+              32,
+              73,
+              65,
+              67,
+              65,
+              48,
+              30,
+              23,
+              13,
+              50,
+              54,
+              48,
+              53,
+              50,
+              54,
+              48,
+              50,
+              52,
+              52,
+              52,
+              55,
+              90,
+              23,
+              13,
+              50,
+              55,
+              48,
+              56,
+              50,
+              54,
+              48,
+              50,
+              52,
+              52,
+              52,
+              55,
+              90,
+              48,
+              31,
+              49,
+              11,
+              48,
+              9,
+              6,
+              3,
+              85,
+              4,
+              6,
+              19,
+              2,
+              85,
+              83,
+              49,
+              16,
+              48,
+              14,
+              6,
+              3,
+              85,
+              4,
+              3,
+              12,
+              7,
+              84,
+              101,
+              115,
+              116,
+              32,
+              68,
+              83,
+              48,
+              89,
+              48,
+              19,
+              6,
+              7,
+              42,
+              -122,
+              72,
+              -50,
+              61,
+              2,
+              1,
+              6,
+              8,
+              42,
+              -122,
+              72,
+              -50,
+              61,
+              3,
+              1,
+              7,
+              3,
+              66,
+              0,
+              4,
+              94,
+              115,
+              -117,
+              40,
+              -118,
+              75,
+              120,
+              60,
+              -107,
+              56,
+              -82,
+              -121,
+              -46,
+              11,
+              -42,
+              -32,
+              74,
+              85,
+              64,
+              16,
+              68,
+              -3,
+              -56,
+              -52,
+              65,
+              50,
+              39,
+              -36,
+              -123,
+              -107,
+              -43,
+              -118,
+              -82,
+              84,
+              -58,
+              10,
+              -127,
+              40,
+              89,
+              16,
+              123,
+              -118,
+              114,
+              -4,
+              127,
+              -126,
+              32,
+              75,
+              -73,
+              -60,
+              64,
+              -60,
+              34,
+              86,
+              -33,
+              68,
+              -70,
+              81,
+              98,
+              97,
+              122,
+              -110,
+              -103,
+              -61,
+              -93,
+              -127,
+              -66,
+              48,
+              -127,
+              -69,
+              48,
+              31,
+              6,
+              3,
+              85,
+              29,
+              35,
+              4,
+              24,
+              48,
+              22,
+              -128,
+              20,
+              22,
+              -100,
+              97,
+              -20,
+              -41,
+              63,
+              -117,
+              69,
+              34,
+              -45,
+              74,
+              -57,
+              98,
+              -7,
+              51,
+              116,
+              -24,
+              -18,
+              55,
+              16,
+              48,
+              29,
+              6,
+              3,
+              85,
+              29,
+              14,
+              4,
+              22,
+              4,
+              20,
+              37,
+              -16,
+              116,
+              -4,
+              42,
+              100,
+              -126,
+              -126,
+              -43,
+              -47,
+              -127,
+              66,
+              -67,
+              -89,
+              -73,
+              -128,
+              107,
+              -36,
+              17,
+              65,
+              48,
+              14,
+              6,
+              3,
+              85,
+              29,
+              15,
+              1,
+              1,
+              -1,
+              4,
+              4,
+              3,
+              2,
+              7,
+              -128,
+              48,
+              35,
+              6,
+              3,
+              85,
+              29,
+              18,
+              4,
+              28,
+              48,
+              26,
+              -122,
+              24,
+              104,
+              116,
+              116,
+              112,
+              115,
+              58,
+              47,
+              47,
+              105,
+              97,
+              99,
+              97,
+              46,
+              101,
+              120,
+              97,
+              109,
+              112,
+              108,
+              101,
+              46,
+              99,
+              111,
+              109,
+              48,
+              21,
+              6,
+              3,
+              85,
+              29,
+              37,
+              1,
+              1,
+              -1,
+              4,
+              11,
+              48,
+              9,
+              6,
+              7,
+              40,
+              -127,
+              -116,
+              93,
+              5,
+              1,
+              2,
+              48,
+              45,
+              6,
+              3,
+              85,
+              29,
+              31,
+              4,
+              38,
+              48,
+              36,
+              48,
+              34,
+              -96,
+              32,
+              -96,
+              30,
+              -122,
+              28,
+              104,
+              116,
+              116,
+              112,
+              115,
+              58,
+              47,
+              47,
+              105,
+              97,
+              99,
+              97,
+              46,
+              101,
+              120,
+              97,
+              109,
+              112,
+              108,
+              101,
+              46,
+              99,
+              111,
+              109,
+              47,
+              99,
+              114,
+              108,
+              48,
+              10,
+              6,
+              8,
+              42,
+              -122,
+              72,
+              -50,
+              61,
+              4,
+              3,
+              2,
+              3,
+              72,
+              0,
+              48,
+              69,
+              2,
+              33,
+              0,
+              -100,
+              -77,
+              -10,
+              120,
+              -119,
+              34,
+              102,
+              49,
+              110,
+              -43,
+              -112,
+              -82,
+              93,
+              88,
+              4,
+              -96,
+              21,
+              92,
+              8,
+              10,
+              -85,
+              116,
+              85,
+              -42,
+              91,
+              -95,
+              -47,
+              103,
+              5,
+              -92,
+              -97,
+              64,
+              2,
+              32,
+              23,
+              14,
+              -85,
+              48,
+              121,
+              1,
+              34,
+              -92,
+              86,
+              79,
+              -64,
+              64,
+              121,
+              104,
+              49,
+              27,
+              -28,
+              -104,
+              -78,
+              58,
+              26,
+              -26,
+              29,
+              88,
+              52,
+              39,
+              18,
+              -22,
+              -112,
+              30,
+              92,
+              111
+            ]
+          },
+          [
+            -40,
+            24,
+            89,
+            2,
+            -42,
+            -90,
+            103,
+            118,
+            101,
+            114,
+            115,
+            105,
+            111,
+            110,
+            99,
+            49,
+            46,
+            48,
+            111,
+            100,
+            105,
+            103,
+            101,
+            115,
+            116,
+            65,
+            108,
+            103,
+            111,
+            114,
+            105,
+            116,
+            104,
+            109,
+            103,
+            83,
+            72,
+            65,
+            45,
+            50,
+            53,
+            54,
+            108,
+            118,
+            97,
+            108,
+            117,
+            101,
+            68,
+            105,
+            103,
+            101,
+            115,
+            116,
+            115,
+            -95,
+            113,
+            111,
+            114,
+            103,
+            46,
+            105,
+            115,
+            111,
+            46,
+            49,
+            56,
+            48,
+            49,
+            51,
+            46,
+            53,
+            46,
+            49,
+            -85,
+            0,
+            88,
+            32,
+            4,
+            -50,
+            4,
+            -116,
+            -11,
+            117,
+            -123,
+            30,
+            94,
+            -2,
+            -85,
+            12,
+            -68,
+            -70,
+            -47,
+            -87,
+            28,
+            -83,
+            14,
+            65,
+            43,
+            -104,
+            -22,
+            -69,
+            43,
+            -72,
+            -80,
+            -56,
+            -4,
+            -73,
+            -37,
+            -72,
+            1,
+            88,
+            32,
+            -90,
+            4,
+            94,
+            -4,
+            -117,
+            -82,
+            -68,
+            -115,
+            -85,
+            -76,
+            90,
+            -50,
+            69,
+            -44,
+            18,
+            7,
+            93,
+            -75,
+            48,
+            83,
+            113,
+            -120,
+            113,
+            124,
+            -51,
+            -87,
+            -22,
+            -28,
+            35,
+            15,
+            -77,
+            -12,
+            2,
+            88,
+            32,
+            -117,
+            69,
+            41,
+            -14,
+            -65,
+            -68,
+            -13,
+            -36,
+            112,
+            91,
+            34,
+            -36,
+            -99,
+            -92,
+            -25,
+            -63,
+            7,
+            -10,
+            47,
+            -25,
+            -69,
+            -65,
+            -38,
+            80,
+            36,
+            -114,
+            19,
+            -18,
+            30,
+            126,
+            37,
+            37,
+            3,
+            88,
+            32,
+            -101,
+            -107,
+            39,
+            44,
+            -45,
+            113,
+            -47,
+            -107,
+            106,
+            97,
+            -24,
+            9,
+            125,
+            -11,
+            -101,
+            60,
+            -87,
+            84,
+            66,
+            90,
+            1,
+            47,
+            20,
+            -50,
+            -5,
+            47,
+            -71,
+            -103,
+            69,
+            -76,
+            -57,
+            -18,
+            4,
+            88,
+            32,
+            23,
+            28,
+            -20,
+            -119,
+            -15,
+            8,
+            12,
+            10,
+            -124,
+            -128,
+            -55,
+            -69,
+            -32,
+            -51,
+            -93,
+            56,
+            2,
+            81,
+            -10,
+            -81,
+            15,
+            43,
+            108,
+            -111,
+            122,
+            66,
+            -38,
+            52,
+            12,
+            113,
+            65,
+            117,
+            5,
+            88,
+            32,
+            -75,
+            5,
+            57,
+            -62,
+            -34,
+            -69,
+            53,
+            89,
+            17,
+            55,
+            112,
+            -36,
+            -104,
+            46,
+            88,
+            33,
+            72,
+            106,
+            -62,
+            71,
+            111,
+            -47,
+            -49,
+            67,
+            55,
+            -120,
+            -41,
+            62,
+            114,
+            31,
+            -10,
+            77,
+            6,
+            88,
+            32,
+            -21,
+            64,
+            -11,
+            93,
+            51,
+            -21,
+            51,
+            -55,
+            116,
+            46,
+            121,
+            -66,
+            -76,
+            -57,
+            0,
+            -11,
+            -40,
+            -59,
+            -118,
+            -91,
+            -38,
+            -47,
+            -64,
+            -105,
+            -122,
+            96,
+            -35,
+            -41,
+            62,
+            -70,
+            -116,
+            8,
+            7,
+            88,
+            32,
+            109,
+            -52,
+            45,
+            88,
+            110,
+            -75,
+            -47,
+            -11,
+            -50,
+            -96,
+            -101,
+            -26,
+            92,
+            -74,
+            58,
+            102,
+            -101,
+            -14,
+            -22,
+            -90,
+            14,
+            -83,
+            0,
+            2,
+            -52,
+            -97,
+            -94,
+            -93,
+            115,
+            -66,
+            30,
+            -13,
+            8,
+            88,
+            32,
+            83,
+            -95,
+            -70,
+            72,
+            38,
+            34,
+            -85,
+            0,
+            45,
+            6,
+            -82,
+            113,
+            47,
+            -123,
+            -92,
+            -121,
+            -105,
+            46,
+            87,
+            -4,
+            57,
+            -61,
+            47,
+            -27,
+            44,
+            -64,
+            25,
+            -22,
+            -1,
+            32,
+            -80,
+            -62,
+            9,
+            88,
+            32,
+            108,
+            42,
+            4,
+            14,
+            54,
+            -7,
+            18,
+            20,
+            -43,
+            -28,
+            -73,
+            49,
+            32,
+            -98,
+            -7,
+            -41,
+            76,
+            -104,
+            66,
+            102,
+            96,
+            101,
+            -104,
+            -42,
+            112,
+            -14,
+            32,
+            75,
+            -44,
+            -52,
+            -114,
+            -103,
+            10,
+            88,
+            32,
+            -109,
+            -34,
+            -128,
+            61,
+            54,
+            -125,
+            -98,
+            -32,
+            16,
+            53,
+            -85,
+            106,
+            92,
+            -43,
+            64,
+            -84,
+            -91,
+            69,
+            72,
+            -21,
+            -40,
+            -88,
+            66,
+            -55,
+            14,
+            -127,
+            -57,
+            9,
+            80,
+            10,
+            120,
+            58,
+            109,
+            100,
+            101,
+            118,
+            105,
+            99,
+            101,
+            75,
+            101,
+            121,
+            73,
+            110,
+            102,
+            111,
+            -95,
+            105,
+            100,
+            101,
+            118,
+            105,
+            99,
+            101,
+            75,
+            101,
+            121,
+            -92,
+            1,
+            2,
+            32,
+            1,
+            33,
+            88,
+            32,
+            79,
+            72,
+            -122,
+            -112,
+            -88,
+            54,
+            100,
+            -104,
+            113,
+            -15,
+            85,
+            77,
+            45,
+            122,
+            -89,
+            89,
+            93,
+            109,
+            -118,
+            -97,
+            -97,
+            92,
+            -83,
+            -62,
+            -68,
+            64,
+            92,
+            -115,
+            12,
+            55,
+            52,
+            31,
+            34,
+            88,
+            32,
+            6,
+            -84,
+            -12,
+            12,
+            -55,
+            -106,
+            -124,
+            -96,
+            -112,
+            -108,
+            -21,
+            121,
+            -113,
+            101,
+            122,
+            15,
+            -65,
+            -31,
+            118,
+            23,
+            -112,
+            -105,
+            16,
+            88,
+            32,
+            4,
+            -120,
+            2,
+            10,
+            80,
+            103,
+            -4,
+            103,
+            100,
+            111,
+            99,
+            84,
+            121,
+            112,
+            101,
+            117,
+            111,
+            114,
+            103,
+            46,
+            105,
+            115,
+            111,
+            46,
+            49,
+            56,
+            48,
+            49,
+            51,
+            46,
+            53,
+            46,
+            49,
+            46,
+            109,
+            68,
+            76,
+            108,
+            118,
+            97,
+            108,
+            105,
+            100,
+            105,
+            116,
+            121,
+            73,
+            110,
+            102,
+            111,
+            -93,
+            102,
+            115,
+            105,
+            103,
+            110,
+            101,
+            100,
+            -64,
+            120,
+            30,
+            50,
+            48,
+            50,
+            54,
+            45,
+            48,
+            53,
+            45,
+            50,
+            54,
+            84,
+            48,
+            50,
+            58,
+            52,
+            52,
+            58,
+            52,
+            55,
+            46,
+            51,
+            57,
+            54,
+            55,
+            51,
+            51,
+            48,
+            53,
+            51,
+            90,
+            105,
+            118,
+            97,
+            108,
+            105,
+            100,
+            70,
+            114,
+            111,
+            109,
+            -64,
+            120,
+            30,
+            50,
+            48,
+            50,
+            54,
+            45,
+            48,
+            53,
+            45,
+            50,
+            54,
+            84,
+            48,
+            50,
+            58,
+            52,
+            52,
+            58,
+            52,
+            55,
+            46,
+            51,
+            57,
+            54,
+            55,
+            51,
+            51,
+            57,
+            50,
+            56,
+            90,
+            106,
+            118,
+            97,
+            108,
+            105,
+            100,
+            85,
+            110,
+            116,
+            105,
+            108,
+            -64,
+            120,
+            30,
+            50,
+            48,
+            50,
+            55,
+            45,
+            48,
+            53,
+            45,
+            50,
+            54,
+            84,
+            48,
+            50,
+            58,
+            52,
+            52,
+            58,
+            52,
+            55,
+            46,
+            51,
+            57,
+            54,
+            55,
+            51,
+            51,
+            57,
+            55,
+            48,
+            90
+          ],
+          [
+            -20,
+            -43,
+            -123,
+            90,
+            -49,
+            -121,
+            8,
+            -23,
+            -26,
+            42,
+            -99,
+            90,
+            60,
+            -7,
+            34,
+            10,
+            -59,
+            7,
+            -6,
+            42,
+            122,
+            -5,
+            -109,
+            85,
+            50,
+            71,
+            69,
+            108,
+            -100,
+            -123,
+            -55,
+            5,
+            -34,
+            52,
+            -70,
+            -117,
+            -9,
+            70,
+            124,
+            111,
+            0,
+            -85,
+            20,
+            18,
+            54,
+            -112,
+            -14,
+            68,
+            79,
+            12,
+            91,
+            78,
+            44,
+            -48,
+            4,
+            -27,
+            -65,
+            -78,
+            -119,
+            -59,
+            -104,
+            64,
+            42,
+            100
+          ]
+        ]
+      },
+      "id": "20bc83f6-f5c7-4d08-93fc-588d09fa5ddb"
+    }
+  }
+]
+✓ Claimed credential ID: 20bc83f6-f5c7-4d08-93fc-588d09fa5ddb
+
+  ┌── Step 8 ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/useOfferRequest
+  │  REQUEST:
+  │   openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.internal%3A7002%2Fdraft13%2FcredentialOffer%3Fid%3Dcb0ddd30-4a53-49b3-a2b6-3a99eb8499c1
+  │  RESPONSE:
+  │   [
+  │     {
+  │       "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+  │       "id": "20bc83f6-f5c7-4d08-93fc-588d09fa5ddb",
+  │       "document": "a267646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6c6973737565725369676e6564a26a6e616d65537061636573a1716f72672e69736f2e31383031332e352e318bd8185852a4686469676573744944006672616e646f6d50e09b63dec05a391d0949754225c5406771656c656d656e744964656e7469666965726b66616d696c795f6e616d656c656c656d656e7456616c756563446f65d8185852a4686469676573744944016672616e646f6d507a91dcf82dd766e0184136655c500a2b71656c656d656e744964656e7469666965726a676976656e5f6e616d656c656c656d656e7456616c7565644a6f686ed8185858a4686469676573744944026672616e646f6d50288578e5c68eea29f6cfe8982dd2a9b971656c656d656e744964656e7469666965726a62697274685f646174656c656c656d656e7456616c75656a313938362d30332d3232d8185858a4686469676573744944036672616e646f6d50f500e73cf8587b3766421b111c174e1271656c656d656e744964656e7469666965726a69737375655f646174656c656c656d656e7456616c75656a323031392d31302d3230d8185859a4686469676573744944046672616e646f6d500fefa1e78d770d0165064b1363a3f70b71656c656d656e744964656e7469666965726b6578706972795f646174656c656c656d656e7456616c75656a323033302d31302d3230d8185855a4686469676573744944056672616e646f6d505dc1f5555e309ae63988d94db482fff871656c656d656e744964656e7469666965726f69737375696e675f636f756e7472796c656c656d656e7456616c7565625553d818585ba4686469676573744944066672616e646f6d5058ec1a1c8edef6994e4f1bd73299d78c71656c656d656e744964656e7469666965727169737375696e675f617574686f726974796c656c656d656e7456616c756566555320444d56d818585ca4686469676573744944076672616e646f6d5032df5128330ab579e20d5799da3889fe71656c656d656e744964656e7469666965726f646f63756d656e745f6e756d6265726c656c656d656e7456616c756569313233343536373839d8185867a4686469676573744944086672616e646f6d5057ce17e657242e7aec433c830ed7daac71656c656d656e744964656e74696669657268706f7274726169746c656c656d656e7456616c75658f188d18b61879186f18ee18321878185e1836186f18710d18f10c0cd818589ca4686469676573744944096672616e646f6d501f0ed87b57bc2cbc0659223ec9ab49f071656c656d656e744964656e7469666965727264726976696e675f70726976696c656765736c656c656d656e7456616c756581a37576656869636c655f63617465676f72795f636f646561426a69737375655f646174656a323031392d31302d32306b6578706972795f646174656a323033302d31302d3230d818585da46864696765737449440a6672616e646f6d505229c734e32cb251ad4c6e5354a648da71656c656d656e744964656e74696669657276756e5f64697374696e6775697368696e675f7369676e6c656c656d656e7456616c7565635553416a697373756572417574688443a10126a1182159020530820201308201a7a003020102021453bf93df3d26aa106a29e1641f0e3307bb8ccfea300a06082a8648ce3d0403023021310b30090603550406130255533112301006035504030c09546573742049414341301e170d3236303532363032343434375a170d3237303832363032343434375a301f310b30090603550406130255533110300e06035504030c07546573742044533059301306072a8648ce3d020106082a8648ce3d030107034200045e738b288a4b783c9538ae87d20bd6e04a55401044fdc8cc413227dc8595d58aae54c60a812859107b8a72fc7f82204bb7c440c42256df44ba5162617a9299c3a381be3081bb301f0603551d23041830168014169c61ecd73f8b4522d34ac762f93374e8ee3710301d0603551d0e0416041425f074fc2a648282d5d18142bda7b7806bdc1141300e0603551d0f0101ff04040302078030230603551d12041c301a861868747470733a2f2f696163612e6578616d706c652e636f6d30150603551d250101ff040b3009060728818c5d050102302d0603551d1f042630243022a020a01e861c68747470733a2f2f696163612e6578616d706c652e636f6d2f63726c300a06082a8648ce3d04030203480030450221009cb3f678892266316ed590ae5d5804a0155c080aab7455d65ba1d16705a49f400220170eab30790122a4564fc0407968311be498b23a1ae61d58342712ea901e5c6f5902dbd8185902d6a66776657273696f6e63312e306f646967657374416c676f726974686d675348412d3235366c76616c756544696765737473a1716f72672e69736f2e31383031332e352e31ab00582004ce048cf575851e5efeab0cbcbad1a91cad0e412b98eabb2bb8b0c8fcb7dbb8015820a6045efc8baebc8dabb45ace45d412075db530537188717ccda9eae4230fb3f40258208b4529f2bfbcf3dc705b22dc9da4e7c107f62fe7bbbfda50248e13ee1e7e25250358209b95272cd371d1956a61e8097df59b3ca954425a012f14cefb2fb99945b4c7ee045820171cec89f1080c0a8480c9bbe0cda3380251f6af0f2b6c917a42da340c714175055820b50539c2debb3559113770dc982e5821486ac2476fd1cf433788d73e721ff64d065820eb40f55d33eb33c9742e79beb4c700f5d8c58aa5dad1c0978660ddd73eba8c080758206dcc2d586eb5d1f5cea09be65cb63a669bf2eaa60ead0002cc9fa2a373be1ef308582053a1ba482622ab002d06ae712f85a487972e57fc39c32fe52cc019eaff20b0c20958206c2a040e36f91214d5e4b731209ef9d74c984266606598d670f2204bd4cc8e990a582093de803d36839ee01035ab6a5cd540aca54548ebd8a842c90e81c709500a783a6d6465766963654b6579496e666fa1696465766963654b6579a4010220012158204f488690a836649871f1554d2d7aa7595d6d8a9f9f5cadc2bc405c8d0c37341f22582006acf40cc99684a09094eb798f657a0fbfe1761790971058200488020a5067fc67646f6354797065756f72672e69736f2e31383031332e352e312e6d444c6c76616c6964697479496e666fa3667369676e6564c0781e323032362d30352d32365430323a34343a34372e3339363733333035335a6976616c696446726f6dc0781e323032362d30352d32365430323a34343a34372e3339363733333932385a6a76616c6964556e74696cc0781e323032372d30352d32365430323a34343a34372e3339363733333937305a5840ecd5855acf8708e9e62a9d5a3cf9220ac507fa2a7afb93553247456c9c85c905de34ba8bf7467c6f00ab14123690f2444f0c5b4e2cd004e5bfb289c598402a64",
+  │       "addedOn": "2026-05-26T02:44:47.402908928Z",
+  │       "pending": false,
+  │       "format": "mso_mdoc",
+  │       "parsedDocument": {
+  │         "docType": "org.iso.18013.5.1.mDL",
+  │         "issuerSigned": {
+  │           "nameSpaces": {
+  │             "org.iso.18013.5.1": [
+  │               {
+  │                 "digestID": 0,
+  │                 "random": [
+  │                   -32,
+  │                   -101,
+  │                   99,
+  │                   -34,
+  │                   -64,
+  │                   90,
+  │                   57,
+  │                   29,
+  │                   9,
+  │                   73,
+  │                   117,
+  │                   66,
+  │                   37,
+  │                   -59,
+  │                   64,
+  │                   103
+  │                 ],
+  │                 "elementIdentifier": "family_name",
+  │                 "elementValue": "Doe"
+  │               },
+  │               {
+  │                 "digestID": 1,
+  │                 "random": [
+  │                   122,
+  │                   -111,
+  │                   -36,
+  │                   -8,
+  │                   45,
+  │                   -41,
+  │                   102,
+  │                   -32,
+  │                   24,
+  │                   65,
+  │                   54,
+  │                   101,
+  │                   92,
+  │                   80,
+  │                   10,
+  │                   43
+  │                 ],
+  │                 "elementIdentifier": "given_name",
+  │                 "elementValue": "John"
+  │               },
+  │               {
+  └──
+
+=== Step 9: Create mDL Authorization Request (Verifier) ===
+✓ Auth request: openid4vp://authorize?client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopeni...
+→ State (session ID): zG8LDfpqu2Xv
+
+  ┌── Step 9 ─── POST http://localhost:7003/openid4vc/verify
+  │  REQUEST:
+  │   {
+  │     "openid_profile": "ISO_18013_7_MDOC",
+  │     "request_credentials": [
+  │       {
+  │         "id": "mDL-request"
+  │       }
+  │     ]
+  │   }
+  │  RESPONSE:
+  │   openid4vp://authorize?client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&request_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Frequest%2FzG8LDfpqu2Xv
+  └──
+
+=== Step 10: Match Credentials for Presentation Definition ===
+→ Fetching request JWT from: http://localhost:7003/openid4vc/request/zG8LDfpqu2Xv
+{
+  "id": "IiUOXFm5CmOr",
+  "input_descriptors": [
+    {
+      "id": "org.iso.18013.5.1.mDL",
+      "format": {
+        "mso_mdoc": {
+          "alg": [
+            "ES256"
+          ]
+        }
+      },
+      "constraints": {
+        "fields": [
+          {
+            "path": [
+              "$['org.iso.18013.5.1']['family_name']"
+            ],
+            "intent_to_retain": false
+          },
+          {
+            "path": [
+              "$['org.iso.18013.5.1']['given_name']"
+            ],
+            "intent_to_retain": false
+          },
+          {
+            "path": [
+              "$['org.iso.18013.5.1']['birth_date']"
+            ],
+            "intent_to_retain": false
+          },
+          {
+            "path": [
+              "$['org.iso.18013.5.1']['document_number']"
+            ],
+            "intent_to_retain": false
+          }
+        ],
+        "limit_disclosure": "required"
+      }
+    }
+  ]
+}
+[]
+→ Credential matching returned empty (mso_mdoc not indexed); using claimed credential ID
+✓ Using credential ID: 20bc83f6-f5c7-4d08-93fc-588d09fa5ddb
+
+  ┌── Step 10a ─── GET http://localhost:7003/openid4vc/request/zG8LDfpqu2Xv
+  │  RESPONSE:
+  │   eyJraWQiOiI3MmVhMGNhZC01MzI3LTQ4NDItYjRkMy1mNWZiYjgyNjEzMWYiLCJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJyZXNwb25zZV91cmkiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6NzAwMy9vcGVuaWQ0dmMvdmVyaWZ5L3pHOExEZnBxdTJYdiIsImF1ZCI6IiIsImNsaWVudF9pZF9zY2hlbWUiOiJ4NTA5X3Nhbl9kbnMiLCJpc3MiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6NzAwMy9vcGVuaWQ0dmMvdmVyaWZ5IiwicmVzcG9uc2VfdHlwZSI6InZwX3Rva2VuIiwicHJlc2VudGF0aW9uX2RlZmluaXRpb24iOnsiaWQiOiJJaVVPWEZtNUNtT3IiLCJpbnB1dF9kZXNjcmlwdG9ycyI6W3siaWQiOiJvcmcuaXNvLjE4MDEzLjUuMS5tREwiLCJmb3JtYXQiOnsibXNvX21kb2MiOnsiYWxnIjpbIkVTMjU2Il19fSwiY29uc3RyYWludHMiOnsiZmllbGRzIjpbeyJwYXRoIjpbIiRbJ29yZy5pc28uMTgwMTMuNS4xJ11bJ2ZhbWlseV9uYW1lJ10iXSwiaW50ZW50X3RvX3JldGFpbiI6ZmFsc2V9LHsicGF0aCI6WyIkWydvcmcuaXNvLjE4MDEzLjUuMSddWydnaXZlbl9uYW1lJ10iXSwiaW50ZW50X3RvX3JldGFpbiI6ZmFsc2V9LHsicGF0aCI6WyIkWydvcmcuaXNvLjE4MDEzLjUuMSddWydiaXJ0aF9kYXRlJ10iXSwiaW50ZW50X3RvX3JldGFpbiI6ZmFsc2V9LHsicGF0aCI6WyIkWydvcmcuaXNvLjE4MDEzLjUuMSddWydkb2N1bWVudF9udW1iZXInXSJdLCJpbnRlbnRfdG9fcmV0YWluIjpmYWxzZX1dLCJsaW1pdF9kaXNjbG9zdXJlIjoicmVxdWlyZWQifX1dfSwic3RhdGUiOiJ6RzhMRGZwcXUyWHYiLCJleHAiOjE3Nzk4NDk4ODcsIm5vbmNlIjoiNDQ5YmE0OGUtMjg2OC00M2NjLWJhNTQtODlkZGQ1YWVmOTEyIiwiY2xpZW50X2lkIjoiaHR0cDovL2hvc3QuZG9ja2VyLmludGVybmFsOjcwMDMvb3BlbmlkNHZjL3ZlcmlmeSIsImNsaWVudF9tZXRhZGF0YSI6eyJqd2tzIjp7ImtleXMiOlt7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYiLCJraWQiOiJKUnhfUVIzbFpnNm5zbjNQeTFOWnFscDV5OHVKazhCS0hXQlpDXzNfMGxZIiwieCI6IjFUcjV2QkNHWTRjNFlEUzFhOXc4SjQ2Q3E1ZHRVOW9YMVlFU0JDN0RkOEUiLCJ5IjoiM0hCV0xWQUlaejAyT3JiUXNJZl8zY01scEVIb0NZUjJtc082U0l3anhndyIsInVzZSI6ImVuYyIsImFsZyI6IkVDREgtRVMifV19LCJhdXRob3JpemF0aW9uX2VuY3J5cHRlZF9yZXNwb25zZV9hbGciOiJFQ0RILUVTIiwiYXV0aG9yaXphdGlvbl9lbmNyeXB0ZWRfcmVzcG9uc2VfZW5jIjoiQTI1NkdDTSJ9LCJyZXNwb25zZV9tb2RlIjoiZGlyZWN0X3Bvc3Quand0In0.5hvmp90ixIG0ZyUD3BSpm1wt4NVoRk1ImntjzaMvse3bWuoSRJ3EpjOet7qU2CyERrYFddQA57fc6BWR24XQ0w
+  └──
+
+  ┌── Step 10b ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/matchCredentialsForPresentationDefinition
+  │  REQUEST:
+  │   {
+  │     "id": "IiUOXFm5CmOr",
+  │     "input_descriptors": [
+  │       {
+  │         "id": "org.iso.18013.5.1.mDL",
+  │         "format": {
+  │           "mso_mdoc": {
+  │             "alg": [
+  │               "ES256"
+  │             ]
+  │           }
+  │         },
+  │         "constraints": {
+  │           "fields": [
+  │             {
+  │               "path": [
+  │                 "$['org.iso.18013.5.1']['family_name']"
+  │               ],
+  │               "intent_to_retain": false
+  │             },
+  │             {
+  │               "path": [
+  │                 "$['org.iso.18013.5.1']['given_name']"
+  │               ],
+  │               "intent_to_retain": false
+  │             },
+  │             {
+  │               "path": [
+  │                 "$['org.iso.18013.5.1']['birth_date']"
+  │               ],
+  │               "intent_to_retain": false
+  │             },
+  │             {
+  │               "path": [
+  │                 "$['org.iso.18013.5.1']['document_number']"
+  │               ],
+  │               "intent_to_retain": false
+  │             }
+  │           ],
+  │           "limit_disclosure": "required"
+  │         }
+  │       }
+  │     ]
+  │   }
+  │  RESPONSE:
+  │   []
+  └──
+
+=== Step 11: Resolve Presentation Request ===
+→ Resolved: openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker....
+
+  ┌── Step 11 ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/resolvePresentationRequest
+  │  REQUEST:
+  │   openid4vp://authorize?client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&request_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Frequest%2FzG8LDfpqu2Xv
+  │  RESPONSE:
+  │   openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&response_mode=direct_post.jwt&state=zG8LDfpqu2Xv&presentation_definition=%7B%22id%22%3A%22IiUOXFm5CmOr%22%2C%22input_descriptors%22%3A%5B%7B%22id%22%3A%22org.iso.18013.5.1.mDL%22%2C%22format%22%3A%7B%22mso_mdoc%22%3A%7B%22alg%22%3A%5B%22ES256%22%5D%7D%7D%2C%22constraints%22%3A%7B%22fields%22%3A%5B%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27family_name%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%2C%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27given_name%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%2C%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27birth_date%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%2C%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27document_number%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%5D%2C%22limit_disclosure%22%3A%22required%22%7D%7D%5D%7D&client_id_scheme=x509_san_dns&client_metadata=%7B%22jwks%22%3A%7B%22keys%22%3A%5B%7B%22kty%22%3A%22EC%22%2C%22crv%22%3A%22P-256%22%2C%22kid%22%3A%22JRx_QR3lZg6nsn3Py1NZqlp5y8uJk8BKHWBZC_3_0lY%22%2C%22x%22%3A%221Tr5vBCGY4c4YDS1a9w8J46Cq5dtU9oX1YESBC7Dd8E%22%2C%22y%22%3A%223HBWLVAIZz02OrbQsIf_3cMlpEHoCYR2msO6SIwjxgw%22%2C%22use%22%3A%22enc%22%2C%22alg%22%3A%22ECDH-ES%22%7D%5D%7D%2C%22authorization_encrypted_response_alg%22%3A%22ECDH-ES%22%2C%22authorization_encrypted_response_enc%22%3A%22A256GCM%22%7D&nonce=449ba48e-2868-43cc-ba54-89ddd5aef912&response_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify%2FzG8LDfpqu2Xv&aud=&iss=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&exp=1779849887
+  └──
+
+=== Step 12: Fulfill mDL Presentation Request (usePresentationRequest) ===
+{
+  "redirectUri": null
+}
+
+  ┌── Step 12 ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/usePresentationRequest
+  │  REQUEST:
+  │   {
+  │     "presentationRequest": "openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&response_mode=direct_post.jwt&state=zG8LDfpqu2Xv&presentation_definition=%7B%22id%22%3A%22IiUOXFm5CmOr%22%2C%22input_descriptors%22%3A%5B%7B%22id%22%3A%22org.iso.18013.5.1.mDL%22%2C%22format%22%3A%7B%22mso_mdoc%22%3A%7B%22alg%22%3A%5B%22ES256%22%5D%7D%7D%2C%22constraints%22%3A%7B%22fields%22%3A%5B%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27family_name%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%2C%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27given_name%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%2C%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27birth_date%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%2C%7B%22path%22%3A%5B%22%24%5B%27org.iso.18013.5.1%27%5D%5B%27document_number%27%5D%22%5D%2C%22intent_to_retain%22%3Afalse%7D%5D%2C%22limit_disclosure%22%3A%22required%22%7D%7D%5D%7D&client_id_scheme=x509_san_dns&client_metadata=%7B%22jwks%22%3A%7B%22keys%22%3A%5B%7B%22kty%22%3A%22EC%22%2C%22crv%22%3A%22P-256%22%2C%22kid%22%3A%22JRx_QR3lZg6nsn3Py1NZqlp5y8uJk8BKHWBZC_3_0lY%22%2C%22x%22%3A%221Tr5vBCGY4c4YDS1a9w8J46Cq5dtU9oX1YESBC7Dd8E%22%2C%22y%22%3A%223HBWLVAIZz02OrbQsIf_3cMlpEHoCYR2msO6SIwjxgw%22%2C%22use%22%3A%22enc%22%2C%22alg%22%3A%22ECDH-ES%22%7D%5D%7D%2C%22authorization_encrypted_response_alg%22%3A%22ECDH-ES%22%2C%22authorization_encrypted_response_enc%22%3A%22A256GCM%22%7D&nonce=449ba48e-2868-43cc-ba54-89ddd5aef912&response_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify%2FzG8LDfpqu2Xv&aud=&iss=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&exp=1779849887",
+  │     "selectedCredentials": [
+  │       "20bc83f6-f5c7-4d08-93fc-588d09fa5ddb"
+  │     ]
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "redirectUri": null
+  │   }
+  └──
+
+=== Step 13: Verify mDL Presentation ===
+{
+  "id": "zG8LDfpqu2Xv",
+  "presentationDefinition": {
+    "id": "IiUOXFm5CmOr",
+    "input_descriptors": [
+      {
+        "id": "org.iso.18013.5.1.mDL",
+        "format": {
+          "mso_mdoc": {
+            "alg": [
+              "ES256"
+            ]
+          }
+        },
+        "constraints": {
+          "fields": [
+            {
+              "path": [
+                "$['org.iso.18013.5.1']['family_name']"
+              ],
+              "intent_to_retain": false
+            },
+            {
+              "path": [
+                "$['org.iso.18013.5.1']['given_name']"
+              ],
+              "intent_to_retain": false
+            },
+            {
+              "path": [
+                "$['org.iso.18013.5.1']['birth_date']"
+              ],
+              "intent_to_retain": false
+            },
+            {
+              "path": [
+                "$['org.iso.18013.5.1']['document_number']"
+              ],
+              "intent_to_retain": false
+            }
+          ],
+          "limit_disclosure": "required"
+        }
+      }
+    ]
+  },
+  "tokenResponse": {
+    "vp_token": "o2d2ZXJzaW9uYzEuMGlkb2N1bWVudHOBo2dkb2NUeXBldW9yZy5pc28uMTgwMTMuNS4xLm1ETGxpc3N1ZXJTaWduZWSiam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xhNgYWFKkaGRpZ2VzdElEAGZyYW5kb21Q4Jtj3sBaOR0JSXVCJcVAZ3FlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWxlbGVtZW50VmFsdWVjRG9l2BhYUqRoZGlnZXN0SUQBZnJhbmRvbVB6kdz4Lddm4BhBNmVcUAorcWVsZW1lbnRJZGVudGlmaWVyamdpdmVuX25hbWVsZWxlbWVudFZhbHVlZEpvaG7YGFhYpGhkaWdlc3RJRAJmcmFuZG9tUCiFeOXGjuop9s_omC3SqblxZWxlbWVudElkZW50aWZpZXJqYmlydGhfZGF0ZWxlbGVtZW50VmFsdWVqMTk4Ni0wMy0yMtgYWFykaGRpZ2VzdElEB2ZyYW5kb21QMt9RKDMKtXniDVeZ2jiJ_nFlbGVtZW50SWRlbnRpZmllcm9kb2N1bWVudF9udW1iZXJsZWxlbWVudFZhbHVlaTEyMzQ1Njc4OWppc3N1ZXJBdXRohEOhASahGCFZAgUwggIBMIIBp6ADAgECAhRTv5PfPSaqEGop4WQfDjMHu4zP6jAKBggqhkjOPQQDAjAhMQswCQYDVQQGEwJVUzESMBAGA1UEAwwJVGVzdCBJQUNBMB4XDTI2MDUyNjAyNDQ0N1oXDTI3MDgyNjAyNDQ0N1owHzELMAkGA1UEBhMCVVMxEDAOBgNVBAMMB1Rlc3QgRFMwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARec4soikt4PJU4rofSC9bgSlVAEET9yMxBMifchZXViq5UxgqBKFkQe4py_H-CIEu3xEDEIlbfRLpRYmF6kpnDo4G-MIG7MB8GA1UdIwQYMBaAFBacYezXP4tFItNKx2L5M3To7jcQMB0GA1UdDgQWBBQl8HT8KmSCgtXRgUK9p7eAa9wRQTAOBgNVHQ8BAf8EBAMCB4AwIwYDVR0SBBwwGoYYaHR0cHM6Ly9pYWNhLmV4YW1wbGUuY29tMBUGA1UdJQEB_wQLMAkGByiBjF0FAQIwLQYDVR0fBCYwJDAioCCgHoYcaHR0cHM6Ly9pYWNhLmV4YW1wbGUuY29tL2NybDAKBggqhkjOPQQDAgNIADBFAiEAnLP2eIkiZjFu1ZCuXVgEoBVcCAqrdFXWW6HRZwWkn0ACIBcOqzB5ASKkVk_AQHloMRvkmLI6GuYdWDQnEuqQHlxvWQLb2BhZAtamZ3ZlcnNpb25jMS4wb2RpZ2VzdEFsZ29yaXRobWdTSEEtMjU2bHZhbHVlRGlnZXN0c6Fxb3JnLmlzby4xODAxMy41LjGrAFggBM4EjPV1hR5e_qsMvLrRqRytDkErmOq7K7iwyPy327gBWCCmBF78i668jau0Ws5F1BIHXbUwU3GIcXzNqerkIw-z9AJYIItFKfK_vPPccFsi3J2k58EH9i_nu7_aUCSOE-4efiUlA1ggm5UnLNNx0ZVqYegJffWbPKlUQloBLxTO-y-5mUW0x-4EWCAXHOyJ8QgMCoSAybvgzaM4AlH2rw8rbJF6Qto0DHFBdQVYILUFOcLeuzVZETdw3JguWCFIasJHb9HPQzeI1z5yH_ZNBlgg60D1XTPrM8l0Lnm-tMcA9djFiqXa0cCXhmDd1z66jAgHWCBtzC1YbrXR9c6gm-Zctjpmm_Lqpg6tAALMn6Kjc74e8whYIFOhukgmIqsALQaucS-FpIeXLlf8OcMv5SzAGer_ILDCCVggbCoEDjb5EhTV5LcxIJ7510yYQmZgZZjWcPIgS9TMjpkKWCCT3oA9NoOe4BA1q2pc1UCspUVI69ioQskOgccJUAp4Om1kZXZpY2VLZXlJbmZvoWlkZXZpY2VLZXmkAQIgASFYIE9IhpCoNmSYcfFVTS16p1ldbYqfn1ytwrxAXI0MNzQfIlggBqz0DMmWhKCQlOt5j2V6D7_hdheQlxBYIASIAgpQZ_xnZG9jVHlwZXVvcmcuaXNvLjE4MDEzLjUuMS5tRExsdmFsaWRpdHlJbmZvo2ZzaWduZWTAeB4yMDI2LTA1LTI2VDAyOjQ0OjQ3LjM5NjczMzA1M1ppdmFsaWRGcm9twHgeMjAyNi0wNS0yNlQwMjo0NDo0Ny4zOTY3MzM5MjhaanZhbGlkVW50aWzAeB4yMDI3LTA1LTI2VDAyOjQ0OjQ3LjM5NjczMzk3MFpYQOzVhVrPhwjp5iqdWjz5IgrFB_oqevuTVTJHRWychckF3jS6i_dGfG8AqxQSNpDyRE8MW04s0ATlv7KJxZhAKmRsZGV2aWNlU2lnbmVkompuYW1lU3BhY2Vz2BhBoGpkZXZpY2VBdXRooW9kZXZpY2VTaWduYXR1cmWEQ6EBJqEYIYD2WECEfG88wB2B23v_VDfsszZter2d4EfjX4CDIvqQ1SB4AfvkxDzVXHuEFl731FOya_-OLyYgJulANb0cFwm_N0vUZnN0YXR1cwA=",
+    "presentation_submission": {
+      "id": "IiUOXFm5CmOr",
+      "definition_id": "IiUOXFm5CmOr",
+      "descriptor_map": [
+        {
+          "id": "org.iso.18013.5.1.mDL",
+          "format": "mso_mdoc",
+          "path": "$",
+          "path_nested": {
+            "id": "org.iso.18013.5.1.mDL",
+            "format": "mso_mdoc",
+            "path": "$.documents[0]"
+          }
+        }
+      ]
+    },
+    "state": "zG8LDfpqu2Xv"
+  },
+  "verificationResult": true
+}
+
+  ┌── Step 13 ─── GET http://localhost:7003/openid4vc/session/zG8LDfpqu2Xv
+  │  RESPONSE:
+  │   {
+  │     "id": "zG8LDfpqu2Xv",
+  │     "presentationDefinition": {
+  │       "id": "IiUOXFm5CmOr",
+  │       "input_descriptors": [
+  │         {
+  │           "id": "org.iso.18013.5.1.mDL",
+  │           "format": {
+  │             "mso_mdoc": {
+  │               "alg": [
+  │                 "ES256"
+  │               ]
+  │             }
+  │           },
+  │           "constraints": {
+  │             "fields": [
+  │               {
+  │                 "path": [
+  │                   "$['org.iso.18013.5.1']['family_name']"
+  │                 ],
+  │                 "intent_to_retain": false
+  │               },
+  │               {
+  │                 "path": [
+  │                   "$['org.iso.18013.5.1']['given_name']"
+  │                 ],
+  │                 "intent_to_retain": false
+  │               },
+  │               {
+  │                 "path": [
+  │                   "$['org.iso.18013.5.1']['birth_date']"
+  │                 ],
+  │                 "intent_to_retain": false
+  │               },
+  │               {
+  │                 "path": [
+  │                   "$['org.iso.18013.5.1']['document_number']"
+  │                 ],
+  │                 "intent_to_retain": false
+  │               }
+  │             ],
+  │             "limit_disclosure": "required"
+  │           }
+  │         }
+  │       ]
+  │     },
+  │     "tokenResponse": {
+  │       "vp_token": "o2d2ZXJzaW9uYzEuMGlkb2N1bWVudHOBo2dkb2NUeXBldW9yZy5pc28uMTgwMTMuNS4xLm1ETGxpc3N1ZXJTaWduZWSiam5hbWVTcGFjZXOhcW9yZy5pc28uMTgwMTMuNS4xhNgYWFKkaGRpZ2VzdElEAGZyYW5kb21Q4Jtj3sBaOR0JSXVCJcVAZ3FlbGVtZW50SWRlbnRpZmllcmtmYW1pbHlfbmFtZWxlbGVtZW50VmFsdWVjRG9l2BhYUqRoZGlnZXN0SUQBZnJhbmRvbVB6kdz4Lddm4BhBNmVcUAorcWVsZW1lbnRJZGVudGlmaWVyamdpdmVuX25hbWVsZWxlbWVudFZhbHVlZEpvaG7YGFhYpGhkaWdlc3RJRAJmcmFuZG9tUCiFeOXGjuop9s_omC3SqblxZWxlbWVudElkZW50aWZpZXJqYmlydGhfZGF0ZWxlbGVtZW50VmFsdWVqMTk4Ni0wMy0yMtgYWFykaGRpZ2VzdElEB2ZyYW5kb21QMt9RKDMKtXniDVeZ2jiJ_nFlbGVtZW50SWRlbnRpZmllcm9kb2N1bWVudF9udW1iZXJsZWxlbWVudFZhbHVlaTEyMzQ1Njc4OWppc3N1ZXJBdXRohEOhASahGCFZAgUwggIBMIIBp6ADAgECAhRTv5PfPSaqEGop4WQfDjMHu4zP6jAKBggqhkjOPQQDAjAhMQswCQYDVQQGEwJVUzESMBAGA1UEAwwJVGVzdCBJQUNBMB4XDTI2MDUyNjAyNDQ0N1oXDTI3MDgyNjAyNDQ0N1owHzELMAkGA1UEBhMCVVMxEDAOBgNVBAMMB1Rlc3QgRFMwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARec4soikt4PJU4rofSC9bgSlVAEET9yMxBMifchZXViq5UxgqBKFkQe4py_H-CIEu3xEDEIlbfRLpRYmF6kpnDo4G-MIG7MB8GA1UdIwQYMBaAFBacYezXP4tFItNKx2L5M3To7jcQMB0GA1UdDgQWBBQl8HT8KmSCgtXRgUK9p7eAa9wRQTAOBgNVHQ8BAf8EBAMCB4AwIwYDVR0SBBwwGoYYaHR0cHM6Ly9pYWNhLmV4YW1wbGUuY29tMBUGA1UdJQEB_wQLMAkGByiBjF0FAQIwLQYDVR0fBCYwJDAioCCgHoYcaHR0cHM6Ly9pYWNhLmV4YW1wbGUuY29tL2NybDAKBggqhkjOPQQDAgNIADBFAiEAnLP2eIkiZjFu1ZCuXVgEoBVcCAqrdFXWW6HRZwWkn0ACIBcOqzB5ASKkVk_AQHloMRvkmLI6GuYdWDQnEuqQHlxvWQLb2BhZAtamZ3ZlcnNpb25jMS4wb2RpZ2VzdEFsZ29yaXRobWdTSEEtMjU2bHZhbHVlRGlnZXN0c6Fxb3JnLmlzby4xODAxMy41LjGrAFggBM4EjPV1hR5e_qsMvLrRqRytDkErmOq7K7iwyPy327gBWCCmBF78i668jau0Ws5F1BIHXbUwU3GIcXzNqerkIw-z9AJYIItFKfK_vPPccFsi3J2k58EH9i_nu7_aUCSOE-4efiUlA1ggm5UnLNNx0ZVqYegJffWbPKlUQloBLxTO-y-5mUW0x-4EWCAXHOyJ8QgMCoSAybvgzaM4AlH2rw8rbJF6Qto0DHFBdQVYILUFOcLeuzVZETdw3JguWCFIasJHb9HPQzeI1z5yH_ZNBlgg60D1XTPrM8l0Lnm-tMcA9djFiqXa0cCXhmDd1z66jAgHWCBtzC1YbrXR9c6gm-Zctjpmm_Lqpg6tAALMn6Kjc74e8whYIFOhukgmIqsALQaucS-FpIeXLlf8OcMv5SzAGer_ILDCCVggbCoEDjb5EhTV5LcxIJ7510yYQmZgZZjWcPIgS9TMjpkKWCCT3oA9NoOe4BA1q2pc1UCspUVI69ioQskOgccJUAp4Om1kZXZpY2VLZXlJbmZvoWlkZXZpY2VLZXmkAQIgASFYIE9IhpCoNmSYcfFVTS16p1ldbYqfn1ytwrxAXI0MNzQfIlggBqz0DMmWhKCQlOt5j2V6D7_hdheQlxBYIASIAgpQZ_xnZG9jVHlwZXVvcmcuaXNvLjE4MDEzLjUuMS5tRExsdmFsaWRpdHlJbmZvo2ZzaWduZWTAeB4yMDI2LTA1LTI2VDAyOjQ0OjQ3LjM5NjczMzA1M1ppdmFsaWRGcm9twHgeMjAyNi0wNS0yNlQwMjo0NDo0Ny4zOTY3MzM5MjhaanZhbGlkVW50aWzAeB4yMDI3LTA1LTI2VDAyOjQ0OjQ3LjM5NjczMzk3MFpYQOzVhVrPhwjp5iqdWjz5IgrFB_oqevuTVTJHRWychckF3jS6i_dGfG8AqxQSNpDyRE8MW04s0ATlv7KJxZhAKmRsZGV2aWNlU2lnbmVkompuYW1lU3BhY2Vz2BhBoGpkZXZpY2VBdXRooW9kZXZpY2VTaWduYXR1cmWEQ6EBJqEYIYD2WECEfG88wB2B23v_VDfsszZter2d4EfjX4CDIvqQ1SB4AfvkxDzVXHuEFl731FOya_-OLyYgJulANb0cFwm_N0vUZnN0YXR1cwA=",
+  │       "presentation_submission": {
+  │         "id": "IiUOXFm5CmOr",
+  │         "definition_id": "IiUOXFm5CmOr",
+  │         "descriptor_map": [
+  │           {
+  │             "id": "org.iso.18013.5.1.mDL",
+  │             "format": "mso_mdoc",
+  │             "path": "$",
+  │             "path_nested": {
+  │               "id": "org.iso.18013.5.1.mDL",
+  │               "format": "mso_mdoc",
+  │               "path": "$.documents[0]"
+  └──
+✓ Verification SUCCESS
+✓ Verbose step data written to: ./demo/mdoc-steps.json
+
+All steps completed.

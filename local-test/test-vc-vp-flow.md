@@ -2,7 +2,8 @@
 
 **Script:** `test-vc-vp-flow.sh`  
 **Spec:** W3C Verifiable Credentials Data Model 1.1 (jwt_vc_json), OID4VCI (pre-authorized code), OID4VP (Presentation Exchange 2.0)  
-**Run command:** `./test-vc-vp-flow.sh [--verbose|-v] [email] [password]`
+**Run command:** `./test-vc-vp-flow.sh [--verbose|-v] [email] [password]`  
+**Log file:** `test-vc-vp-flow.log` — captured with `./test-vc-vp-flow.sh --verbose > test-vc-vp-flow.log 2>&1`
 
 ---
 
@@ -625,3 +626,33 @@ flowchart TB
 | **Verifier sees**       | All credential fields      | Only disclosed fields              | Only requested namespace fields     |
 | **Key algorithm**       | ES256 (secp256r1)          | ES256 (secp256r1)                  | ES256 (P-256) + X.509               |
 | **Script**              | `test-vc-vp-flow.sh`       | `test-sd-jwt-flow.sh`              | `test-mdoc-flow.sh`                 |
+
+---
+
+## Verbose Mode
+
+Run with `--verbose` or `-v` to enable per-step request/response logging:
+
+```bash
+./test-vc-vp-flow.sh --verbose
+```
+
+To capture all output to a plain-text log file:
+
+```bash
+./test-vc-vp-flow.sh --verbose > test-vc-vp-flow.log 2>&1
+```
+
+> Colors are automatically disabled when stdout is redirected, so the log file contains clean plain text.
+
+Each step prints:
+```
+  ┌── Step N ─── METHOD URL
+  │  REQUEST:
+  │   { ... json ... }
+  │  RESPONSE:
+  │   { ... json ... }
+  └──
+```
+
+The verbose log is also written as JSON to `demo/jwtvc-steps.json` on successful completion.

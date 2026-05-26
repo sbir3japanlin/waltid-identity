@@ -2,7 +2,8 @@
 
 **Script:** `test-mdoc-flow.sh`  
 **Spec:** ISO/IEC 18013-5 (mDL), ISO 18013-7 (OID4VP profile), OID4VCI (pre-authorized code)  
-**Run command:** `./test-mdoc-flow.sh [--verbose|-v] [email] [password]`
+**Run command:** `./test-mdoc-flow.sh [--verbose|-v] [email] [password]`  
+**Log file:** `test-mdoc-flow.log` — captured with `./test-mdoc-flow.sh --verbose > test-mdoc-flow.log 2>&1`
 
 ---
 
@@ -625,3 +626,33 @@ flowchart TB
 | **OID4VP profile**  | Default / PE 2.0             | `ISO_18013_7_MDOC`                   |
 | **Field paths**     | JSONPath `$.field`           | `$['namespace']['field']`            |
 | **Key algorithm**   | ES256 (secp256r1)            | ES256 (P-256) + X.509 cert           |
+
+---
+
+## Verbose Mode
+
+Run with `--verbose` or `-v` to enable per-step request/response logging:
+
+```bash
+./test-mdoc-flow.sh --verbose
+```
+
+To capture all output to a plain-text log file:
+
+```bash
+./test-mdoc-flow.sh --verbose > test-mdoc-flow.log 2>&1
+```
+
+> Colors are automatically disabled when stdout is redirected, so the log file contains clean plain text.
+
+Each step prints:
+```
+  ┌── Step N ─── METHOD URL
+  │  REQUEST:
+  │   { ... json ... }
+  │  RESPONSE:
+  │   { ... json ... }
+  └──
+```
+
+The verbose log is also written as JSON to `demo/mdoc-steps.json` on successful completion.

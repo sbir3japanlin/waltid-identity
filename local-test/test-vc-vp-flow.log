@@ -1,0 +1,954 @@
+
+=== Step 0: Register account (test@email.com) ===
+→ Registration returned HTTP 409 — account may already exist, continuing...
+
+  ┌── Step 0 ─── POST http://localhost:7001/wallet-api/auth/register
+  │  REQUEST:
+  │   {
+  │     "type": "email",
+  │     "name": "Test",
+  │     "email": "test@email.com",
+  │     "password": "test"
+  │   }
+  │  RESPONSE:
+  │   HTTP 409
+  └──
+
+=== Step 1: Login ===
+✓ Token: eyJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3Nzk3NjM1MDcsImV4c...
+
+  ┌── Step 1 ─── POST http://localhost:7001/wallet-api/auth/login
+  │  REQUEST:
+  │   {
+  │     "type": "email",
+  │     "email": "test@email.com",
+  │     "password": "test"
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "id": "c798f9a8-32e1-40ec-b75a-67c3e21e332f",
+  │     "token": "eyJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE3Nzk3NjM1MDcsImV4cCI6MTc4MjM1NTUwNywiaWF0IjoxNzc5NzYzNTA3LCJqdGkiOiJhODgyODI0My0xMDY5LTQ5Y2MtODRjOS05ODdlODNmMWQ0MGMiLCJpc3MiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6NzAwMSIsImF1ZCI6Imh0dHA6Ly9ob3N0LmRvY2tlci5pbnRlcm5hbDo3MDAxIiwic3ViIjoiYzc5OGY5YTgtMzJlMS00MGVjLWI3NWEtNjdjM2UyMWUzMzJmIn0.CU-HC_p63-Lk3PwSptXE1oRhOyo1pnAwn1G6aiCBNAA",
+  │     "username": "test@email.com"
+  │   }
+  └──
+
+=== Step 2: Retrieve Wallet ID ===
+✓ Wallet ID: c3419873-07be-419c-89ad-0b7a352f2d70
+
+  ┌── Step 2 ─── GET http://localhost:7001/wallet-api/wallet/accounts/wallets
+  │  RESPONSE:
+  │   {
+  │     "account": "c798f9a8-32e1-40ec-b75a-67c3e21e332f",
+  │     "wallets": [
+  │       {
+  │         "id": "c3419873-07be-419c-89ad-0b7a352f2d70",
+  │         "name": "Wallet of Test",
+  │         "createdOn": "2026-05-22T05:26:11.760032Z",
+  │         "addedOn": "2026-05-22T05:26:11.762275Z",
+  │         "permission": "ADMINISTRATE"
+  │       }
+  │     ]
+  │   }
+  └──
+
+=== Step 3: Retrieve Key ===
+[
+  {
+    "algorithm": "secp256r1",
+    "cryptoProvider": "[walt.id crypto private secp256r1 key]",
+    "keyId": {
+      "id": "kePnU9VEoCX4byyuLOczT1G1LOUJxWYH82EmNeOYvog"
+    },
+    "keyPair": {},
+    "keysetHandle": null
+  }
+]
+✓ Key ID: kePnU9VEoCX4byyuLOczT1G1LOUJxWYH82EmNeOYvog
+
+  ┌── Step 3 ─── GET http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/keys
+  │  RESPONSE:
+  │   [
+  │     {
+  │       "algorithm": "secp256r1",
+  │       "cryptoProvider": "[walt.id crypto private secp256r1 key]",
+  │       "keyId": {
+  │         "id": "kePnU9VEoCX4byyuLOczT1G1LOUJxWYH82EmNeOYvog"
+  │       },
+  │       "keyPair": {},
+  │       "keysetHandle": null
+  │     }
+  │   ]
+  └──
+
+=== Step 4: Retrieve DID ===
+[
+  {
+    "did": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+    "alias": "Onboarding",
+    "default": true
+  }
+]
+✓ DID: did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ
+
+  ┌── Step 4 ─── GET http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/dids
+  │  RESPONSE:
+  │   [
+  │     {
+  │       "did": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+  │       "alias": "Onboarding",
+  │       "document": "{\"@context\":[\"https://www.w3.org/ns/did/v1\",\"https://w3id.org/security/suites/jws-2020/v1\"],\"id\":\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ\",\"verificationMethod\":[{\"id\":\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ#0\",\"type\":\"JsonWebKey2020\",\"controller\":\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ\",\"publicKeyJwk\":{\"kty\":\"EC\",\"crv\":\"P-256\",\"kid\":\"kePnU9VEoCX4byyuLOczT1G1LOUJxWYH82EmNeOYvog\",\"x\":\"T0iGkKg2ZJhx8VVNLXqnWV1tip-fXK3CvEBcjQw3NB8\",\"y\":\"Bqz0DMmWhKCQlOt5j2V6D7_hdheQlxBYIASIAgpQZ_w\"}}],\"assertionMethod\":[\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ#0\"],\"authentication\":[\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ#0\"],\"capabilityInvocation\":[\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ#0\"],\"capabilityDelegation\":[\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ#0\"],\"keyAgreement\":[\"did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ#0\"]}",
+  │       "keyId": "kePnU9VEoCX4byyuLOczT1G1LOUJxWYH82EmNeOYvog",
+  │       "default": true,
+  │       "createdOn": "2026-05-22T05:26:11.872326Z"
+  │     }
+  │   ]
+  └──
+
+=== Step 5: Retrieve VC well-known config ===
+{
+  "issuer": "http://host.docker.internal:7002/draft13",
+  "authorization_endpoint": "http://host.docker.internal:7002/draft13/authorize",
+  "token_endpoint": "http://host.docker.internal:7002/draft13/token",
+  "jwks_uri": "http://host.docker.internal:7002/draft13/jwks",
+  "scopes_supported": [
+    "openid",
+    "org.iso.23220.photoid.1"
+  ],
+  "response_types_supported": [
+    "code",
+    "vp_token",
+    "id_token"
+  ],
+  "response_modes_supported": [
+    "query",
+    "fragment"
+  ],
+  "grant_types_supported": [
+    "authorization_code",
+    "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+  ],
+  "subject_types_supported": [
+    "public"
+  ],
+  "id_token_signing_alg_values_supported": [
+    "ES256"
+  ],
+  "code_challenge_methods_supported": [
+    "S256"
+  ],
+  "credential_issuer": "http://host.docker.internal:7002/draft13",
+  "credential_endpoint": "http://host.docker.internal:7002/draft13/credential",
+  "batch_credential_endpoint": "http://host.docker.internal:7002/draft13/batch_credential",
+  "deferred_credential_endpoint": "http://host.docker.internal:7002/draft13/credential_deferred",
+  "authorization_servers": [
+    "http://host.docker.internal:7002/draft13"
+  ]
+}
+
+  ┌── Step 5 ─── GET http://localhost:7002/draft13/.well-known/openid-configuration
+  │  RESPONSE:
+  │   {
+  │     "issuer": "http://host.docker.internal:7002/draft13",
+  │     "authorization_endpoint": "http://host.docker.internal:7002/draft13/authorize",
+  │     "token_endpoint": "http://host.docker.internal:7002/draft13/token",
+  │     "jwks_uri": "http://host.docker.internal:7002/draft13/jwks",
+  │     "scopes_supported": [
+  │       "openid",
+  │       "org.iso.23220.photoid.1"
+  │     ],
+  │     "response_types_supported": [
+  │       "code",
+  │       "vp_token",
+  │       "id_token"
+  │     ],
+  │     "response_modes_supported": [
+  │       "query",
+  │       "fragment"
+  │     ],
+  │     "grant_types_supported": [
+  │       "authorization_code",
+  │       "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+  │     ],
+  │     "subject_types_supported": [
+  │       "public"
+  │     ],
+  │     "id_token_signing_alg_values_supported": [
+  │       "ES256"
+  │     ],
+  │     "code_challenge_methods_supported": [
+  │       "S256"
+  │     ],
+  │     "credential_issuer": "http://host.docker.internal:7002/draft13",
+  │     "credential_endpoint": "http://host.docker.internal:7002/draft13/credential",
+  │     "batch_credential_endpoint": "http://host.docker.internal:7002/draft13/batch_credential",
+  │     "deferred_credential_endpoint": "http://host.docker.internal:7002/draft13/credential_deferred",
+  │     "authorization_servers": [
+  │       "http://host.docker.internal:7002/draft13"
+  │     ]
+  │   }
+  └──
+
+=== Step 6: Onboard Issuer ===
+✓ Issuer DID: did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsIngiOiJUTjUwX0IyX3NRVFpxMHNlS3FkOHhtN2s4Y2ZULTFYZ204TGtkRlZmVERVIiwieSI6IkZHckZSZlVGbm44NGNHWmlEekpITTRYeFhLWDljcHRHdHJwY1BSODlUbmMifQ
+
+  ┌── Step 6 ─── POST http://localhost:7002/onboard/issuer
+  │  REQUEST:
+  │   {
+  │     "key": {
+  │       "keyType": "secp256r1"
+  │     }
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "issuerKey": {
+  │       "type": "jwk",
+  │       "jwk": {
+  │         "kty": "EC",
+  │         "d": "Rh5XE0p9SsetCGIhVo4nVHZ9iz715Omx_oGcaiO49sQ",
+  │         "crv": "P-256",
+  │         "kid": "GcdwtvHH5vV7ZLr4CP2_84Z_wPWHbPYLhOk35tqjrIQ",
+  │         "x": "TN50_B2_sQTZq0seKqd8xm7k8cfT-1Xgm8LkdFVfTDU",
+  │         "y": "FGrFRfUFnn84cGZiDzJHM4XxXKX9cptGtrpcPR89Tnc"
+  │       }
+  │     },
+  │     "issuerDid": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsIngiOiJUTjUwX0IyX3NRVFpxMHNlS3FkOHhtN2s4Y2ZULTFYZ204TGtkRlZmVERVIiwieSI6IkZHckZSZlVGbm44NGNHWmlEekpITTRYeFhLWDljcHRHdHJwY1BSODlUbmMifQ"
+  │   }
+  └──
+
+=== Step 7: Create Credential Offer ===
+✓ Raw offer URI: openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.internal%3A7002%2Fdraft13%2FcredentialOffer%3Fid%3Dee278cc1-0267-4fcd-a480-499699e6222f
+
+  ┌── Step 7 ─── POST http://localhost:7002/openid4vc/jwt/issue
+  │  REQUEST:
+  │   {
+  │     "issuerKey": {
+  │       "type": "jwk",
+  │       "jwk": {
+  │         "kty": "EC",
+  │         "d": "Rh5XE0p9SsetCGIhVo4nVHZ9iz715Omx_oGcaiO49sQ",
+  │         "crv": "P-256",
+  │         "kid": "GcdwtvHH5vV7ZLr4CP2_84Z_wPWHbPYLhOk35tqjrIQ",
+  │         "x": "TN50_B2_sQTZq0seKqd8xm7k8cfT-1Xgm8LkdFVfTDU",
+  │         "y": "FGrFRfUFnn84cGZiDzJHM4XxXKX9cptGtrpcPR89Tnc"
+  │       }
+  │     },
+  │     "issuerDid": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsIngiOiJUTjUwX0IyX3NRVFpxMHNlS3FkOHhtN2s4Y2ZULTFYZ204TGtkRlZmVERVIiwieSI6IkZHckZSZlVGbm44NGNHWmlEekpITTRYeFhLWDljcHRHdHJwY1BSODlUbmMifQ",
+  │     "credentialConfigurationId": "UniversityDegree_jwt_vc_json",
+  │     "credentialData": {
+  │       "@context": [
+  │         "https://www.w3.org/2018/credentials/v1",
+  │         "https://www.w3.org/2018/credentials/examples/v1"
+  │       ],
+  │       "id": "http://example.gov/credentials/3732",
+  │       "type": [
+  │         "VerifiableCredential",
+  │         "UniversityDegree"
+  │       ],
+  │       "issuer": {
+  │         "id": "did:web:vc.transmute.world"
+  │       },
+  │       "issuanceDate": "2020-03-10T04:24:12.164Z",
+  │       "credentialSubject": {
+  │         "id": "did:example:ebfeb1f712ebc6f1c276e12ec21",
+  │         "degree": {
+  │           "type": "BachelorDegree",
+  │           "name": "Bachelor of Science and Arts"
+  │         }
+  │       }
+  │     },
+  │     "mapping": {
+  │       "id": "<uuid>",
+  │       "issuer": {
+  │         "id": "<issuerDid>"
+  │       },
+  │       "credentialSubject": {
+  │         "id": "<subjectDid>"
+  │       },
+  │       "issuanceDate": "<timestamp>",
+  │       "expirationDate": "<timestamp-in:365d>"
+  │     },
+  │     "authenticationMethod": "PRE_AUTHORIZED",
+  │     "standardVersion": "DRAFT13"
+  │   }
+  │  RESPONSE:
+  │   openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.internal%3A7002%2Fdraft13%2FcredentialOffer%3Fid%3Dee278cc1-0267-4fcd-a480-499699e6222f
+  └──
+→ Fixed offer URI: openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.internal%3A7002%2Fdraft13%2FcredentialOffer%3Fid%3Dee278cc1-0267-4fcd-a480-499699e6222f
+
+=== Step 8/9: Inspect offer content ===
+→ Could not extract offer ID from URI, skipping content check
+
+=== Step 10: Claim credential (useOfferRequest) ===
+[
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:6671dee1-63f3-4ae0-9108-9ad5c150b9b9",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUjJOa2QzUjJTRWcxZGxZM1dreHlORU5RTWw4NE5GcGZkMUJYU0dKUVdVeG9UMnN6TlhSeGFuSkpVU0lzSW5naU9pSlVUalV3WDBJeVgzTlJWRnB4TUhObFMzRmtPSGh0TjJzNFkyWlVMVEZZWjIwNFRHdGtSbFptVkVSVklpd2llU0k2SWtaSGNrWlNabFZHYm00NE5HTkhXbWxFZWtwSVRUUlllRmhMV0RsamNIUkhkSEp3WTFCU09EbFVibU1pZlEjR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUjJOa2QzUjJTRWcxZGxZM1dreHlORU5RTWw4NE5GcGZkMUJYU0dKUVdVeG9UMnN6TlhSeGFuSkpVU0lzSW5naU9pSlVUalV3WDBJeVgzTlJWRnB4TUhObFMzRmtPSGh0TjJzNFkyWlVMVEZZWjIwNFRHdGtSbFptVkVSVklpd2llU0k2SWtaSGNrWlNabFZHYm00NE5HTkhXbWxFZWtwSVRUUlllRmhMV0RsamNIUkhkSEp3WTFCU09EbFVibU1pZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6NjY3MWRlZTEtNjNmMy00YWUwLTkxMDgtOWFkNWMxNTBiOWI5IiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaVIyTmtkM1IyU0VnMWRsWTNXa3h5TkVOUU1sODRORnBmZDFCWFNHSlFXVXhvVDJzek5YUnhhbkpKVVNJc0luZ2lPaUpVVGpVd1gwSXlYM05SVkZweE1ITmxTM0ZrT0hodE4yczRZMlpVTFRGWVoyMDRUR3RrUmxabVZFUlZJaXdpZVNJNklrWkhja1pTWmxWR2JtNDROR05IV21sRWVrcElUVFJZZUZoTFdEbGpjSFJIZEhKd1kxQlNPRGxVYm1NaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjZUMDI6NDU6MDguMDYxNzI1MjU3WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjZUMDI6NDU6MDguMDYxNzM4MzgyWiJ9LCJqdGkiOiJ1cm46dXVpZDo2NjcxZGVlMS02M2YzLTRhZTAtOTEwOC05YWQ1YzE1MGI5YjkiLCJleHAiOjE4MTEyOTk1MDgsImlhdCI6MTc3OTc2MzUwOCwibmJmIjoxNzc5NzYzNTA4fQ.ghxyGEKRuC8uLKeDv4TcGUnygpHHY7EjaLlrDoFgnwr72ssALroxEtQjceVq_IAMzT7GtQj_Gq3c-SjTnkhjLA",
+    "disclosures": "",
+    "addedOn": "2026-05-26T02:45:08.065817632Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:6671dee1-63f3-4ae0-9108-9ad5c150b9b9",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsIngiOiJUTjUwX0IyX3NRVFpxMHNlS3FkOHhtN2s4Y2ZULTFYZ204TGtkRlZmVERVIiwieSI6IkZHckZSZlVGbm44NGNHWmlEekpITTRYeFhLWDljcHRHdHJwY1BSODlUbmMifQ"
+      },
+      "issuanceDate": "2026-05-26T02:45:08.061725257Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-26T02:45:08.061738382Z"
+    }
+  }
+]
+
+  ┌── Step 10 ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/useOfferRequest
+  │  REQUEST:
+  │   openid-credential-offer://?credential_offer_uri=http%3A%2F%2Fhost.docker.internal%3A7002%2Fdraft13%2FcredentialOffer%3Fid%3Dee278cc1-0267-4fcd-a480-499699e6222f
+  │  RESPONSE:
+  │   [
+  │     {
+  │       "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+  │       "id": "urn:uuid:6671dee1-63f3-4ae0-9108-9ad5c150b9b9",
+  │       "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUjJOa2QzUjJTRWcxZGxZM1dreHlORU5RTWw4NE5GcGZkMUJYU0dKUVdVeG9UMnN6TlhSeGFuSkpVU0lzSW5naU9pSlVUalV3WDBJeVgzTlJWRnB4TUhObFMzRmtPSGh0TjJzNFkyWlVMVEZZWjIwNFRHdGtSbFptVkVSVklpd2llU0k2SWtaSGNrWlNabFZHYm00NE5HTkhXbWxFZWtwSVRUUlllRmhMV0RsamNIUkhkSEp3WTFCU09EbFVibU1pZlEjR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUjJOa2QzUjJTRWcxZGxZM1dreHlORU5RTWw4NE5GcGZkMUJYU0dKUVdVeG9UMnN6TlhSeGFuSkpVU0lzSW5naU9pSlVUalV3WDBJeVgzTlJWRnB4TUhObFMzRmtPSGh0TjJzNFkyWlVMVEZZWjIwNFRHdGtSbFptVkVSVklpd2llU0k2SWtaSGNrWlNabFZHYm00NE5HTkhXbWxFZWtwSVRUUlllRmhMV0RsamNIUkhkSEp3WTFCU09EbFVibU1pZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6NjY3MWRlZTEtNjNmMy00YWUwLTkxMDgtOWFkNWMxNTBiOWI5IiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaVIyTmtkM1IyU0VnMWRsWTNXa3h5TkVOUU1sODRORnBmZDFCWFNHSlFXVXhvVDJzek5YUnhhbkpKVVNJc0luZ2lPaUpVVGpVd1gwSXlYM05SVkZweE1ITmxTM0ZrT0hodE4yczRZMlpVTFRGWVoyMDRUR3RrUmxabVZFUlZJaXdpZVNJNklrWkhja1pTWmxWR2JtNDROR05IV21sRWVrcElUVFJZZUZoTFdEbGpjSFJIZEhKd1kxQlNPRGxVYm1NaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjZUMDI6NDU6MDguMDYxNzI1MjU3WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjZUMDI6NDU6MDguMDYxNzM4MzgyWiJ9LCJqdGkiOiJ1cm46dXVpZDo2NjcxZGVlMS02M2YzLTRhZTAtOTEwOC05YWQ1YzE1MGI5YjkiLCJleHAiOjE4MTEyOTk1MDgsImlhdCI6MTc3OTc2MzUwOCwibmJmIjoxNzc5NzYzNTA4fQ.ghxyGEKRuC8uLKeDv4TcGUnygpHHY7EjaLlrDoFgnwr72ssALroxEtQjceVq_IAMzT7GtQj_Gq3c-SjTnkhjLA",
+  │       "disclosures": "",
+  │       "addedOn": "2026-05-26T02:45:08.065817632Z",
+  │       "pending": false,
+  │       "format": "jwt_vc_json",
+  │       "parsedDocument": {
+  │         "@context": [
+  │           "https://www.w3.org/2018/credentials/v1",
+  │           "https://www.w3.org/2018/credentials/examples/v1"
+  │         ],
+  │         "id": "urn:uuid:6671dee1-63f3-4ae0-9108-9ad5c150b9b9",
+  │         "type": [
+  │           "VerifiableCredential",
+  │           "UniversityDegree"
+  │         ],
+  │         "issuer": {
+  │           "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsIngiOiJUTjUwX0IyX3NRVFpxMHNlS3FkOHhtN2s4Y2ZULTFYZ204TGtkRlZmVERVIiwieSI6IkZHckZSZlVGbm44NGNHWmlEekpITTRYeFhLWDljcHRHdHJwY1BSODlUbmMifQ"
+  │         },
+  │         "issuanceDate": "2026-05-26T02:45:08.061725257Z",
+  │         "credentialSubject": {
+  │           "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+  │           "degree": {
+  │             "type": "BachelorDegree",
+  │             "name": "Bachelor of Science and Arts"
+  │           }
+  │         },
+  │         "expirationDate": "2027-05-26T02:45:08.061738382Z"
+  │       }
+  │     }
+  │   ]
+  └──
+
+=== Step 11: Create Authorization Request (Verifier) ===
+✓ Auth request: openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker....
+→ State: g7kTBQ77VxvO
+
+  ┌── Step 11 ─── POST http://localhost:7003/openid4vc/verify
+  │  REQUEST:
+  │   {
+  │     "request_credentials": [
+  │       {
+  │         "type": "UniversityDegree",
+  │         "format": "jwt_vc_json"
+  │       }
+  │     ]
+  │   }
+  │  RESPONSE:
+  │   openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&response_mode=direct_post&state=g7kTBQ77VxvO&presentation_definition_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fpd%2Fg7kTBQ77VxvO&client_id_scheme=redirect_uri&client_metadata=%7B%22authorization_encrypted_response_alg%22%3A%22ECDH-ES%22%2C%22authorization_encrypted_response_enc%22%3A%22A256GCM%22%7D&nonce=bedbd991-221a-4a45-9b7d-6eb3525ffb31&response_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify%2Fg7kTBQ77VxvO
+  └──
+
+=== Step 12: Match Credentials for Presentation Definition ===
+→ Presentation definition URI: http://localhost:7003/openid4vc/pd/g7kTBQ77VxvO
+{
+  "id": "8MU5GnDBNlUF",
+  "input_descriptors": [
+    {
+      "id": "UniversityDegree",
+      "format": {
+        "jwt_vc_json": {
+          "alg": [
+            "EdDSA"
+          ]
+        }
+      },
+      "constraints": {
+        "fields": [
+          {
+            "path": [
+              "$.vc.type"
+            ],
+            "filter": {
+              "type": "string",
+              "pattern": "UniversityDegree"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+[
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTTJweVExcGZNbkZtWWpWSWFXZENTelJZVmtkaFNteEhPRlpzVEVSSlRHUmhYMHR6ZG5od1UzUkZaeUlzSW5naU9pSXRNVmhTV0hwTloxZE9ZbE5SZFY4dGJESmpTVkZpYmt4eWNIaE9UVWs0WDFJNGRHVmxhR3BsWTFnMElpd2llU0k2SW14WU0wdEhPRk4xVFVkMFJFVkZiVkpLTmpoSlRtcGtjSGd6VkZwV1RuUjVhelpsZHpCdFdYVnFjMjhpZlEjM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTTJweVExcGZNbkZtWWpWSWFXZENTelJZVmtkaFNteEhPRlpzVEVSSlRHUmhYMHR6ZG5od1UzUkZaeUlzSW5naU9pSXRNVmhTV0hwTloxZE9ZbE5SZFY4dGJESmpTVkZpYmt4eWNIaE9UVWs0WDFJNGRHVmxhR3BsWTFnMElpd2llU0k2SW14WU0wdEhPRk4xVFVkMFJFVkZiVkpLTmpoSlRtcGtjSGd6VkZwV1RuUjVhelpsZHpCdFdYVnFjMjhpZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6ZjQ0NTVhODMtNDg2OC00NTllLTk0NzgtNDM1ODgwNDNmYTBkIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaU0ycHlRMXBmTW5GbVlqVklhV2RDU3pSWVZrZGhTbXhIT0Zac1RFUkpUR1JoWDB0emRuaHdVM1JGWnlJc0luZ2lPaUl0TVZoU1dIcE5aMWRPWWxOUmRWOHRiREpqU1ZGaWJreHljSGhPVFVrNFgxSTRkR1ZsYUdwbFkxZzBJaXdpZVNJNklteFlNMHRIT0ZOMVRVZDBSRVZGYlZKS05qaEpUbXBrY0hnelZGcFdUblI1YXpabGR6QnRXWFZxYzI4aWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjVUMDI6MzU6MjUuODYxOTc1MzM1WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjVUMDI6MzU6MjUuODYyMDEwMDg1WiJ9LCJqdGkiOiJ1cm46dXVpZDpmNDQ1NWE4My00ODY4LTQ1OWUtOTQ3OC00MzU4ODA0M2ZhMGQiLCJleHAiOjE4MTEyMTI1MjUsImlhdCI6MTc3OTY3NjUyNSwibmJmIjoxNzc5Njc2NTI1fQ.XYUezHKoNVbdCu61SvSs-mRh-ztNcmZUY-EnUzJeL-SJZmqOPnaQ6gmpCvrF5dgBFwz_w2VYpKjy1ifqNm-K2g",
+    "disclosures": "",
+    "addedOn": "2026-05-25T02:35:25.869804Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsIngiOiItMVhSWHpNZ1dOYlNRdV8tbDJjSVFibkxycHhOTUk4X1I4dGVlaGplY1g0IiwieSI6ImxYM0tHOFN1TUd0REVFbVJKNjhJTmpkcHgzVFpWTnR5azZldzBtWXVqc28ifQ"
+      },
+      "issuanceDate": "2026-05-25T02:35:25.861975335Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-25T02:35:25.862010085Z"
+    }
+  },
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:d4c01b3e-600e-4252-bfb0-b24831fb502e",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYW1WbE5WSXhOakZTT1VwVFkwNXljeTFOU2tKaGIyRlNWMWxqZUdWbVNtWkJhMHRCZUZaWlVGcEhSU0lzSW5naU9pSlhOVkZrTFZRd2IxWnBjMjVTVXpaNU4wNWtObXg1TW5GWWVFUm5lR3hETUdab2RGbFZNMWwzU2pKTklpd2llU0k2SWtFeGJ6VXlZblZUWmpkUU1ucHpURlZNVFZCMFpWUTJPVzFWYzFCMVVHeGFiSFp1UjBoc1FrZERlV01pZlEjamVlNVIxNjFSOUpTY05ycy1NSkJhb2FSV1ljeGVmSmZBa0tBeFZZUFpHRSIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYW1WbE5WSXhOakZTT1VwVFkwNXljeTFOU2tKaGIyRlNWMWxqZUdWbVNtWkJhMHRCZUZaWlVGcEhSU0lzSW5naU9pSlhOVkZrTFZRd2IxWnBjMjVTVXpaNU4wNWtObXg1TW5GWWVFUm5lR3hETUdab2RGbFZNMWwzU2pKTklpd2llU0k2SWtFeGJ6VXlZblZUWmpkUU1ucHpURlZNVFZCMFpWUTJPVzFWYzFCMVVHeGFiSFp1UjBoc1FrZERlV01pZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6ZDRjMDFiM2UtNjAwZS00MjUyLWJmYjAtYjI0ODMxZmI1MDJlIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWFtVmxOVkl4TmpGU09VcFRZMDV5Y3kxTlNrSmhiMkZTVjFsamVHVm1TbVpCYTB0QmVGWlpVRnBIUlNJc0luZ2lPaUpYTlZGa0xWUXdiMVpwYzI1U1V6WjVOMDVrTm14NU1uRlllRVJuZUd4RE1HWm9kRmxWTTFsM1NqSk5JaXdpZVNJNklrRXhielV5WW5WVFpqZFFNbnB6VEZWTVRWQjBaVlEyT1cxVmMxQjFVR3hhYkhadVIwaHNRa2REZVdNaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjVUMDI6Mzg6MTYuODQ4OTkxMTM2WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjVUMDI6Mzg6MTYuODQ5MDE1NTExWiJ9LCJqdGkiOiJ1cm46dXVpZDpkNGMwMWIzZS02MDBlLTQyNTItYmZiMC1iMjQ4MzFmYjUwMmUiLCJleHAiOjE4MTEyMTI2OTYsImlhdCI6MTc3OTY3NjY5NiwibmJmIjoxNzc5Njc2Njk2fQ.Hzyz7JVikVVLH5s6SzSdOZmPlPnpAEKma017PbFft2PqldfIfWTBbkkyP53yWg3e5Tp9OhDBA5hLbosc8eR8zQ",
+    "disclosures": "",
+    "addedOn": "2026-05-25T02:38:16.852978Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:d4c01b3e-600e-4252-bfb0-b24831fb502e",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiamVlNVIxNjFSOUpTY05ycy1NSkJhb2FSV1ljeGVmSmZBa0tBeFZZUFpHRSIsIngiOiJXNVFkLVQwb1Zpc25SUzZ5N05kNmx5MnFYeERneGxDMGZodFlVM1l3SjJNIiwieSI6IkExbzUyYnVTZjdQMnpzTFVMTVB0ZVQ2OW1Vc1B1UGxabHZuR0hsQkdDeWMifQ"
+      },
+      "issuanceDate": "2026-05-25T02:38:16.848991136Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-25T02:38:16.849015511Z"
+    }
+  },
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:b3c13fbc-66fb-4606-9d9e-fe4ca5d0688b",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pWVdWRmNFc3hjazVxT1MxcFJYQlliM2RxVVVGalZtWk5Sbkp5ZHkxVlozQTFUbUU1WkdoeFRISTNNQ0lzSW5naU9pSm5lR2xtZDNRMU5Wb3diM0pXVkVWSFFXaGZjbnBRWm14T2VWTndUVEJvUkd3NFdUWnljalV6ZURkQklpd2llU0k2SWpGb1p5MVdWbkZNY1dGdlNGVjRaWGM0UkRCdFduVkljR1kwUnpoVE4ybERjMUpEU1VSblRrbHdVMUVpZlEjYWVFcEsxck5qOS1pRXBYb3dqUUFjVmZNRnJydy1VZ3A1TmE5ZGhxTHI3MCIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pWVdWRmNFc3hjazVxT1MxcFJYQlliM2RxVVVGalZtWk5Sbkp5ZHkxVlozQTFUbUU1WkdoeFRISTNNQ0lzSW5naU9pSm5lR2xtZDNRMU5Wb3diM0pXVkVWSFFXaGZjbnBRWm14T2VWTndUVEJvUkd3NFdUWnljalV6ZURkQklpd2llU0k2SWpGb1p5MVdWbkZNY1dGdlNGVjRaWGM0UkRCdFduVkljR1kwUnpoVE4ybERjMUpEU1VSblRrbHdVMUVpZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6YjNjMTNmYmMtNjZmYi00NjA2LTlkOWUtZmU0Y2E1ZDA2ODhiIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaVlXVkZjRXN4Y2s1cU9TMXBSWEJZYjNkcVVVRmpWbVpOUm5KeWR5MVZaM0ExVG1FNVpHaHhUSEkzTUNJc0luZ2lPaUpuZUdsbWQzUTFOVm93YjNKV1ZFVkhRV2hmY25wUVpteE9lVk53VFRCb1JHdzRXVFp5Y2pVemVEZEJJaXdpZVNJNklqRm9aeTFXVm5GTWNXRnZTRlY0WlhjNFJEQnRXblZJY0dZMFJ6aFROMmxEYzFKRFNVUm5Ua2x3VTFFaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjZUMDI6Mjk6NDcuNjA0NjIyNDcwWiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjZUMDI6Mjk6NDcuNjA0NzAyMzg3WiJ9LCJqdGkiOiJ1cm46dXVpZDpiM2MxM2ZiYy02NmZiLTQ2MDYtOWQ5ZS1mZTRjYTVkMDY4OGIiLCJleHAiOjE4MTEyOTg1ODcsImlhdCI6MTc3OTc2MjU4NywibmJmIjoxNzc5NzYyNTg3fQ.EMNtYfG_esdt_en_jbGYV-2gk3ta-Mn9YdpyM6DKOdlg4mcorRpaqhiRjt6K0PNvOOfCzgP78gYdi5rb-M7ePQ",
+    "disclosures": "",
+    "addedOn": "2026-05-26T02:29:47.620925Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:b3c13fbc-66fb-4606-9d9e-fe4ca5d0688b",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiYWVFcEsxck5qOS1pRXBYb3dqUUFjVmZNRnJydy1VZ3A1TmE5ZGhxTHI3MCIsIngiOiJneGlmd3Q1NVowb3JWVEVHQWhfcnpQZmxOeVNwTTBoRGw4WTZycjUzeDdBIiwieSI6IjFoZy1WVnFMcWFvSFV4ZXc4RDBtWnVIcGY0RzhTN2lDc1JDSURnTklwU1EifQ"
+      },
+      "issuanceDate": "2026-05-26T02:29:47.604622470Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-26T02:29:47.604702387Z"
+    }
+  },
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:36526743-bd0e-44e6-a34d-b0454c2d0948",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUWxnMVJGQnBTRWg1VEZsV2NDMUxMVFpVTFdkUVoyMHhSRUZ0UmpOVE55MXVabHBVZUdwYVYzQmZPQ0lzSW5naU9pSjZVWGN3V0MwM1pHZzVXWFV3WTFkdlRsRlZXa016U0ZaUFVDMTViSGhwYmtWcGVFbFhjVUYwWDNSUklpd2llU0k2SWxsS09WQklTVXhEU1ZoWFlsZEdaR2wwZEhKR1JrVllPVTh3TFdjeFNYQTFZbk5EVXpCM2NHMUhjRlVpZlEjQlg1RFBpSEh5TFlWcC1LLTZULWdQZ20xREFtRjNTNy1uZlpUeGpaV3BfOCIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUWxnMVJGQnBTRWg1VEZsV2NDMUxMVFpVTFdkUVoyMHhSRUZ0UmpOVE55MXVabHBVZUdwYVYzQmZPQ0lzSW5naU9pSjZVWGN3V0MwM1pHZzVXWFV3WTFkdlRsRlZXa016U0ZaUFVDMTViSGhwYmtWcGVFbFhjVUYwWDNSUklpd2llU0k2SWxsS09WQklTVXhEU1ZoWFlsZEdaR2wwZEhKR1JrVllPVTh3TFdjeFNYQTFZbk5EVXpCM2NHMUhjRlVpZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6MzY1MjY3NDMtYmQwZS00NGU2LWEzNGQtYjA0NTRjMmQwOTQ4IiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaVFsZzFSRkJwU0VoNVRGbFdjQzFMTFRaVUxXZFFaMjB4UkVGdFJqTlROeTF1WmxwVWVHcGFWM0JmT0NJc0luZ2lPaUo2VVhjd1dDMDNaR2c1V1hVd1kxZHZUbEZWV2tNelNGWlBVQzE1YkhocGJrVnBlRWxYY1VGMFgzUlJJaXdpZVNJNklsbEtPVkJJU1V4RFNWaFhZbGRHWkdsMGRISkdSa1ZZT1U4d0xXY3hTWEExWW5ORFV6QjNjRzFIY0ZVaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjZUMDI6MzA6MDguNzMyNzI5Mjk5WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjZUMDI6MzA6MDguNzMyNzQxNjc0WiJ9LCJqdGkiOiJ1cm46dXVpZDozNjUyNjc0My1iZDBlLTQ0ZTYtYTM0ZC1iMDQ1NGMyZDA5NDgiLCJleHAiOjE4MTEyOTg2MDgsImlhdCI6MTc3OTc2MjYwOCwibmJmIjoxNzc5NzYyNjA4fQ._9PFoxS_qSLZ5nf2U2Wcw5OodNdZ-_zHGdQuhJXbwEtBMWPS95ehm4GXnaVcjfHXF8w5V6KwFhBxlAx7lKZ4iA",
+    "disclosures": "",
+    "addedOn": "2026-05-26T02:30:08.740058Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:36526743-bd0e-44e6-a34d-b0454c2d0948",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiQlg1RFBpSEh5TFlWcC1LLTZULWdQZ20xREFtRjNTNy1uZlpUeGpaV3BfOCIsIngiOiJ6UXcwWC03ZGg5WXUwY1dvTlFVWkMzSFZPUC15bHhpbkVpeElXcUF0X3RRIiwieSI6IllKOVBISUxDSVhXYldGZGl0dHJGRkVYOU8wLWcxSXA1YnNDUzB3cG1HcFUifQ"
+      },
+      "issuanceDate": "2026-05-26T02:30:08.732729299Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-26T02:30:08.732741674Z"
+    }
+  },
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:9c2b3dab-ec5c-4272-84e9-9b345bd6070c",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTmtselFWTllXazgxYnpaWVlrRTJjRXB1WkRoNlRIVnVTR2xYTTA5NVZ6TnROMHhNYkdSR1JDMUhaeUlzSW5naU9pSTBTamsyUVZCQlZEbEZlR2xsVVU5dGJIUmtlVFJEYmxCUWQyTkpNRWRGVTNaU1Z6TXRWblpqZWxWRklpd2llU0k2SWxKWVNWazRXVmRDYVROVFRGaEhXWGhQYW14aFZYaGhPRE16WlY5UlptdEVYMWgxWjB0RlRsSXhRVFFpZlEjNklzQVNYWk81bzZYYkE2cEpuZDh6THVuSGlXM095VzNtN0xMbGRGRC1HZyIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTmtselFWTllXazgxYnpaWVlrRTJjRXB1WkRoNlRIVnVTR2xYTTA5NVZ6TnROMHhNYkdSR1JDMUhaeUlzSW5naU9pSTBTamsyUVZCQlZEbEZlR2xsVVU5dGJIUmtlVFJEYmxCUWQyTkpNRWRGVTNaU1Z6TXRWblpqZWxWRklpd2llU0k2SWxKWVNWazRXVmRDYVROVFRGaEhXWGhQYW14aFZYaGhPRE16WlY5UlptdEVYMWgxWjB0RlRsSXhRVFFpZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6OWMyYjNkYWItZWM1Yy00MjcyLTg0ZTktOWIzNDViZDYwNzBjIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaU5rbHpRVk5ZV2s4MWJ6WllZa0UyY0VwdVpEaDZUSFZ1U0dsWE0wOTVWek50TjB4TWJHUkdSQzFIWnlJc0luZ2lPaUkwU2prMlFWQkJWRGxGZUdsbFVVOXRiSFJrZVRSRGJsQlFkMk5KTUVkRlUzWlNWek10Vm5aamVsVkZJaXdpZVNJNklsSllTVms0V1ZkQ2FUTlRURmhIV1hoUGFteGhWWGhoT0RNelpWOVJabXRFWDFoMVowdEZUbEl4UVRRaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjZUMDI6MzU6MzIuOTQxNzU3Nzk2WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjZUMDI6MzU6MzIuOTQxNzcwNzk2WiJ9LCJqdGkiOiJ1cm46dXVpZDo5YzJiM2RhYi1lYzVjLTQyNzItODRlOS05YjM0NWJkNjA3MGMiLCJleHAiOjE4MTEyOTg5MzIsImlhdCI6MTc3OTc2MjkzMiwibmJmIjoxNzc5NzYyOTMyfQ.fpYiU3KqHr7qKLA7a7PGrbXDRfjt_KGEJhlMIfFFmrGnmKBdRrbEAL-9jSytsPCizVXEJfvv1UPEWTVNEmswBw",
+    "disclosures": "",
+    "addedOn": "2026-05-26T02:35:32.946462Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:9c2b3dab-ec5c-4272-84e9-9b345bd6070c",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiNklzQVNYWk81bzZYYkE2cEpuZDh6THVuSGlXM095VzNtN0xMbGRGRC1HZyIsIngiOiI0Sjk2QVBBVDlFeGllUU9tbHRkeTRDblBQd2NJMEdFU3ZSVzMtVnZjelVFIiwieSI6IlJYSVk4WVdCaTNTTFhHWXhPamxhVXhhODMzZV9RZmtEX1h1Z0tFTlIxQTQifQ"
+      },
+      "issuanceDate": "2026-05-26T02:35:32.941757796Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-26T02:35:32.941770796Z"
+    }
+  },
+  {
+    "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+    "id": "urn:uuid:6671dee1-63f3-4ae0-9108-9ad5c150b9b9",
+    "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUjJOa2QzUjJTRWcxZGxZM1dreHlORU5RTWw4NE5GcGZkMUJYU0dKUVdVeG9UMnN6TlhSeGFuSkpVU0lzSW5naU9pSlVUalV3WDBJeVgzTlJWRnB4TUhObFMzRmtPSGh0TjJzNFkyWlVMVEZZWjIwNFRHdGtSbFptVkVSVklpd2llU0k2SWtaSGNrWlNabFZHYm00NE5HTkhXbWxFZWtwSVRUUlllRmhMV0RsamNIUkhkSEp3WTFCU09EbFVibU1pZlEjR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pUjJOa2QzUjJTRWcxZGxZM1dreHlORU5RTWw4NE5GcGZkMUJYU0dKUVdVeG9UMnN6TlhSeGFuSkpVU0lzSW5naU9pSlVUalV3WDBJeVgzTlJWRnB4TUhObFMzRmtPSGh0TjJzNFkyWlVMVEZZWjIwNFRHdGtSbFptVkVSVklpd2llU0k2SWtaSGNrWlNabFZHYm00NE5HTkhXbWxFZWtwSVRUUlllRmhMV0RsamNIUkhkSEp3WTFCU09EbFVibU1pZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6NjY3MWRlZTEtNjNmMy00YWUwLTkxMDgtOWFkNWMxNTBiOWI5IiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaVIyTmtkM1IyU0VnMWRsWTNXa3h5TkVOUU1sODRORnBmZDFCWFNHSlFXVXhvVDJzek5YUnhhbkpKVVNJc0luZ2lPaUpVVGpVd1gwSXlYM05SVkZweE1ITmxTM0ZrT0hodE4yczRZMlpVTFRGWVoyMDRUR3RrUmxabVZFUlZJaXdpZVNJNklrWkhja1pTWmxWR2JtNDROR05IV21sRWVrcElUVFJZZUZoTFdEbGpjSFJIZEhKd1kxQlNPRGxVYm1NaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjZUMDI6NDU6MDguMDYxNzI1MjU3WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjZUMDI6NDU6MDguMDYxNzM4MzgyWiJ9LCJqdGkiOiJ1cm46dXVpZDo2NjcxZGVlMS02M2YzLTRhZTAtOTEwOC05YWQ1YzE1MGI5YjkiLCJleHAiOjE4MTEyOTk1MDgsImlhdCI6MTc3OTc2MzUwOCwibmJmIjoxNzc5NzYzNTA4fQ.ghxyGEKRuC8uLKeDv4TcGUnygpHHY7EjaLlrDoFgnwr72ssALroxEtQjceVq_IAMzT7GtQj_Gq3c-SjTnkhjLA",
+    "disclosures": "",
+    "addedOn": "2026-05-26T02:45:08.067444Z",
+    "pending": false,
+    "format": "jwt_vc_json",
+    "parsedDocument": {
+      "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+      ],
+      "id": "urn:uuid:6671dee1-63f3-4ae0-9108-9ad5c150b9b9",
+      "type": [
+        "VerifiableCredential",
+        "UniversityDegree"
+      ],
+      "issuer": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiR2Nkd3R2SEg1dlY3WkxyNENQMl84NFpfd1BXSGJQWUxoT2szNXRxanJJUSIsIngiOiJUTjUwX0IyX3NRVFpxMHNlS3FkOHhtN2s4Y2ZULTFYZ204TGtkRlZmVERVIiwieSI6IkZHckZSZlVGbm44NGNHWmlEekpITTRYeFhLWDljcHRHdHJwY1BSODlUbmMifQ"
+      },
+      "issuanceDate": "2026-05-26T02:45:08.061725257Z",
+      "credentialSubject": {
+        "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+        "degree": {
+          "type": "BachelorDegree",
+          "name": "Bachelor of Science and Arts"
+        }
+      },
+      "expirationDate": "2027-05-26T02:45:08.061738382Z"
+    }
+  }
+]
+✓ Matching credential ID: urn:uuid:f4455a83-4868-459e-9478-43588043fa0d
+
+  ┌── Step 12a ─── GET http://localhost:7003/openid4vc/pd/g7kTBQ77VxvO
+  │  RESPONSE:
+  │   {
+  │     "id": "8MU5GnDBNlUF",
+  │     "input_descriptors": [
+  │       {
+  │         "id": "UniversityDegree",
+  │         "format": {
+  │           "jwt_vc_json": {
+  │             "alg": [
+  │               "EdDSA"
+  │             ]
+  │           }
+  │         },
+  │         "constraints": {
+  │           "fields": [
+  │             {
+  │               "path": [
+  │                 "$.vc.type"
+  │               ],
+  │               "filter": {
+  │                 "type": "string",
+  │                 "pattern": "UniversityDegree"
+  │               }
+  │             }
+  │           ]
+  │         }
+  │       }
+  │     ]
+  │   }
+  └──
+
+  ┌── Step 12b ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/matchCredentialsForPresentationDefinition
+  │  REQUEST:
+  │   {
+  │     "id": "8MU5GnDBNlUF",
+  │     "input_descriptors": [
+  │       {
+  │         "id": "UniversityDegree",
+  │         "format": {
+  │           "jwt_vc_json": {
+  │             "alg": [
+  │               "EdDSA"
+  │             ]
+  │           }
+  │         },
+  │         "constraints": {
+  │           "fields": [
+  │             {
+  │               "path": [
+  │                 "$.vc.type"
+  │               ],
+  │               "filter": {
+  │                 "type": "string",
+  │                 "pattern": "UniversityDegree"
+  │               }
+  │             }
+  │           ]
+  │         }
+  │       }
+  │     ]
+  │   }
+  │  RESPONSE:
+  │   [
+  │     {
+  │       "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+  │       "id": "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d",
+  │       "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTTJweVExcGZNbkZtWWpWSWFXZENTelJZVmtkaFNteEhPRlpzVEVSSlRHUmhYMHR6ZG5od1UzUkZaeUlzSW5naU9pSXRNVmhTV0hwTloxZE9ZbE5SZFY4dGJESmpTVkZpYmt4eWNIaE9UVWs0WDFJNGRHVmxhR3BsWTFnMElpd2llU0k2SW14WU0wdEhPRk4xVFVkMFJFVkZiVkpLTmpoSlRtcGtjSGd6VkZwV1RuUjVhelpsZHpCdFdYVnFjMjhpZlEjM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTTJweVExcGZNbkZtWWpWSWFXZENTelJZVmtkaFNteEhPRlpzVEVSSlRHUmhYMHR6ZG5od1UzUkZaeUlzSW5naU9pSXRNVmhTV0hwTloxZE9ZbE5SZFY4dGJESmpTVkZpYmt4eWNIaE9UVWs0WDFJNGRHVmxhR3BsWTFnMElpd2llU0k2SW14WU0wdEhPRk4xVFVkMFJFVkZiVkpLTmpoSlRtcGtjSGd6VkZwV1RuUjVhelpsZHpCdFdYVnFjMjhpZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6ZjQ0NTVhODMtNDg2OC00NTllLTk0NzgtNDM1ODgwNDNmYTBkIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaU0ycHlRMXBmTW5GbVlqVklhV2RDU3pSWVZrZGhTbXhIT0Zac1RFUkpUR1JoWDB0emRuaHdVM1JGWnlJc0luZ2lPaUl0TVZoU1dIcE5aMWRPWWxOUmRWOHRiREpqU1ZGaWJreHljSGhPVFVrNFgxSTRkR1ZsYUdwbFkxZzBJaXdpZVNJNklteFlNMHRIT0ZOMVRVZDBSRVZGYlZKS05qaEpUbXBrY0hnelZGcFdUblI1YXpabGR6QnRXWFZxYzI4aWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjVUMDI6MzU6MjUuODYxOTc1MzM1WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjVUMDI6MzU6MjUuODYyMDEwMDg1WiJ9LCJqdGkiOiJ1cm46dXVpZDpmNDQ1NWE4My00ODY4LTQ1OWUtOTQ3OC00MzU4ODA0M2ZhMGQiLCJleHAiOjE4MTEyMTI1MjUsImlhdCI6MTc3OTY3NjUyNSwibmJmIjoxNzc5Njc2NTI1fQ.XYUezHKoNVbdCu61SvSs-mRh-ztNcmZUY-EnUzJeL-SJZmqOPnaQ6gmpCvrF5dgBFwz_w2VYpKjy1ifqNm-K2g",
+  │       "disclosures": "",
+  │       "addedOn": "2026-05-25T02:35:25.869804Z",
+  │       "pending": false,
+  │       "format": "jwt_vc_json",
+  │       "parsedDocument": {
+  │         "@context": [
+  │           "https://www.w3.org/2018/credentials/v1",
+  │           "https://www.w3.org/2018/credentials/examples/v1"
+  │         ],
+  │         "id": "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d",
+  │         "type": [
+  │           "VerifiableCredential",
+  │           "UniversityDegree"
+  │         ],
+  │         "issuer": {
+  │           "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsIngiOiItMVhSWHpNZ1dOYlNRdV8tbDJjSVFibkxycHhOTUk4X1I4dGVlaGplY1g0IiwieSI6ImxYM0tHOFN1TUd0REVFbVJKNjhJTmpkcHgzVFpWTnR5azZldzBtWXVqc28ifQ"
+  │         },
+  │         "issuanceDate": "2026-05-25T02:35:25.861975335Z",
+  │         "credentialSubject": {
+  │           "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+  │           "degree": {
+  │             "type": "BachelorDegree",
+  │             "name": "Bachelor of Science and Arts"
+  │           }
+  │         },
+  │         "expirationDate": "2027-05-25T02:35:25.862010085Z"
+  │       }
+  │     },
+  │     {
+  │       "wallet": "c3419873-07be-419c-89ad-0b7a352f2d70",
+  │       "id": "urn:uuid:d4c01b3e-600e-4252-bfb0-b24831fb502e",
+  │       "document": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYW1WbE5WSXhOakZTT1VwVFkwNXljeTFOU2tKaGIyRlNWMWxqZUdWbVNtWkJhMHRCZUZaWlVGcEhSU0lzSW5naU9pSlhOVkZrTFZRd2IxWnBjMjVTVXpaNU4wNWtObXg1TW5GWWVFUm5lR3hETUdab2RGbFZNMWwzU2pKTklpd2llU0k2SWtFeGJ6VXlZblZUWmpkUU1ucHpURlZNVFZCMFpWUTJPVzFWYzFCMVVHeGFiSFp1UjBoc1FrZERlV01pZlEjamVlNVIxNjFSOUpTY05ycy1NSkJhb2FSV1ljeGVmSmZBa0tBeFZZUFpHRSIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYW1WbE5WSXhOakZTT1VwVFkwNXljeTFOU2tKaGIyRlNWMWxqZUdWbVNtWkJhMHRCZUZaWlVGcEhSU0lzSW5naU9pSlhOVkZrTFZRd2IxWnBjMjVTVXpaNU4wNWtObXg1TW5GWWVFUm5lR3hETUdab2RGbFZNMWwzU2pKTklpd2llU0k2SWtFeGJ6VXlZblZUWmpkUU1ucHpURlZNVFZCMFpWUTJPVzFWYzFCMVVHeGFiSFp1UjBoc1FrZERlV01pZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6ZDRjMDFiM2UtNjAwZS00MjUyLWJmYjAtYjI0ODMxZmI1MDJlIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWFtVmxOVkl4TmpGU09VcFRZMDV5Y3kxTlNrSmhiMkZTVjFsamVHVm1TbVpCYTB0QmVGWlpVRnBIUlNJc0luZ2lPaUpYTlZGa0xWUXdiMVpwYzI1U1V6WjVOMDVrTm14NU1uRlllRVJuZUd4RE1HWm9kRmxWTTFsM1NqSk5JaXdpZVNJNklrRXhielV5WW5WVFpqZFFNbnB6VEZWTVRWQjBaVlEyT1cxVmMxQjFVR3hhYkhadVIwaHNRa2REZVdNaWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjVUMDI6Mzg6MTYuODQ4OTkxMTM2WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjVUMDI6Mzg6MTYuODQ5MDE1NTExWiJ9LCJqdGkiOiJ1cm46dXVpZDpkNGMwMWIzZS02MDBlLTQyNTItYmZiMC1iMjQ4MzFmYjUwMmUiLCJleHAiOjE4MTEyMTI2OTYsImlhdCI6MTc3OTY3NjY5NiwibmJmIjoxNzc5Njc2Njk2fQ.Hzyz7JVikVVLH5s6SzSdOZmPlPnpAEKma017PbFft2PqldfIfWTBbkkyP53yWg3e5Tp9OhDBA5hLbosc8eR8zQ",
+  │       "disclosures": "",
+  │       "addedOn": "2026-05-25T02:38:16.852978Z",
+  │       "pending": false,
+  │       "format": "jwt_vc_json",
+  │       "parsedDocument": {
+  │         "@context": [
+  │           "https://www.w3.org/2018/credentials/v1",
+  │           "https://www.w3.org/2018/credentials/examples/v1"
+  │         ],
+  │         "id": "urn:uuid:d4c01b3e-600e-4252-bfb0-b24831fb502e",
+  │         "type": [
+  │           "VerifiableCredential",
+  │           "UniversityDegree"
+  │         ],
+  │         "issuer": {
+  │           "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiamVlNVIxNjFSOUpTY05ycy1NSkJhb2FSV1ljeGVmSmZBa0tBeFZZUFpHRSIsIngiOiJXNVFkLVQwb1Zpc25SUzZ5N05kNmx5MnFYeERneGxDMGZodFlVM1l3SjJNIiwieSI6IkExbzUyYnVTZjdQMnpzTFVMTVB0ZVQ2OW1Vc1B1UGxabHZuR0hsQkdDeWMifQ"
+  │         },
+  │         "issuanceDate": "2026-05-25T02:38:16.848991136Z",
+  │         "credentialSubject": {
+  │           "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+  │           "degree": {
+  │             "type": "BachelorDegree",
+  │             "name": "Bachelor of Science and Arts"
+  └──
+
+=== Step 13: Resolve Presentation Request ===
+→ Resolved: openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker....
+
+  ┌── Step 13 ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/resolvePresentationRequest
+  │  REQUEST:
+  │   openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&response_mode=direct_post&state=g7kTBQ77VxvO&presentation_definition_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fpd%2Fg7kTBQ77VxvO&client_id_scheme=redirect_uri&client_metadata=%7B%22authorization_encrypted_response_alg%22%3A%22ECDH-ES%22%2C%22authorization_encrypted_response_enc%22%3A%22A256GCM%22%7D&nonce=bedbd991-221a-4a45-9b7d-6eb3525ffb31&response_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify%2Fg7kTBQ77VxvO
+  │  RESPONSE:
+  │   openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&response_mode=direct_post&state=g7kTBQ77VxvO&presentation_definition=%7B%22id%22%3A%228MU5GnDBNlUF%22%2C%22input_descriptors%22%3A%5B%7B%22id%22%3A%22UniversityDegree%22%2C%22format%22%3A%7B%22jwt_vc_json%22%3A%7B%22alg%22%3A%5B%22EdDSA%22%5D%7D%7D%2C%22constraints%22%3A%7B%22fields%22%3A%5B%7B%22path%22%3A%5B%22%24.vc.type%22%5D%2C%22filter%22%3A%7B%22type%22%3A%22string%22%2C%22pattern%22%3A%22UniversityDegree%22%7D%7D%5D%7D%7D%5D%7D&presentation_definition_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fpd%2Fg7kTBQ77VxvO&client_id_scheme=redirect_uri&client_metadata=%7B%22authorization_encrypted_response_alg%22%3A%22ECDH-ES%22%2C%22authorization_encrypted_response_enc%22%3A%22A256GCM%22%7D&nonce=bedbd991-221a-4a45-9b7d-6eb3525ffb31&response_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify%2Fg7kTBQ77VxvO
+  └──
+
+=== Step 14: Fulfill Presentation Request (usePresentationRequest) ===
+{
+  "redirectUri": null
+}
+
+  ┌── Step 14 ─── POST http://localhost:7001/wallet-api/wallet/c3419873-07be-419c-89ad-0b7a352f2d70/exchange/usePresentationRequest
+  │  REQUEST:
+  │   {
+  │     "presentationRequest": "openid4vp://authorize?response_type=vp_token&client_id=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify&response_mode=direct_post&state=g7kTBQ77VxvO&presentation_definition=%7B%22id%22%3A%228MU5GnDBNlUF%22%2C%22input_descriptors%22%3A%5B%7B%22id%22%3A%22UniversityDegree%22%2C%22format%22%3A%7B%22jwt_vc_json%22%3A%7B%22alg%22%3A%5B%22EdDSA%22%5D%7D%7D%2C%22constraints%22%3A%7B%22fields%22%3A%5B%7B%22path%22%3A%5B%22%24.vc.type%22%5D%2C%22filter%22%3A%7B%22type%22%3A%22string%22%2C%22pattern%22%3A%22UniversityDegree%22%7D%7D%5D%7D%7D%5D%7D&presentation_definition_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fpd%2Fg7kTBQ77VxvO&client_id_scheme=redirect_uri&client_metadata=%7B%22authorization_encrypted_response_alg%22%3A%22ECDH-ES%22%2C%22authorization_encrypted_response_enc%22%3A%22A256GCM%22%7D&nonce=bedbd991-221a-4a45-9b7d-6eb3525ffb31&response_uri=http%3A%2F%2Fhost.docker.internal%3A7003%2Fopenid4vc%2Fverify%2Fg7kTBQ77VxvO",
+  │     "selectedCredentials": [
+  │       "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d"
+  │     ]
+  │   }
+  │  RESPONSE:
+  │   {
+  │     "redirectUri": null
+  │   }
+  └──
+
+=== Step 15: Verify Credential Presentation ===
+{
+  "id": "g7kTBQ77VxvO",
+  "presentationDefinition": {
+    "id": "8MU5GnDBNlUF",
+    "input_descriptors": [
+      {
+        "id": "UniversityDegree",
+        "format": {
+          "jwt_vc_json": {
+            "alg": [
+              "EdDSA"
+            ]
+          }
+        },
+        "constraints": {
+          "fields": [
+            {
+              "path": [
+                "$.vc.type"
+              ],
+              "filter": {
+                "type": "string",
+                "pattern": "UniversityDegree"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "tokenResponse": {
+    "vp_token": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEjMCIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJuYmYiOjE3Nzk3NjM0NDgsImlhdCI6MTc3OTc2MzUwOCwianRpIjoiOE1VNUduREJObFVGIiwiaXNzIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwibm9uY2UiOiJiZWRiZDk5MS0yMjFhLTRhNDUtOWI3ZC02ZWIzNTI1ZmZiMzEiLCJhdWQiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6NzAwMy9vcGVuaWQ0dmMvdmVyaWZ5IiwidnAiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiXSwidHlwZSI6WyJWZXJpZmlhYmxlUHJlc2VudGF0aW9uIl0sImlkIjoiOE1VNUduREJObFVGIiwiaG9sZGVyIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwidmVyaWZpYWJsZUNyZWRlbnRpYWwiOlsiZXlKcmFXUWlPaUprYVdRNmFuZHJPbVY1U25Ka1NHdHBUMmxLUmxGNVNYTkpiVTU1WkdsSk5rbHNRWFJOYWxVeVNXbDNhV0V5Ykd0SmFtOXBUVEp3ZVZFeGNHWk5ia1p0V1dwV1NXRlhaRU5UZWxKWlZtdGthRk50ZUVoUFJscHpWRVZTU2xSSFVtaFlNSFI2Wkc1b2QxVXpVa1phZVVselNXNW5hVTlwU1hSTlZtaFRWMGh3VGxveFpFOVpiRTVTWkZZNGRHSkVTbXBUVmtacFltdDRlV05JYUU5VVZXczBXREZKTkdSSFZteGhSM0JzV1RGbk1FbHBkMmxsVTBrMlNXMTRXVTB3ZEVoUFJrNHhWRlZrTUZKRlZrWmlWa3BMVG1wb1NsUnRjR3RqU0dkNlZrWndWMVJ1VWpWaGVscHNaSHBDZEZkWVZuRmpNamhwWmxFak0ycHlRMXBmTW5GbVlqVklhV2RDU3pSWVZrZGhTbXhIT0Zac1RFUkpUR1JoWDB0emRuaHdVM1JGWnlJc0luUjVjQ0k2SWtwWFZDSXNJbUZzWnlJNklrVlRNalUySW4wLmV5SnBjM01pT2lKa2FXUTZhbmRyT21WNVNuSmtTR3RwVDJsS1JsRjVTWE5KYlU1NVpHbEpOa2xzUVhSTmFsVXlTV2wzYVdFeWJHdEphbTlwVFRKd2VWRXhjR1pOYmtadFdXcFdTV0ZYWkVOVGVsSlpWbXRrYUZOdGVFaFBSbHB6VkVWU1NsUkhVbWhZTUhSNlpHNW9kMVV6VWtaYWVVbHpTVzVuYVU5cFNYUk5WbWhUVjBod1Rsb3haRTlaYkU1U1pGWTRkR0pFU21wVFZrWnBZbXQ0ZVdOSWFFOVVWV3MwV0RGSk5HUkhWbXhoUjNCc1dURm5NRWxwZDJsbFUwazJTVzE0V1Uwd2RFaFBSazR4VkZWa01GSkZWa1ppVmtwTFRtcG9TbFJ0Y0d0alNHZDZWa1p3VjFSdVVqVmhlbHBzWkhwQ2RGZFlWbkZqTWpocFpsRWlMQ0p6ZFdJaU9pSmthV1E2YW5kck9tVjVTbkprU0d0cFQybEtSbEY1U1hOSmJVNTVaR2xKTmtsc1FYUk5hbFV5U1dsM2FXRXliR3RKYW05cFlUSldVV0pzVlRWV2ExWjJVVEZuTUZsdWJEVmtWWGhRV1ROd1ZVMVZZM2hVUlRsV1UyNW9XRmRWWnpSTmExWjBWRzFXVUZkWVduWmFlVWx6U1c1bmFVOXBTbFZOUjJ4SVlUQjBiazFzY0V0aFNHYzBWbXhhVDFSR2FIaGliR1JYVFZoU2NHTkRNVzFYUlhONlVUTmFSbEZ0VG5GVldHTjZWR3RKTkVscGQybGxVMGsyU1d0S2VHVnFRa1ZVVnpGWVlVVjBSRlZYZUZCa1JGWnhUV3haTWxKRVpHWmhSMUp2V2xaR2MyVkZTbHBUVlVaVVUxVkdibU5HUm1GWU0yTnBabEVpTENKMll5STZleUpBWTI5dWRHVjRkQ0k2V3lKb2RIUndjem92TDNkM2R5NTNNeTV2Y21jdk1qQXhPQzlqY21Wa1pXNTBhV0ZzY3k5Mk1TSXNJbWgwZEhCek9pOHZkM2QzTG5jekxtOXlaeTh5TURFNEwyTnlaV1JsYm5ScFlXeHpMMlY0WVcxd2JHVnpMM1l4SWwwc0ltbGtJam9pZFhKdU9uVjFhV1E2WmpRME5UVmhPRE10TkRnMk9DMDBOVGxsTFRrME56Z3RORE0xT0Rnd05ETm1ZVEJrSWl3aWRIbHdaU0k2V3lKV1pYSnBabWxoWW14bFEzSmxaR1Z1ZEdsaGJDSXNJbFZ1YVhabGNuTnBkSGxFWldkeVpXVWlYU3dpYVhOemRXVnlJanA3SW1sa0lqb2laR2xrT21wM2F6cGxlVXB5WkVocmFVOXBTa1pSZVVselNXMU9lV1JwU1RaSmJFRjBUV3BWTWtscGQybGhNbXhyU1dwdmFVMHljSGxSTVhCbVRXNUdiVmxxVmtsaFYyUkRVM3BTV1ZaclpHaFRiWGhJVDBaYWMxUkZVa3BVUjFKb1dEQjBlbVJ1YUhkVk0xSkdXbmxKYzBsdVoybFBhVWwwVFZab1UxZEljRTVhTVdSUFdXeE9VbVJXT0hSaVJFcHFVMVpHYVdKcmVIbGpTR2hQVkZWck5GZ3hTVFJrUjFac1lVZHdiRmt4WnpCSmFYZHBaVk5KTmtsdGVGbE5NSFJJVDBaT01WUlZaREJTUlZaR1lsWktTMDVxYUVwVWJYQnJZMGhuZWxaR2NGZFVibEkxWVhwYWJHUjZRblJYV0ZaeFl6STRhV1pSSW4wc0ltbHpjM1ZoYm1ObFJHRjBaU0k2SWpJd01qWXRNRFV0TWpWVU1ESTZNelU2TWpVdU9EWXhPVGMxTXpNMVdpSXNJbU55WldSbGJuUnBZV3hUZFdKcVpXTjBJanA3SW1sa0lqb2laR2xrT21wM2F6cGxlVXB5WkVocmFVOXBTa1pSZVVselNXMU9lV1JwU1RaSmJFRjBUV3BWTWtscGQybGhNbXhyU1dwdmFXRXlWbEZpYkZVMVZtdFdkbEV4WnpCWmJtdzFaRlY0VUZremNGVk5WV040VkVVNVZsTnVhRmhYVldjMFRXdFdkRlJ0VmxCWFdGcDJXbmxKYzBsdVoybFBhVXBWVFVkc1NHRXdkRzVOYkhCTFlVaG5ORlpzV2s5VVJtaDRZbXhrVjAxWVVuQmpRekZ0VjBWemVsRXpXa1pSYlU1eFZWaGplbFJyU1RSSmFYZHBaVk5KTmtsclNuaGxha0pGVkZjeFdHRkZkRVJWVjNoUVpFUldjVTFzV1RKU1JHUm1ZVWRTYjFwV1JuTmxSVXBhVTFWR1ZGTlZSbTVqUmtaaFdETmphV1pSSWl3aVpHVm5jbVZsSWpwN0luUjVjR1VpT2lKQ1lXTm9aV3h2Y2tSbFozSmxaU0lzSW01aGJXVWlPaUpDWVdOb1pXeHZjaUJ2WmlCVFkybGxibU5sSUdGdVpDQkJjblJ6SW4xOUxDSmxlSEJwY21GMGFXOXVSR0YwWlNJNklqSXdNamN0TURVdE1qVlVNREk2TXpVNk1qVXVPRFl5TURFd01EZzFXaUo5TENKcWRHa2lPaUoxY200NmRYVnBaRHBtTkRRMU5XRTRNeTAwT0RZNExUUTFPV1V0T1RRM09DMDBNelU0T0RBME0yWmhNR1FpTENKbGVIQWlPakU0TVRFeU1USTFNalVzSW1saGRDSTZNVGMzT1RZM05qVXlOU3dpYm1KbUlqb3hOemM1TmpjMk5USTFmUS5YWVVlekhLb05WYmRDdTYxU3ZTcy1tUmgtenROY21aVVktRW5VekplTC1TSlptcU9QbmFRNmdtcEN2ckY1ZGdCRnd6X3cyVllwS2p5MWlmcU5tLUsyZyJdfX0.4JWPo2Rqhco8BiupmXAE6HvIyYxG06HQVrOoexIuMX0JS7dhsMEIkvHPQiPYcDHxEFxxl3tnj5afGCRB5YEffA",
+    "presentation_submission": {
+      "id": "8MU5GnDBNlUF",
+      "definition_id": "8MU5GnDBNlUF",
+      "descriptor_map": [
+        {
+          "id": "UniversityDegree",
+          "format": "jwt_vp",
+          "path": "$",
+          "path_nested": {
+            "id": "UniversityDegree",
+            "format": "jwt_vc",
+            "path": "$.vp.verifiableCredential[0]"
+          }
+        }
+      ]
+    },
+    "state": "g7kTBQ77VxvO"
+  },
+  "verificationResult": true,
+  "policyResults": {
+    "results": [
+      {
+        "credential": "VerifiablePresentation",
+        "policyResults": [
+          {
+            "policy": "signature",
+            "description": "Checks a JWT credential by verifying its cryptographic signature using the key referenced by the DID in `iss`.",
+            "is_success": true,
+            "result": {
+              "sub": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+              "nbf": 1779763448,
+              "iat": 1779763508,
+              "jti": "8MU5GnDBNlUF",
+              "iss": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+              "nonce": "bedbd991-221a-4a45-9b7d-6eb3525ffb31",
+              "aud": "http://host.docker.internal:7003/openid4vc/verify",
+              "vp": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1"
+                ],
+                "type": [
+                  "VerifiablePresentation"
+                ],
+                "id": "8MU5GnDBNlUF",
+                "holder": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+                "verifiableCredential": [
+                  "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTTJweVExcGZNbkZtWWpWSWFXZENTelJZVmtkaFNteEhPRlpzVEVSSlRHUmhYMHR6ZG5od1UzUkZaeUlzSW5naU9pSXRNVmhTV0hwTloxZE9ZbE5SZFY4dGJESmpTVkZpYmt4eWNIaE9UVWs0WDFJNGRHVmxhR3BsWTFnMElpd2llU0k2SW14WU0wdEhPRk4xVFVkMFJFVkZiVkpLTmpoSlRtcGtjSGd6VkZwV1RuUjVhelpsZHpCdFdYVnFjMjhpZlEjM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pTTJweVExcGZNbkZtWWpWSWFXZENTelJZVmtkaFNteEhPRlpzVEVSSlRHUmhYMHR6ZG5od1UzUkZaeUlzSW5naU9pSXRNVmhTV0hwTloxZE9ZbE5SZFY4dGJESmpTVkZpYmt4eWNIaE9UVWs0WDFJNGRHVmxhR3BsWTFnMElpd2llU0k2SW14WU0wdEhPRk4xVFVkMFJFVkZiVkpLTmpoSlRtcGtjSGd6VkZwV1RuUjVhelpsZHpCdFdYVnFjMjhpZlEiLCJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sImlkIjoidXJuOnV1aWQ6ZjQ0NTVhODMtNDg2OC00NTllLTk0NzgtNDM1ODgwNDNmYTBkIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWUiXSwiaXNzdWVyIjp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaU0ycHlRMXBmTW5GbVlqVklhV2RDU3pSWVZrZGhTbXhIT0Zac1RFUkpUR1JoWDB0emRuaHdVM1JGWnlJc0luZ2lPaUl0TVZoU1dIcE5aMWRPWWxOUmRWOHRiREpqU1ZGaWJreHljSGhPVFVrNFgxSTRkR1ZsYUdwbFkxZzBJaXdpZVNJNklteFlNMHRIT0ZOMVRVZDBSRVZGYlZKS05qaEpUbXBrY0hnelZGcFdUblI1YXpabGR6QnRXWFZxYzI4aWZRIn0sImlzc3VhbmNlRGF0ZSI6IjIwMjYtMDUtMjVUMDI6MzU6MjUuODYxOTc1MzM1WiIsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImlkIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwiZGVncmVlIjp7InR5cGUiOiJCYWNoZWxvckRlZ3JlZSIsIm5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIn19LCJleHBpcmF0aW9uRGF0ZSI6IjIwMjctMDUtMjVUMDI6MzU6MjUuODYyMDEwMDg1WiJ9LCJqdGkiOiJ1cm46dXVpZDpmNDQ1NWE4My00ODY4LTQ1OWUtOTQ3OC00MzU4ODA0M2ZhMGQiLCJleHAiOjE4MTEyMTI1MjUsImlhdCI6MTc3OTY3NjUyNSwibmJmIjoxNzc5Njc2NTI1fQ.XYUezHKoNVbdCu61SvSs-mRh-ztNcmZUY-EnUzJeL-SJZmqOPnaQ6gmpCvrF5dgBFwz_w2VYpKjy1ifqNm-K2g"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      {
+        "credential": "UniversityDegree",
+        "policyResults": [
+          {
+            "policy": "signature",
+            "description": "Checks a JWT credential by verifying its cryptographic signature using the key referenced by the DID in `iss`.",
+            "is_success": true,
+            "result": {
+              "iss": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsIngiOiItMVhSWHpNZ1dOYlNRdV8tbDJjSVFibkxycHhOTUk4X1I4dGVlaGplY1g0IiwieSI6ImxYM0tHOFN1TUd0REVFbVJKNjhJTmpkcHgzVFpWTnR5azZldzBtWXVqc28ifQ",
+              "sub": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://www.w3.org/2018/credentials/examples/v1"
+                ],
+                "id": "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d",
+                "type": [
+                  "VerifiableCredential",
+                  "UniversityDegree"
+                ],
+                "issuer": {
+                  "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoiM2pyQ1pfMnFmYjVIaWdCSzRYVkdhSmxHOFZsTERJTGRhX0tzdnhwU3RFZyIsIngiOiItMVhSWHpNZ1dOYlNRdV8tbDJjSVFibkxycHhOTUk4X1I4dGVlaGplY1g0IiwieSI6ImxYM0tHOFN1TUd0REVFbVJKNjhJTmpkcHgzVFpWTnR5azZldzBtWXVqc28ifQ"
+                },
+                "issuanceDate": "2026-05-25T02:35:25.861975335Z",
+                "credentialSubject": {
+                  "id": "did:jwk:eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2Iiwia2lkIjoia2VQblU5VkVvQ1g0Ynl5dUxPY3pUMUcxTE9VSnhXWUg4MkVtTmVPWXZvZyIsIngiOiJUMGlHa0tnMlpKaHg4VlZOTFhxbldWMXRpcC1mWEszQ3ZFQmNqUXczTkI4IiwieSI6IkJxejBETW1XaEtDUWxPdDVqMlY2RDdfaGRoZVFseEJZSUFTSUFncFFaX3cifQ",
+                  "degree": {
+                    "type": "BachelorDegree",
+                    "name": "Bachelor of Science and Arts"
+                  }
+                },
+                "expirationDate": "2027-05-25T02:35:25.862010085Z"
+              },
+              "jti": "urn:uuid:f4455a83-4868-459e-9478-43588043fa0d",
+              "exp": 1811212525,
+              "iat": 1779676525,
+              "nbf": 1779676525
+            }
+          }
+        ]
+      }
+    ],
+    "time": "PT0.003410875S",
+    "policiesRun": 2
+  }
+}
+
+  ┌── Step 15 ─── GET http://localhost:7003/openid4vc/session/g7kTBQ77VxvO
+  │  RESPONSE:
+  │   {
+  │     "id": "g7kTBQ77VxvO",
+  │     "presentationDefinition": {
+  │       "id": "8MU5GnDBNlUF",
+  │       "input_descriptors": [
+  │         {
+  │           "id": "UniversityDegree",
+  │           "format": {
+  │             "jwt_vc_json": {
+  │               "alg": [
+  │                 "EdDSA"
+  │               ]
+  │             }
+  │           },
+  │           "constraints": {
+  │             "fields": [
+  │               {
+  │                 "path": [
+  │                   "$.vc.type"
+  │                 ],
+  │                 "filter": {
+  │                   "type": "string",
+  │                   "pattern": "UniversityDegree"
+  │                 }
+  │               }
+  │             ]
+  │           }
+  │         }
+  │       ]
+  │     },
+  │     "tokenResponse": {
+  │       "vp_token": "eyJraWQiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEjMCIsInR5cCI6IkpXVCIsImFsZyI6IkVTMjU2In0.eyJzdWIiOiJkaWQ6andrOmV5SnJkSGtpT2lKRlF5SXNJbU55ZGlJNklsQXRNalUySWl3aWEybGtJam9pYTJWUWJsVTVWa1Z2UTFnMFlubDVkVXhQWTNwVU1VY3hURTlWU25oWFdVZzRNa1Z0VG1WUFdYWnZaeUlzSW5naU9pSlVNR2xIYTB0bk1scEthSGc0VmxaT1RGaHhibGRXTVhScGNDMW1XRXN6UTNaRlFtTnFVWGN6VGtJNElpd2llU0k2SWtKeGVqQkVUVzFYYUV0RFVXeFBkRFZxTWxZMlJEZGZhR1JvWlZGc2VFSlpTVUZUU1VGbmNGRmFYM2NpZlEiLCJuYmYiOjE3Nzk3NjM0NDgsImlhdCI6MTc3OTc2MzUwOCwianRpIjoiOE1VNUduREJObFVGIiwiaXNzIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwibm9uY2UiOiJiZWRiZDk5MS0yMjFhLTRhNDUtOWI3ZC02ZWIzNTI1ZmZiMzEiLCJhdWQiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6NzAwMy9vcGVuaWQ0dmMvdmVyaWZ5IiwidnAiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiXSwidHlwZSI6WyJWZXJpZmlhYmxlUHJlc2VudGF0aW9uIl0sImlkIjoiOE1VNUduREJObFVGIiwiaG9sZGVyIjoiZGlkOmp3azpleUpyZEhraU9pSkZReUlzSW1OeWRpSTZJbEF0TWpVMklpd2lhMmxrSWpvaWEyVlFibFU1VmtWdlExZzBZbmw1ZFV4UFkzcFVNVWN4VEU5VlNuaFhXVWc0TWtWdFRtVlBXWFp2WnlJc0luZ2lPaUpVTUdsSGEwdG5NbHBLYUhnNFZsWk9URmh4YmxkV01YUnBjQzFtV0VzelEzWkZRbU5xVVhjelRrSTRJaXdpZVNJNklrSnhlakJFVFcxWGFFdERVV3hQZERWcU1sWTJSRGRmYUdSb1pWRnNlRUpaU1VGVFNVRm5jRkZhWDNjaWZRIiwidmVyaWZpYWJsZUNyZWRlbnRpYWwiOlsiZXlKcmFXUWlPaUprYVdRNmFuZHJPbVY1U25Ka1NHdHBUMmxLUmxGNVNYTkpiVTU1WkdsSk5rbHNRWFJOYWxVeVNXbDNhV0V5Ykd0SmFtOXBUVEp3ZVZFeGNHWk5ia1p0V1dwV1NXRlhaRU5UZWxKWlZtdGthRk50ZUVoUFJscHpWRVZTU2xSSFVtaFlNSFI2Wkc1b2QxVXpVa1phZVVselNXNW5hVTlwU1hSTlZtaFRWMGh3VGxveFpFOVpiRTVTWkZZNGRHSkVTbXBUVmtacFltdDRlV05JYUU5VVZXczBXREZKTkdSSFZteGhSM0JzV1RGbk1FbHBkMmxsVTBrMlNXMTRXVTB3ZEVoUFJrNHhWRlZrTUZKRlZrWmlWa3BMVG1wb1NsUnRjR3RqU0dkNlZrWndWMVJ1VWpWaGVscHNaSHBDZEZkWVZuRmpNamhwWmxFak0ycHlRMXBmTW5GbVlqVklhV2RDU3pSWVZrZGhTbXhIT0Zac1RFUkpUR1JoWDB0emRuaHdVM1JGWnlJc0luUjVjQ0k2SWtwWFZDSXNJbUZzWnlJNklrVlRNalUySW4wLmV5SnBjM01pT2lKa2FXUTZhbmRyT21WNVNuSmtTR3RwVDJsS1JsRjVTWE5KYlU1NVpHbEpOa2xzUVhSTmFsVXlTV2wzYVdFeWJHdEphbTlwVFRKd2VWRXhjR1pOYmtadFdXcFdTV0ZYWkVOVGVsSlpWbXRrYUZOdGVFaFBSbHB6VkVWU1NsUkhVbWhZTUhSNlpHNW9kMVV6VWtaYWVVbHpTVzVuYVU5cFNYUk5WbWhUVjBod1Rsb3haRTlaYkU1U1pGWTRkR0pFU21wVFZrWnBZbXQ0ZVdOSWFFOVVWV3MwV0RGSk5HUkhWbXhoUjNCc1dURm5NRWxwZDJsbFUwazJTVzE0V1Uwd2RFaFBSazR4VkZWa01GSkZWa1ppVmtwTFRtcG9TbFJ0Y0d0alNHZDZWa1p3VjFSdVVqVmhlbHBzWkhwQ2RGZFlWbkZqTWpocFpsRWlMQ0p6ZFdJaU9pSmthV1E2YW5kck9tVjVTbkprU0d0cFQybEtSbEY1U1hOSmJVNTVaR2xKTmtsc1FYUk5hbFV5U1dsM2FXRXliR3RKYW05cFlUSldVV0pzVlRWV2ExWjJVVEZuTUZsdWJEVmtWWGhRV1ROd1ZVMVZZM2hVUlRsV1UyNW9XRmRWWnpSTmExWjBWRzFXVUZkWVduWmFlVWx6U1c1bmFVOXBTbFZOUjJ4SVlUQjBiazFzY0V0aFNHYzBWbXhhVDFSR2FIaGliR1JYVFZoU2NHTkRNVzFYUlhONlVUTmFSbEZ0VG5GVldHTjZWR3RKTkVscGQybGxVMGsyU1d0S2VHVnFRa1ZVVnpGWVlVVjBSRlZYZUZCa1JGWnhUV3haTWxKRVpHWmhSMUp2V2xaR2MyVkZTbHBUVlVaVVUxVkdibU5HUm1GWU0yTnBabEVpTENKMll5STZleUpBWTI5dWRHVjRkQ0k2V3lKb2RIUndjem92TDNkM2R5NTNNeTV2Y21jdk1qQXhPQzlqY21Wa1pXNTBhV0ZzY3k5Mk1TSXNJbWgwZEhCek9pOHZkM2QzTG5jekxtOXlaeTh5TURFNEwyTnlaV1JsYm5ScFlXeHpMMlY0WVcxd2JHVnpMM1l4SWwwc0ltbGtJam9pZFhKdU9uVjFhV1E2WmpRME5UVmhPRE10TkRnMk9DMDBOVGxsTFRrME56Z3RORE0xT0Rnd05ETm1ZVEJrSWl3aWRIbHdaU0k2V3lKV1pYSnBabWxoWW14bFEzSmxaR1Z1ZEdsaGJDSXNJbFZ1YVhabGNuTnBkSGxFWldkeVpXVWlYU3dpYVhOemRXVnlJanA3SW1sa0lqb2laR2xrT21wM2F6cGxlVXB5WkVocmFVOXBTa1pSZVVselNXMU9lV1JwU1RaSmJFRjBUV3BWTWtscGQybGhNbXhyU1dwdmFVMHljSGxSTVhCbVRXNUdiVmxxVmtsaFYyUkRVM3BTV1ZaclpHaFRiWGhJVDBaYWMxUkZVa3BVUjFKb1dEQjBlbVJ1YUhkVk0xSkdXbmxKYzBsdVoybFBhVWwwVFZab1UxZEljRTVhTVdSUFdXeE9VbVJXT0hSaVJFcHFVMVpHYVdKcmVIbGpTR2hQVkZWck5GZ3hTVFJrUjFac1lVZHdiRmt4WnpCSmFYZHBaVk5KTmtsdGVGbE5NSFJJVDBaT01WUlZaREJTUlZaR1lsWktTMDVxYUVwVWJYQnJZMGhuZWxaR2NGZFVibEkxWVhwYWJHUjZRblJYV0ZaeFl6STRhV1pSSW4wc0ltbHpjM1ZoYm1ObFJHRjBaU0k2SWpJd01qWXRNRFV0TWpWVU1ESTZNelU2TWpVdU9EWXhPVGMxTXpNMVdpSXNJbU55WldSbGJuUnBZV3hUZFdKcVpXTjBJanA3SW1sa0lqb2laR2xrT21wM2F6cGxlVXB5WkVocmFVOXBTa1pSZVVselNXMU9lV1JwU1RaSmJFRjBUV3BWTWtscGQybGhNbXhyU1dwdmFXRXlWbEZpYkZVMVZtdFdkbEV4WnpCWmJtdzFaRlY0VUZremNGVk5WV040VkVVNVZsTnVhRmhYVldjMFRXdFdkRlJ0VmxCWFdGcDJXbmxKYzBsdVoybFBhVXBWVFVkc1NHRXdkRzVOYkhCTFlVaG5ORlpzV2s5VVJtaDRZbXhrVjAxWVVuQmpRekZ0VjBWemVsRXpXa1pSYlU1eFZWaGplbFJyU1RSSmFYZHBaVk5KTmtsclNuaGxha0pGVkZjeFdHRkZkRVJWVjNoUVpFUldjVTFzV1RKU1JHUm1ZVWRTYjFwV1JuTmxSVXBhVTFWR1ZGTlZSbTVqUmtaaFdETmphV1pSSWl3aVpHVm5jbVZsSWpwN0luUjVjR1VpT2lKQ1lXTm9aV3h2Y2tSbFozSmxaU0lzSW01aGJXVWlPaUpDWVdOb1pXeHZjaUJ2WmlCVFkybGxibU5sSUdGdVpDQkJjblJ6SW4xOUxDSmxlSEJwY21GMGFXOXVSR0YwWlNJNklqSXdNamN0TURVdE1qVlVNREk2TXpVNk1qVXVPRFl5TURFd01EZzFXaUo5TENKcWRHa2lPaUoxY200NmRYVnBaRHBtTkRRMU5XRTRNeTAwT0RZNExUUTFPV1V0T1RRM09DMDBNelU0T0RBME0yWmhNR1FpTENKbGVIQWlPakU0TVRFeU1USTFNalVzSW1saGRDSTZNVGMzT1RZM05qVXlOU3dpYm1KbUlqb3hOemM1TmpjMk5USTFmUS5YWVVlekhLb05WYmRDdTYxU3ZTcy1tUmgtenROY21aVVktRW5VekplTC1TSlptcU9QbmFRNmdtcEN2ckY1ZGdCRnd6X3cyVllwS2p5MWlmcU5tLUsyZyJdfX0.4JWPo2Rqhco8BiupmXAE6HvIyYxG06HQVrOoexIuMX0JS7dhsMEIkvHPQiPYcDHxEFxxl3tnj5afGCRB5YEffA",
+  │       "presentation_submission": {
+  │         "id": "8MU5GnDBNlUF",
+  │         "definition_id": "8MU5GnDBNlUF",
+  │         "descriptor_map": [
+  │           {
+  │             "id": "UniversityDegree",
+  │             "format": "jwt_vp",
+  │             "path": "$",
+  │             "path_nested": {
+  │               "id": "UniversityDegree",
+  │               "format": "jwt_vc",
+  │               "path": "$.vp.verifiableCredential[0]"
+  │             }
+  │           }
+  │         ]
+  │       },
+  │       "state": "g7kTBQ77VxvO"
+  │     },
+  │     "verificationResult": true,
+  │     "policyResults": {
+  │       "results": [
+  │         {
+  │           "credential": "VerifiablePresentation",
+  │           "policyResults": [
+  │             {
+  │               "policy": "signature",
+  │               "description": "Checks a JWT credential by verifying its cryptographic signature using the key referenced by the DID in `iss`.",
+  │               "is_success": true,
+  └──
+✓ Verification SUCCESS
+✓ Verbose step data written to: ./demo/jwtvc-steps.json
+
+All steps completed.
