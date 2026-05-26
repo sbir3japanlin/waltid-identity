@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Verifier — Walt.id Demo</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--primary:#4f46e5;--ph:#4338ca;--ok:#059669;--err:#dc2626;--warn:#d97706;--text:#0f172a;--muted:#64748b;--code:#0f172a;--codec:#e2e8f0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+nav{background:#1e293b;color:#fff;padding:0 24px;display:flex;align-items:center;gap:8px;height:52px}
+nav .brand{font-weight:700;color:#818cf8;margin-right:auto;font-size:15px}
+nav a{color:#94a3b8;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:14px;transition:.15s}
+nav a:hover{background:#334155;color:#fff}
+nav a.active{background:#4f46e5;color:#fff}
+.role-badge{background:#d97706;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;margin-left:8px}
+main{max-width:900px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.subtitle{color:var(--muted);font-size:14px;margin-bottom:24px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--border);width:fit-content}
+.tab{padding:8px 20px;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:500;background:transparent;color:var(--muted);transition:.15s}
+.tab.active{background:var(--primary);color:#fff}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h2{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.field-toggle{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#fafafa;font-size:14px}
+.field-toggle input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary)}
+.field-toggle label{flex:1;font-family:monospace;font-size:13px}
+.field-toggle .hint{font-size:11px;color:var(--muted)}
+.btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--ph)}
+.btn-secondary{background:#f1f5f9;color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+/* Auth request output */
+.auth-box{background:#0f172a;border-radius:8px;padding:14px;margin-top:12px;word-break:break-all;font-size:12px;font-family:monospace;color:#86efac;line-height:1.6}
+.auth-box .label{color:#818cf8;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.copy-row{display:flex;gap:8px;margin-top:8px}
+.copy-btn{padding:5px 12px;font-size:12px;border:1px solid #334155;border-radius:6px;cursor:pointer;background:#1e293b;color:#94a3b8;transition:.15s}
+.copy-btn:hover{background:#334155;color:#fff}
+/* Session/result */
+.session-input{display:flex;gap:8px;margin-bottom:12px}
+.session-input input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:monospace;outline:none}
+.session-input input:focus{border-color:var(--primary)}
+.result-card{border-radius:10px;padding:20px;margin-top:12px;border:2px solid}
+.result-card.ok{border-color:#22c55e;background:#f0fdf4}
+.result-card.fail{border-color:#ef4444;background:#fef2f2}
+.result-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.result-icon{font-size:32px}
+.result-title{font-size:20px;font-weight:700}
+.result-card.ok .result-title{color:#15803d}
+.result-card.fail .result-title{color:#dc2626}
+.claim-table{width:100%;border-collapse:collapse;font-size:13px}
+.claim-table th{text-align:left;padding:6px 10px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border)}
+.claim-table td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.claim-table tr:last-child td{border-bottom:none}
+.claim-key{font-family:monospace;color:var(--muted);font-size:12px}
+.claim-val{font-weight:500}
+.tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;text-transform:uppercase;margin-left:6px}
+.tag-disclosed{background:#d1fae5;color:#065f46}
+.tag-ns{background:#dbeafe;color:#1d4ed8;font-size:9px}
+details>summary{cursor:pointer;list-style:none;font-size:12px;color:#818cf8;margin-top:12px}
+details>summary::before{content:'▶ '}
+details[open]>summary::before{content:'▼ '}
+details pre{background:var(--code);color:var(--codec);padding:12px;border-radius:6px;font-size:11px;overflow:auto;max-height:300px;white-space:pre-wrap;word-break:break-all;margin-top:6px;font-family:monospace}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:999;animation:slidein .3s ease}
+@keyframes slidein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.info-pill{display:inline-block;background:#eef2ff;color:#4338ca;font-size:12px;padding:3px 10px;border-radius:10px;font-weight:500;margin-bottom:12px}
+</style>
+</head>
+<body>
+<nav>
+  <span class="brand">&#x1F511; Walt.id Identity Demo</span>
+  <a href="http://localhost:8001" target="_blank">Wallet</a>
+  <a href="http://localhost:8002" target="_blank">Issuer</a>
+  <a href="http://localhost:8003" class="active">Verifier <span class="role-badge">:7003</span></a>
+</nav>
+<main>
+  <h1>Verifier</h1>
+  <p class="subtitle">Creates OID4VP presentation requests and verifies SD-JWT VC and ISO mDoc presentations</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('sdjwt',this)">SD-JWT VC</button>
+    <button class="tab" onclick="showTab('mdoc',this)">mDoc / mDL</button>
+  </div>
+
+  <!-- ========== SD-JWT PANEL ========== -->
+  <div id="panel-sdjwt" class="panel active">
+    <div class="card">
+      <h2>Requested Fields (Presentation Definition)</h2>
+      <p class="info-pill">limit_disclosure: "required" — wallet may only disclose requested fields</p>
+      <div class="field-toggle">
+        <input type="checkbox" id="sd-req-birthdate" checked>
+        <label for="sd-req-birthdate">birthdate</label>
+        <span class="hint">was marked sd:true → selectively disclosed</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="sd-req-given_name" checked>
+        <label for="sd-req-given_name">given_name</label>
+        <span class="hint">marked sd:false → always in JWT plaintext</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="sd-req-family_name">
+        <label for="sd-req-family_name">family_name</label>
+        <span class="hint">was marked sd:true → not requested here → withheld</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="sd-req-email">
+        <label for="sd-req-email">email</label>
+        <span class="hint">marked sd:false → always visible</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="createSdJwtRequest()" id="btn-sd-req">
+        &#x1F4E4; Create Verification Request
+      </button>
+    </div>
+
+    <div id="sd-auth-out" style="display:none">
+      <div class="auth-box">
+        <div class="label">Authorization Request URI</div>
+        <div id="sd-auth-uri"></div>
+        <div class="copy-row">
+          <button class="copy-btn" onclick="copyToClipboard('sd-auth-uri')">&#x1F4CB; Copy URI</button>
+          <button class="copy-btn" onclick="openWallet()">&#x1F4F2; Open Wallet</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">
+        Paste this URI into the Wallet page to present a credential, then check the result below.
+      </p>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>&#x2705; Check Verification Result</h2>
+      <div class="session-input">
+        <input id="sd-state" placeholder="Session state ID (auto-filled after request is created)">
+        <button class="btn btn-primary btn-sm" onclick="checkSdJwtResult()" id="btn-sd-check">Check</button>
+        <button class="btn btn-secondary btn-sm" onclick="pollSdJwtResult()" id="btn-sd-poll">Auto-poll</button>
+      </div>
+      <div id="sd-result"></div>
+    </div>
+  </div>
+
+  <!-- ========== mDOC PANEL ========== -->
+  <div id="panel-mdoc" class="panel">
+    <div class="card">
+      <h2>Requested Fields (ISO 18013-7 Presentation Definition)</h2>
+      <p class="info-pill">limit_disclosure: "required" — only listed namespace elements are revealed</p>
+      <div class="field-toggle">
+        <input type="checkbox" id="md-req-family_name" checked>
+        <label for="md-req-family_name">org.iso.18013.5.1 / family_name</label>
+        <span class="hint">digestID:0</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="md-req-given_name" checked>
+        <label for="md-req-given_name">org.iso.18013.5.1 / given_name</label>
+        <span class="hint">digestID:1</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="md-req-birth_date" checked>
+        <label for="md-req-birth_date">org.iso.18013.5.1 / birth_date</label>
+        <span class="hint">digestID:2</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="md-req-document_number" checked>
+        <label for="md-req-document_number">org.iso.18013.5.1 / document_number</label>
+        <span class="hint">digestID:7</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="md-req-issue_date">
+        <label for="md-req-issue_date">org.iso.18013.5.1 / issue_date</label>
+        <span class="hint">digestID:3 — not requested, stays hidden</span>
+      </div>
+      <div class="field-toggle">
+        <input type="checkbox" id="md-req-expiry_date">
+        <label for="md-req-expiry_date">org.iso.18013.5.1 / expiry_date</label>
+        <span class="hint">digestID:4 — not requested, stays hidden</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>IACA Certificate PEM <span style="font-weight:400;font-size:11px;color:var(--muted)">(required for mDoc — paste from Issuer page or run demo there first)</span></h2>
+      <div style="margin-bottom:8px">
+        <textarea id="md-iaca-pem" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:monospace;min-height:80px;outline:none;resize:vertical"
+          placeholder="-----BEGIN CERTIFICATE-----&#10;MIIBmTC...&#10;-----END CERTIFICATE-----"></textarea>
+      </div>
+      <p style="font-size:12px;color:var(--muted)">Run the mDoc demo on the Issuer page and copy the IACA PEM from the step logs, or leave blank to skip trusted root validation.</p>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="createMdocRequest()" id="btn-md-req">
+        &#x1F4E4; Create Verification Request
+      </button>
+    </div>
+
+    <div id="md-auth-out" style="display:none">
+      <div class="auth-box">
+        <div class="label">Authorization Request URI</div>
+        <div id="md-auth-uri"></div>
+        <div class="copy-row">
+          <button class="copy-btn" onclick="copyToClipboard('md-auth-uri')">&#x1F4CB; Copy URI</button>
+          <button class="copy-btn" onclick="openWallet()">&#x1F4F2; Open Wallet</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px">
+        Paste this URI into the Wallet page to present the mDoc credential.
+      </p>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>&#x2705; Check Verification Result</h2>
+      <div class="session-input">
+        <input id="md-state" placeholder="Session state ID (auto-filled after request is created)">
+        <button class="btn btn-primary btn-sm" onclick="checkMdocResult()" id="btn-md-check">Check</button>
+        <button class="btn btn-secondary btn-sm" onclick="pollMdocResult()" id="btn-md-poll">Auto-poll</button>
+      </div>
+      <div id="md-result"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── API helpers ───────────────────────────────────────────────────────────────
+async function api(method, url, body = null, headers = {}) {
+  const opts = { method, headers: { ...headers } };
+  if (body !== null) {
+    opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+    opts.body = typeof body === 'object' ? JSON.stringify(body) : body;
+  }
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let data; try { data = JSON.parse(text); } catch { data = text; }
+  if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.data = data; throw e; }
+  return data;
+}
+const V = p => `/proxy/verifier/${p}`;
+
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── SD-JWT ────────────────────────────────────────────────────────────────────
+async function createSdJwtRequest() {
+  const btn = document.getElementById('btn-sd-req');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
+  try {
+    const fields = [];
+    [['sd-req-birthdate','$.birthdate'],['sd-req-given_name','$.given_name'],['sd-req-family_name','$.family_name'],['sd-req-email','$.email']]
+      .forEach(([id, path]) => {
+        if (document.getElementById(id).checked)
+          fields.push({ path:[path], filter:{type:'string',pattern:'.*'} });
+      });
+
+    const authRequest = await api('POST', V('openid4vc/verify'), {
+      request_credentials: [{
+        format: 'vc+sd-jwt',
+        input_descriptor: {
+          id: 'identity-credential-request',
+          format: { 'vc+sd-jwt': {} },
+          constraints: { fields, limit_disclosure: 'required' },
+        }
+      }],
+      vp_policies: ['signature_sd-jwt-vc'],
+      vc_policies: ['not-before', 'expired'],
+    }, { accept:'*/*', authorizeBaseUrl:'openid4vp://authorize', responseMode:'direct_post' });
+
+    const authStr = typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest);
+    document.getElementById('sd-auth-uri').textContent = authStr;
+    document.getElementById('sd-auth-out').style.display = 'block';
+
+    const qs = authStr.includes('?') ? authStr.split('?').slice(1).join('?') : authStr;
+    const state = new URLSearchParams(qs).get('state');
+    if (state) document.getElementById('sd-state').value = state;
+  } catch(e) {
+    alert(`Failed: ${e.message}\n${JSON.stringify(e.data||'',null,2).slice(0,300)}`);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '&#x1F4E4; Create Verification Request';
+  }
+}
+
+// ── mDoc ──────────────────────────────────────────────────────────────────────
+async function createMdocRequest() {
+  const btn = document.getElementById('btn-md-req');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
+  try {
+    const NS = "org.iso.18013.5.1";
+    const fields = [];
+    ['family_name','given_name','birth_date','document_number','issue_date','expiry_date'].forEach(f => {
+      if (document.getElementById(`md-req-${f}`) && document.getElementById(`md-req-${f}`).checked)
+        fields.push({ path:[`$['${NS}']['${f}']`], intent_to_retain: false });
+    });
+
+    const iacaPem = document.getElementById('md-iaca-pem').value.trim();
+    const body = {
+      request_credentials: [{
+        id: 'mDL-request',
+        input_descriptor: {
+          id: NS + '.mDL',
+          format: { mso_mdoc: { alg:['ES256'] } },
+          constraints: { fields, limit_disclosure: 'required' },
+        }
+      }],
+      openid_profile: 'ISO_18013_7_MDOC',
+    };
+    if (iacaPem) body.trusted_root_cas = [iacaPem];
+
+    const authRequest = await api('POST', V('openid4vc/verify'), body, {
+      accept:'*/*', authorizeBaseUrl:'openid4vp://authorize',
+      responseMode:'direct_post_jwt', openId4VPProfile:'ISO_18013_7_MDOC',
+    });
+
+    const authStr = typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest);
+    document.getElementById('md-auth-uri').textContent = authStr;
+    document.getElementById('md-auth-out').style.display = 'block';
+
+    // Extract state from request_uri
+    const qs = authStr.includes('?') ? authStr.split('?').slice(1).join('?') : authStr;
+    const params = new URLSearchParams(qs);
+    const requestUri = decodeURIComponent(params.get('request_uri') || '');
+    const state = requestUri.split('/').pop() || params.get('state');
+    if (state) document.getElementById('md-state').value = state;
+  } catch(e) {
+    alert(`Failed: ${e.message}\n${JSON.stringify(e.data||'',null,2).slice(0,300)}`);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '&#x1F4E4; Create Verification Request';
+  }
+}
+
+// ── Check result ──────────────────────────────────────────────────────────────
+async function checkSdJwtResult() {
+  const state = document.getElementById('sd-state').value.trim();
+  if (!state) { alert('Enter a session state ID'); return; }
+  const session = await api('GET', V(`openid4vc/session/${state}`));
+  renderResult('sd-result', session, false);
+}
+
+async function checkMdocResult() {
+  const state = document.getElementById('md-state').value.trim();
+  if (!state) { alert('Enter a session state ID'); return; }
+  const session = await api('GET', V(`openid4vc/session/${state}`));
+  renderResult('md-result', session, true);
+}
+
+let sdPollTimer = null, mdPollTimer = null;
+
+function pollSdJwtResult() {
+  if (sdPollTimer) { clearInterval(sdPollTimer); sdPollTimer = null; document.getElementById('btn-sd-poll').textContent='Auto-poll'; return; }
+  document.getElementById('btn-sd-poll').textContent='Stop polling';
+  sdPollTimer = setInterval(async () => {
+    try {
+      const state = document.getElementById('sd-state').value.trim();
+      if (!state) return;
+      const session = await api('GET', V(`openid4vc/session/${state}`));
+      renderResult('sd-result', session, false);
+      if (session.verificationResult !== null && session.verificationResult !== undefined) {
+        clearInterval(sdPollTimer); sdPollTimer = null;
+        document.getElementById('btn-sd-poll').textContent='Auto-poll';
+      }
+    } catch {}
+  }, 2000);
+}
+
+function pollMdocResult() {
+  if (mdPollTimer) { clearInterval(mdPollTimer); mdPollTimer = null; document.getElementById('btn-md-poll').textContent='Auto-poll'; return; }
+  document.getElementById('btn-md-poll').textContent='Stop polling';
+  mdPollTimer = setInterval(async () => {
+    try {
+      const state = document.getElementById('md-state').value.trim();
+      if (!state) return;
+      const session = await api('GET', V(`openid4vc/session/${state}`));
+      renderResult('md-result', session, true);
+      if (session.verificationResult !== null && session.verificationResult !== undefined) {
+        clearInterval(mdPollTimer); mdPollTimer = null;
+        document.getElementById('btn-md-poll').textContent='Auto-poll';
+      }
+    } catch {}
+  }, 2000);
+}
+
+// ── Render verification result ─────────────────────────────────────────────────
+function renderResult(containerId, session, isMdoc) {
+  const el = document.getElementById(containerId);
+  const ok = session.verificationResult === true;
+  const status = ok ? 'ok' : 'fail';
+
+  // Extract disclosed claims
+  const claimsHtml = extractClaimsHtml(session, isMdoc);
+
+  el.innerHTML = `
+    <div class="result-card ${status}">
+      <div class="result-header">
+        <span class="result-icon">${ok ? '✅' : '❌'}</span>
+        <div>
+          <div class="result-title">${ok ? 'VERIFIED' : 'NOT VERIFIED'}</div>
+          <div style="font-size:12px;color:var(--muted)">verificationResult = ${session.verificationResult}</div>
+        </div>
+      </div>
+      ${claimsHtml}
+      <details><summary>Full session JSON</summary><pre>${JSON.stringify(session, null, 2).slice(0, 4000)}</pre></details>
+    </div>`;
+}
+
+function extractClaimsHtml(session, isMdoc) {
+  try {
+    let rows = '';
+    // Walk into the session to find presented claims
+    // The session may have presentationData, tokenResponse, or similar
+    const src = session.tokenResponse || session.presentationData || session;
+    const flat = flattenObject(src);
+    const interesting = Object.entries(flat).filter(([k,v]) =>
+      !k.includes('iss') && !k.includes('aud') && !k.includes('exp') &&
+      !k.includes('iat') && !k.includes('jti') && !k.includes('nbf') &&
+      !k.includes('_sd') && !k.includes('cnf') && !k.includes('token') &&
+      !k.includes('vp_token') && !k.includes('presentation_submission') &&
+      !k.includes('verificationResult') && String(v).length < 100 && typeof v !== 'object'
+    ).slice(0, 20);
+
+    if (interesting.length) {
+      rows = interesting.map(([k,v]) =>
+        `<tr><td class="claim-key">${k}</td><td class="claim-val">${v}<span class="tag tag-disclosed">disclosed</span></td></tr>`
+      ).join('');
+      return `<table class="claim-table"><thead><tr><th>Claim</th><th>Value</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+    return `<p style="font-size:13px;color:var(--muted);margin-top:8px">See full session JSON below for presented claims.</p>`;
+  } catch {
+    return '';
+  }
+}
+
+function flattenObject(obj, prefix = '', result = {}) {
+  if (typeof obj !== 'object' || obj === null) return result;
+  for (const [k, v] of Object.entries(obj)) {
+    const key = prefix ? `${prefix}.${k}` : k;
+    if (typeof v === 'object' && v !== null && !Array.isArray(v)) flattenObject(v, key, result);
+    else result[key] = v;
+  }
+  return result;
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function copyToClipboard(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard'));
+}
+function openWallet() { window.open('http://localhost:8001', '_blank'); }
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Wallet — Walt.id Demo</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--primary:#4f46e5;--ph:#4338ca;--ok:#059669;--err:#dc2626;--warn:#d97706;--text:#0f172a;--muted:#64748b;--code:#0f172a;--codec:#e2e8f0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+nav{background:#1e293b;color:#fff;padding:0 24px;display:flex;align-items:center;gap:8px;height:52px}
+nav .brand{font-weight:700;color:#818cf8;margin-right:auto;font-size:15px}
+nav a{color:#94a3b8;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:14px;transition:.15s}
+nav a:hover{background:#334155;color:#fff}
+nav a.active{background:#4f46e5;color:#fff}
+.role-badge{background:#059669;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;margin-left:8px}
+main{max-width:900px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.subtitle{color:var(--muted);font-size:14px;margin-bottom:24px}
+.status-bar{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.status-dot{width:10px;height:10px;border-radius:50%;background:#e2e8f0}
+.status-dot.ok{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.status-dot.err{background:#ef4444}
+.status-text{font-size:14px}
+.status-sub{font-size:12px;color:var(--muted);margin-left:auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card-header{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.card-header h2{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;flex:1}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--text)}
+.form-group input,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;background:#fff;font-family:monospace}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(79,70,229,.1)}
+.form-group textarea{resize:vertical;min-height:72px}
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--ph)}
+.btn-secondary{background:#f1f5f9;color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+/* Credential cards */
+.cred-grid{display:flex;flex-direction:column;gap:10px}
+.cred-card{border:1px solid var(--border);border-radius:10px;padding:16px;background:var(--card);transition:.15s}
+.cred-card:hover{border-color:#c7d2fe;box-shadow:0 2px 8px rgba(79,70,229,.08)}
+.cred-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.cred-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.cred-icon.sdjwt{background:#ede9fe}
+.cred-icon.mdoc{background:#dbeafe}
+.cred-title{font-size:14px;font-weight:600;flex:1}
+.cred-format{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.format-sdjwt{background:#ede9fe;color:#7c3aed}
+.format-mdoc{background:#dbeafe;color:#1d4ed8}
+.cred-date{font-size:11px;color:var(--muted)}
+.fields-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.fields-table td{padding:5px 8px;border-bottom:1px solid #f1f5f9}
+.fields-table tr:last-child td{border-bottom:none}
+.field-key{color:var(--muted);font-family:monospace;font-size:12px;width:140px}
+.field-val{font-weight:500}
+.field-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;text-transform:uppercase;margin-left:6px}
+.tag-sd{background:#ede9fe;color:#7c3aed}
+.tag-hash{background:#dbeafe;color:#1d4ed8}
+.tag-plain{background:#d1fae5;color:#065f46}
+/* Collapsible */
+details>summary{cursor:pointer;list-style:none;font-size:12px;color:#818cf8;margin-top:8px}
+details>summary::before{content:'▶ ';font-size:10px}
+details[open]>summary::before{content:'▼ '}
+details pre{background:var(--code);color:var(--codec);padding:12px;border-radius:6px;font-size:11px;overflow:auto;max-height:200px;white-space:pre-wrap;word-break:break-all;margin-top:6px}
+/* Toasts */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:999;animation:slidein .3s ease}
+@keyframes slidein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.log{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.log-item{border-radius:6px;padding:9px 12px;border-left:3px solid var(--border);background:#fafafa;font-size:13px}
+.log-item.ok{border-left-color:var(--ok);background:#f0fdf4;color:#065f46}
+.log-item.err{border-left-color:var(--err);background:#fef2f2;color:#991b1b}
+.log-item.info{border-left-color:var(--primary);background:#eef2ff;color:#312e81}
+</style>
+</head>
+<body>
+<nav>
+  <span class="brand">&#x1F511; Walt.id Identity Demo</span>
+  <a href="http://localhost:8001" class="active">Wallet <span class="role-badge">:7001</span></a>
+  <a href="http://localhost:8002" target="_blank">Issuer</a>
+  <a href="http://localhost:8003" target="_blank">Verifier</a>
+</nav>
+<main>
+  <h1>Wallet</h1>
+  <p class="subtitle">Stores and presents verifiable credentials (SD-JWT VC and ISO mDoc)</p>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-text" id="status-text">Connecting…</span>
+    <span class="status-sub" id="status-sub"></span>
+  </div>
+
+  <!-- Accept Credential Offer -->
+  <div class="card">
+    <div class="card-header">
+      <h2>&#x1F4E5; Accept Credential Offer</h2>
+    </div>
+    <div class="form-group">
+      <label>Credential Offer URI <span style="color:var(--muted)">(from Issuer page)</span></label>
+      <textarea id="offer-uri" placeholder="openid-credential-offer://?credential_offer_uri=…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="acceptOffer()" id="btn-accept">Accept Offer</button>
+      <button class="btn btn-secondary btn-sm" onclick="pasteOffer()">&#x1F4CB; Paste</button>
+    </div>
+    <div id="accept-log" class="log"></div>
+  </div>
+
+  <!-- My Credentials -->
+  <div class="card">
+    <div class="card-header">
+      <h2>&#x1F4BC; My Credentials</h2>
+      <button class="btn btn-secondary btn-sm" onclick="loadCredentials()">&#x21BB; Refresh</button>
+    </div>
+    <div id="cred-list"><div class="empty">No credentials yet — accept a credential offer above.</div></div>
+  </div>
+
+  <!-- Present Credential -->
+  <div class="card">
+    <div class="card-header">
+      <h2>&#x1F4E4; Present Credential</h2>
+    </div>
+    <div class="form-group">
+      <label>Authorization Request URI <span style="color:var(--muted)">(from Verifier page)</span></label>
+      <textarea id="auth-request" placeholder="openid4vp://authorize?…  or  openid4vp://…?request_uri=…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="presentCredential()" id="btn-present">Present</button>
+      <button class="btn btn-secondary btn-sm" onclick="pasteAuth()">&#x1F4CB; Paste</button>
+    </div>
+    <div id="present-log" class="log"></div>
+  </div>
+</main>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let token = null, walletId = null;
+const EMAIL = 'demo@waltid.test', PASS = 'demo1234';
+
+// ── API helper ───────────────────────────────────────────────────────────────
+async function api(method, url, body = null, headers = {}) {
+  const opts = { method, headers: { ...headers } };
+  if (body !== null) {
+    if (typeof body === 'object') {
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+      opts.body = JSON.stringify(body);
+    } else {
+      opts.body = body;
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+    }
+  }
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let data; try { data = JSON.parse(text); } catch { data = text; }
+  if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.data = data; e.status = res.status; throw e; }
+  return data;
+}
+const W = p => `/proxy/wallet/${p}`;
+
+// ── Status / login ───────────────────────────────────────────────────────────
+async function init() {
+  try {
+    await api('POST', W('auth/register'), { type:'email', name:'Demo User', email:EMAIL, password:PASS });
+  } catch {}
+  try {
+    const login = await api('POST', W('auth/login'), { type:'email', email:EMAIL, password:PASS });
+    token = login.token;
+    const wallets = await api('GET', W('wallet/accounts/wallets'), null, { Authorization:`Bearer ${token}` });
+    walletId = wallets.wallets[0].id;
+    document.getElementById('status-dot').className = 'status-dot ok';
+    document.getElementById('status-text').textContent = `Logged in as ${EMAIL}`;
+    document.getElementById('status-sub').textContent = `Wallet ID: ${walletId}`;
+    loadCredentials();
+  } catch(e) {
+    document.getElementById('status-dot').className = 'status-dot err';
+    document.getElementById('status-text').textContent = 'Connection failed — is the Wallet API running on :7001?';
+  }
+}
+
+// ── Load credentials ─────────────────────────────────────────────────────────
+async function loadCredentials() {
+  if (!token || !walletId) return;
+  try {
+    const creds = await api('GET', W(`wallet/${walletId}/credentials`), null, { Authorization:`Bearer ${token}` });
+    renderCredentials(Array.isArray(creds) ? creds : (creds.credentials || []));
+  } catch(e) {
+    document.getElementById('cred-list').innerHTML = `<div class="empty" style="color:var(--err)">Error loading credentials: ${e.message}</div>`;
+  }
+}
+
+function renderCredentials(creds) {
+  const el = document.getElementById('cred-list');
+  if (!creds.length) { el.innerHTML = '<div class="empty">No credentials yet.</div>'; return; }
+  el.innerHTML = '';
+  creds.forEach(cred => {
+    const isMdoc = cred.format === 'mso_mdoc';
+    const card = document.createElement('div');
+    card.className = 'cred-card';
+    const pd = cred.parsedDocument;
+    const docType = pd?.docType || pd?.vct || cred.format || 'Credential';
+    const addedOn = cred.addedOn ? new Date(cred.addedOn).toLocaleString() : '';
+
+    let fieldsHtml = '';
+    if (isMdoc && pd?.issuerSigned?.nameSpaces) {
+      const ns = pd.issuerSigned.nameSpaces;
+      Object.keys(ns).forEach(namespace => {
+        ns[namespace].forEach(elem => {
+          fieldsHtml += `<tr>
+            <td class="field-key">${elem.elementIdentifier}</td>
+            <td class="field-val">${JSON.stringify(elem.elementValue)}<span class="field-tag tag-hash" title="digestID: ${elem.digestID}">digestID:${elem.digestID}</span></td>
+          </tr>`;
+        });
+      });
+    } else if (!isMdoc && pd) {
+      const sdKeys = pd._sd ? [] : [];
+      Object.keys(pd).forEach(k => {
+        if (k.startsWith('_')) return;
+        fieldsHtml += `<tr>
+          <td class="field-key">${k}</td>
+          <td class="field-val">${JSON.stringify(pd[k])}<span class="field-tag tag-plain">plain</span></td>
+        </tr>`;
+      });
+      if (pd._sd && pd._sd.length) {
+        pd._sd.forEach(hash => {
+          fieldsHtml += `<tr>
+            <td class="field-key" style="color:#7c3aed">— hidden —</td>
+            <td class="field-val" style="font-family:monospace;font-size:11px;color:#7c3aed"><span class="field-tag tag-sd">SD</span> ${hash.slice(0,20)}…</td>
+          </tr>`;
+        });
+      }
+    }
+
+    card.innerHTML = `
+      <div class="cred-header">
+        <div class="cred-icon ${isMdoc ? 'mdoc' : 'sdjwt'}">${isMdoc ? '&#x1F4C7;' : '&#x1F194;'}</div>
+        <div>
+          <div class="cred-title">${docType}</div>
+          <div class="cred-date">${addedOn}</div>
+        </div>
+        <span class="cred-format ${isMdoc ? 'format-mdoc' : 'format-sdjwt'}">${isMdoc ? 'mso_mdoc' : 'vc+sd-jwt'}</span>
+      </div>
+      ${fieldsHtml ? `<table class="fields-table">${fieldsHtml}</table>` : ''}
+      <details><summary>Raw JSON</summary><pre>${JSON.stringify(pd, null, 2).slice(0,1500)}</pre></details>`;
+    el.appendChild(card);
+  });
+}
+
+// ── Accept offer ─────────────────────────────────────────────────────────────
+async function acceptOffer() {
+  const offerUri = document.getElementById('offer-uri').value.trim();
+  if (!offerUri) { toast('Paste a credential offer URI first'); return; }
+  if (!token) { toast('Not logged in — wait for auto-login'); return; }
+
+  const logEl = document.getElementById('accept-log');
+  logEl.innerHTML = '';
+  const btn = document.getElementById('btn-accept');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Claiming…';
+
+  const offerFixed = offerUri.replace(/localhost/g, 'host.docker.internal');
+  try {
+    addLog(logEl, 'info', 'Sending offer to wallet-api…');
+    const claimed = await api('POST', W(`wallet/${walletId}/exchange/useOfferRequest`), offerFixed,
+      { Authorization:`Bearer ${token}`, 'Content-Type': 'application/json' });
+    const credId = Array.isArray(claimed) ? claimed[0]?.id : claimed?.id;
+    addLog(logEl, 'ok', `✅ Credential claimed! ID: ${credId || 'unknown'}`);
+    document.getElementById('offer-uri').value = '';
+    loadCredentials();
+  } catch(e) {
+    addLog(logEl, 'err', `❌ ${e.message}: ${JSON.stringify(e.data||'').slice(0,200)}`);
+  } finally {
+    btn.disabled = false; btn.innerHTML = 'Accept Offer';
+  }
+}
+
+// ── Present credential ────────────────────────────────────────────────────────
+async function presentCredential() {
+  const authRequest = document.getElementById('auth-request').value.trim();
+  if (!authRequest) { toast('Paste an authorization request URI first'); return; }
+  if (!token) { toast('Not logged in'); return; }
+
+  const logEl = document.getElementById('present-log');
+  logEl.innerHTML = '';
+  const btn = document.getElementById('btn-present');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Presenting…';
+
+  const authFixed = authRequest.replace(/localhost/g, 'host.docker.internal');
+  try {
+    addLog(logEl, 'info', 'Resolving presentation request…');
+    const resolved = await api('POST', W(`wallet/${walletId}/exchange/resolvePresentationRequest`), authFixed,
+      { Authorization:`Bearer ${token}`, 'Content-Type': 'text/plain', 'accept': 'text/plain' });
+    addLog(logEl, 'ok', 'Presentation request resolved');
+
+    // Find matching credential
+    addLog(logEl, 'info', 'Finding matching credential…');
+    let credId = null;
+    try {
+      const creds = await api('GET', W(`wallet/${walletId}/credentials`), null, { Authorization:`Bearer ${token}` });
+      const credList = Array.isArray(creds) ? creds : (creds.credentials || []);
+      if (credList.length) credId = credList[0].id; // use first credential
+    } catch {}
+
+    if (!credId) { addLog(logEl, 'err', 'No credentials in wallet'); return; }
+    addLog(logEl, 'info', `Using credential: ${credId.slice(0,30)}…`);
+
+    addLog(logEl, 'info', 'Presenting credential (selective disclosure)…');
+    const result = await api('POST', W(`wallet/${walletId}/exchange/usePresentationRequest`),
+      { presentationRequest: resolved, selectedCredentials: [credId] },
+      { Authorization:`Bearer ${token}` });
+    addLog(logEl, 'ok', '✅ Credential presented successfully! Check the Verifier page for the result.');
+    document.getElementById('auth-request').value = '';
+  } catch(e) {
+    addLog(logEl, 'err', `❌ ${e.message}: ${JSON.stringify(e.data||'').slice(0,300)}`);
+  } finally {
+    btn.disabled = false; btn.innerHTML = 'Present';
+  }
+}
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+function addLog(el, type, msg) {
+  const d = document.createElement('div');
+  d.className = `log-item ${type}`;
+  d.textContent = msg;
+  el.appendChild(d);
+  d.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+async function pasteOffer() {
+  try { document.getElementById('offer-uri').value = await navigator.clipboard.readText(); } catch {}
+}
+async function pasteAuth() {
+  try { document.getElementById('auth-request').value = await navigator.clipboard.readText(); } catch {}
+}
+
+init();
+</script>
+</body>
+</html>

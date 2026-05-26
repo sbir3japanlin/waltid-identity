@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Issuer — Walt.id Demo</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--primary:#4f46e5;--ph:#4338ca;--ok:#059669;--err:#dc2626;--warn:#d97706;--text:#0f172a;--muted:#64748b;--code:#0f172a;--codec:#e2e8f0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+nav{background:#1e293b;color:#fff;padding:0 24px;display:flex;align-items:center;gap:8px;height:52px}
+nav .brand{font-weight:700;color:#818cf8;margin-right:auto;font-size:15px}
+nav a{color:#94a3b8;text-decoration:none;padding:6px 14px;border-radius:6px;font-size:14px;transition:.15s}
+nav a:hover{background:#334155;color:#fff}
+nav a.active{background:#4f46e5;color:#fff}
+.role-badge{background:#4f46e5;color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;margin-left:8px}
+main{max-width:900px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.subtitle{color:var(--muted);font-size:14px;margin-bottom:24px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--border);width:fit-content}
+.tab{padding:8px 20px;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:500;background:transparent;color:var(--muted);transition:.15s}
+.tab.active{background:var(--primary);color:#fff}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h2{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:13px;font-weight:500;margin-bottom:4px;color:var(--text)}
+.form-group input,.form-group select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;outline:none;background:#fff}
+.form-group input:focus,.form-group select:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(79,70,229,.1)}
+.sd-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:#fafafa}
+.sd-row label{flex:1;font-size:14px}
+.sd-row .badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.badge-sd{background:#fef3c7;color:#92400e}
+.badge-plain{background:#d1fae5;color:#065f46}
+.sd-toggle{display:flex;gap:4px}
+.sd-toggle button{padding:3px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:#fff;color:var(--muted)}
+.sd-toggle button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--ph)}
+.btn-secondary{background:#f1f5f9;color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#e2e8f0}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.step-log{display:flex;flex-direction:column;gap:6px;margin-top:16px}
+.step-item{border-radius:8px;padding:12px 14px;border-left:4px solid var(--border);background:var(--card);border:1px solid var(--border);border-left-width:4px}
+.step-item.running{border-left-color:var(--warn)}
+.step-item.success{border-left-color:var(--ok)}
+.step-item.error{border-left-color:var(--err)}
+.step-header{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.step-icon{font-size:16px;width:22px;text-align:center}
+.step-title{font-size:14px;font-weight:500;flex:1}
+.step-badge{font-size:12px;padding:2px 10px;border-radius:12px;font-weight:600;white-space:nowrap}
+.step-item.running .step-badge{background:#fef3c7;color:#92400e}
+.step-item.success .step-badge{background:#d1fae5;color:#065f46}
+.step-item.error .step-badge{background:#fee2e2;color:#991b1b}
+.step-body{display:none;margin-top:10px}
+.step-body.open{display:block}
+.step-body pre{background:var(--code);color:var(--codec);padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:220px;white-space:pre-wrap;word-break:break-all;font-family:monospace}
+.result-box{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:20px;margin-top:16px}
+.result-box h3{font-size:13px;font-weight:600;color:#818cf8;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.field-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px}
+.field-row:last-child{border-bottom:none}
+.field-name{color:#94a3b8;width:150px;font-family:monospace;font-size:12px}
+.field-value{color:#f1f5f9;flex:1}
+.field-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;text-transform:uppercase}
+.tag-sd{background:#7c3aed;color:#ede9fe}
+.tag-plain{background:#065f46;color:#d1fae5}
+.tag-hash{background:#1e40af;color:#bfdbfe}
+.offer-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-top:12px;word-break:break-all;font-size:12px;font-family:monospace;color:#166534}
+.copy-btn{padding:4px 10px;font-size:12px;border:1px solid #bbf7d0;border-radius:6px;cursor:pointer;background:#fff;color:#166534;float:right;margin-top:-4px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.separator{height:1px;background:var(--border);margin:16px 0}
+</style>
+</head>
+<body>
+<nav>
+  <span class="brand">&#x1F511; Walt.id Identity Demo</span>
+  <a href="http://localhost:8001" target="_blank">Wallet</a>
+  <a href="http://localhost:8002" class="active">Issuer <span class="role-badge">:7002</span></a>
+  <a href="http://localhost:8003" target="_blank">Verifier</a>
+</nav>
+<main>
+  <h1>Issuer API</h1>
+  <p class="subtitle">Issues SD-JWT VC and ISO mDoc credentials via OID4VCI (pre-authorized flow)</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('sdjwt')">SD-JWT VC</button>
+    <button class="tab" onclick="showTab('mdoc')">mDoc / mDL (ISO 18013-5)</button>
+  </div>
+
+  <!-- ========== SD-JWT PANEL ========== -->
+  <div id="panel-sdjwt" class="panel active">
+    <div class="card">
+      <h2>Credential Data</h2>
+      <div class="grid2">
+        <div class="form-group"><label>Given Name</label><input id="sd-given_name" value="John"></div>
+        <div class="form-group"><label>Family Name</label><input id="sd-family_name" value="Doe"></div>
+        <div class="form-group"><label>Birthdate</label><input id="sd-birthdate" value="1940-01-01"></div>
+        <div class="form-group"><label>Email</label><input id="sd-email" value="johndoe@example.com"></div>
+        <div class="form-group"><label>Phone</label><input id="sd-phone_number" value="+1-202-555-0101"></div>
+        <div class="form-group"><label>Is Over 18?</label>
+          <select id="sd-is_over_18"><option value="true">true</option><option value="false">false</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Selective Disclosure Configuration</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Fields marked <strong>SD</strong> are hashed in the JWT — the wallet reveals them only when requested by a verifier. Fields marked <strong>Plain</strong> are always visible in the JWT body.</p>
+      <div id="sd-fields">
+        <div class="sd-row" data-field="given_name">
+          <span class="field-name" style="font-family:monospace;font-size:13px">given_name</span>
+          <span id="badge-given_name" class="badge badge-plain">Plain</span>
+          <div class="sd-toggle">
+            <button id="btn-given_name-plain" class="active" onclick="setSd('given_name',false)">Plain</button>
+            <button id="btn-given_name-sd" onclick="setSd('given_name',true)">SD</button>
+          </div>
+        </div>
+        <div class="sd-row" data-field="family_name">
+          <span style="font-family:monospace;font-size:13px">family_name</span>
+          <span id="badge-family_name" class="badge badge-sd">SD</span>
+          <div class="sd-toggle">
+            <button id="btn-family_name-plain" onclick="setSd('family_name',false)">Plain</button>
+            <button id="btn-family_name-sd" class="active" onclick="setSd('family_name',true)">SD</button>
+          </div>
+        </div>
+        <div class="sd-row" data-field="birthdate">
+          <span style="font-family:monospace;font-size:13px">birthdate</span>
+          <span id="badge-birthdate" class="badge badge-sd">SD</span>
+          <div class="sd-toggle">
+            <button id="btn-birthdate-plain" onclick="setSd('birthdate',false)">Plain</button>
+            <button id="btn-birthdate-sd" class="active" onclick="setSd('birthdate',true)">SD</button>
+          </div>
+        </div>
+        <div class="sd-row" data-field="email">
+          <span style="font-family:monospace;font-size:13px">email</span>
+          <span id="badge-email" class="badge badge-plain">Plain</span>
+          <div class="sd-toggle">
+            <button id="btn-email-plain" class="active" onclick="setSd('email',false)">Plain</button>
+            <button id="btn-email-sd" onclick="setSd('email',true)">SD</button>
+          </div>
+        </div>
+        <div class="sd-row" data-field="phone_number">
+          <span style="font-family:monospace;font-size:13px">phone_number</span>
+          <span id="badge-phone_number" class="badge badge-plain">Plain</span>
+          <div class="sd-toggle">
+            <button id="btn-phone_number-plain" class="active" onclick="setSd('phone_number',false)">Plain</button>
+            <button id="btn-phone_number-sd" onclick="setSd('phone_number',true)">SD</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Verifier — Requested Fields</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Which fields will the verifier request? Only fields marked SD above can be selectively disclosed.</p>
+      <div id="vr-fields">
+        <div class="sd-row">
+          <span style="font-family:monospace;font-size:13px">birthdate</span>
+          <input type="checkbox" id="vr-birthdate" checked> <label for="vr-birthdate" style="font-size:13px">Request</label>
+        </div>
+        <div class="sd-row">
+          <span style="font-family:monospace;font-size:13px">given_name</span>
+          <input type="checkbox" id="vr-given_name" checked> <label for="vr-given_name" style="font-size:13px">Request</label>
+        </div>
+        <div class="sd-row">
+          <span style="font-family:monospace;font-size:13px">family_name</span>
+          <input type="checkbox" id="vr-family_name"> <label for="vr-family_name" style="font-size:13px">Request</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runSdJwtDemo()" id="btn-sdjwt-demo">
+        &#x25B6; Run Full SD-JWT Demo
+      </button>
+      <button class="btn btn-secondary" onclick="issueOnly('sdjwt')" id="btn-sdjwt-issue">
+        Issue Only (get offer URI)
+      </button>
+    </div>
+
+    <div id="sdjwt-offer" style="display:none">
+      <div class="offer-box" id="sdjwt-offer-uri"></div>
+    </div>
+
+    <div id="sdjwt-log" class="step-log"></div>
+    <div id="sdjwt-result"></div>
+  </div>
+
+  <!-- ========== mDOC PANEL ========== -->
+  <div id="panel-mdoc" class="panel">
+    <div class="card">
+      <h2>mDL Data (org.iso.18013.5.1)</h2>
+      <div class="grid2">
+        <div class="form-group"><label>Family Name</label><input id="md-family_name" value="Doe"></div>
+        <div class="form-group"><label>Given Name</label><input id="md-given_name" value="John"></div>
+        <div class="form-group"><label>Birth Date</label><input id="md-birth_date" value="1986-03-22"></div>
+        <div class="form-group"><label>Issue Date</label><input id="md-issue_date" value="2019-10-20"></div>
+        <div class="form-group"><label>Expiry Date</label><input id="md-expiry_date" value="2030-10-20"></div>
+        <div class="form-group"><label>Document Number</label><input id="md-document_number" value="123456789"></div>
+        <div class="form-group"><label>Issuing Country</label><input id="md-issuing_country" value="US"></div>
+        <div class="form-group"><label>Issuing Authority</label><input id="md-issuing_authority" value="US DMV"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Verifier — Requested Fields</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">mDoc uses digestID-per-field — every field is individually disclosable. The verifier requests specific fields via namespace-qualified JSONPath.</p>
+      <div>
+        <div class="sd-row"><input type="checkbox" id="mvr-family_name" checked><label for="mvr-family_name" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.family_name</code></label></div>
+        <div class="sd-row"><input type="checkbox" id="mvr-given_name" checked><label for="mvr-given_name" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.given_name</code></label></div>
+        <div class="sd-row"><input type="checkbox" id="mvr-birth_date" checked><label for="mvr-birth_date" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.birth_date</code></label></div>
+        <div class="sd-row"><input type="checkbox" id="mvr-document_number" checked><label for="mvr-document_number" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.document_number</code></label></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runMdocDemo()" id="btn-mdoc-demo">
+        &#x25B6; Run Full mDoc Demo
+      </button>
+      <button class="btn btn-secondary" onclick="issueOnly('mdoc')" id="btn-mdoc-issue">
+        Issue Only (get offer URI)
+      </button>
+    </div>
+
+    <div id="mdoc-offer" style="display:none">
+      <div class="offer-box" id="mdoc-offer-uri"></div>
+    </div>
+
+    <div id="mdoc-log" class="step-log"></div>
+    <div id="mdoc-result"></div>
+  </div>
+</main>
+
+<script>
+// ── SD config state ──────────────────────────────────────────────────────────
+const sdState = {given_name: false, family_name: true, birthdate: true, email: false, phone_number: false};
+
+function setSd(field, isSD) {
+  sdState[field] = isSD;
+  document.getElementById(`badge-${field}`).className = `badge ${isSD ? 'badge-sd' : 'badge-plain'}`;
+  document.getElementById(`badge-${field}`).textContent = isSD ? 'SD' : 'Plain';
+  document.getElementById(`btn-${field}-plain`).classList.toggle('active', !isSD);
+  document.getElementById(`btn-${field}-sd`).classList.toggle('active', isSD);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`panel-${name}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── API helpers ──────────────────────────────────────────────────────────────
+async function api(method, url, body = null, headers = {}) {
+  const opts = { method, headers: { ...headers } };
+  if (body !== null) {
+    if (typeof body === 'object') {
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+      opts.body = JSON.stringify(body);
+    } else {
+      opts.body = body;
+      // keep caller-supplied Content-Type, default application/json
+      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
+    }
+  }
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let data; try { data = JSON.parse(text); } catch { data = text; }
+  if (!res.ok) { const e = new Error(`HTTP ${res.status}`); e.data = data; e.status = res.status; throw e; }
+  return data;
+}
+const W = p => `/proxy/wallet/${p}`;
+const I = p => `/proxy/issuer/${p}`;
+const V = p => `/proxy/verifier/${p}`;
+
+// ── Step logger ──────────────────────────────────────────────────────────────
+function makeLog(id) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  return {
+    step(title) {
+      const d = document.createElement('div');
+      d.className = 'step-item running';
+      d.innerHTML = `<div class="step-header" onclick="this.nextElementSibling.classList.toggle('open')">
+        <span class="step-icon">&#x23F3;</span>
+        <span class="step-title">${title}</span>
+        <span class="step-badge">running…</span>
+      </div><div class="step-body"></div>`;
+      el.appendChild(d);
+      d.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return {
+        done(msg, data) {
+          d.className = 'step-item success';
+          d.querySelector('.step-icon').textContent = '✅';
+          d.querySelector('.step-badge').textContent = msg || 'done';
+          if (data) { const pre = document.createElement('pre'); pre.textContent = JSON.stringify(data, null, 2).slice(0, 1200); d.querySelector('.step-body').appendChild(pre); }
+        },
+        fail(msg, data) {
+          d.className = 'step-item error';
+          d.querySelector('.step-icon').textContent = '❌';
+          d.querySelector('.step-badge').textContent = msg || 'error';
+          if (data) { const pre = document.createElement('pre'); pre.textContent = JSON.stringify(data, null, 2).slice(0, 1200); d.querySelector('.step-body').classList.add('open'); d.querySelector('.step-body').appendChild(pre); }
+        }
+      };
+    }
+  };
+}
+
+// ── Wallet setup helper ──────────────────────────────────────────────────────
+async function walletSetup(log, email = 'demo@waltid.test', pass = 'demo1234') {
+  let s = log.step(`Register wallet (${email})`);
+  try {
+    await api('POST', W('auth/register'), { type:'email', name:'Demo User', email, password: pass });
+    s.done('Registered');
+  } catch(e) {
+    if (e.status === 409 || e.status === 400 || (e.data && JSON.stringify(e.data).includes('already')))
+      s.done('Account exists, continuing');
+    else { s.fail(e.message, e.data); throw e; }
+  }
+
+  s = log.step('Login to wallet');
+  const login = await api('POST', W('auth/login'), { type:'email', email, password: pass });
+  const token = login.token;
+  s.done(`Token: ${token.slice(0,30)}…`);
+
+  s = log.step('Get wallet ID');
+  const wallets = await api('GET', W('wallet/accounts/wallets'), null, { Authorization: `Bearer ${token}` });
+  const walletId = wallets.wallets[0].id;
+  s.done(`Wallet ID: ${walletId}`);
+
+  return { token, walletId };
+}
+
+// ── Onboard issuer ────────────────────────────────────────────────────────────
+async function onboardIssuer(log) {
+  const s = log.step('Onboard issuer (create key + DID)');
+  const issuer = await api('POST', I('onboard/issuer'), { key: { keyType: 'secp256r1' } });
+  s.done(`DID: ${issuer.issuerDid.slice(0,40)}…`, { issuerDid: issuer.issuerDid });
+  return issuer;
+}
+
+// ── Create IACA + DS certs ────────────────────────────────────────────────────
+async function onboardMdoc(log) {
+  let s = log.step('Create IACA certificate');
+  const iaca = await api('POST', I('onboard/iso-mdl/iacas'), {
+    certificateData: { country:'US', commonName:'Test IACA', issuerAlternativeNameConf:{ uri:'https://iaca.example.com' } }
+  });
+  s.done('IACA created', { commonName: iaca.certificateData?.commonName });
+
+  s = log.step('Create Document Signer certificate');
+  const ds = await api('POST', I('onboard/iso-mdl/document-signers'), {
+    iacaSigner: { iacaKey: iaca.iacaKey, certificateData: iaca.certificateData },
+    certificateData: { country:'US', commonName:'Test DS', crlDistributionPointUri:'https://iaca.example.com/crl' }
+  });
+  s.done('DS certificate created');
+  return { iacaKey: iaca.iacaKey, iacaCertPem: iaca.certificatePEM, iacaCertData: iaca.certificateData,
+           dsKey: ds.documentSignerKey, dsCertPem: ds.certificatePEM };
+}
+
+// ── Extract state from OID4VP auth request ────────────────────────────────────
+function extractState(authRequest, isMdoc) {
+  const qs = authRequest.includes('?') ? authRequest.split('?').slice(1).join('?') : authRequest;
+  const params = new URLSearchParams(qs);
+  if (isMdoc) {
+    const requestUri = decodeURIComponent(params.get('request_uri') || '');
+    return requestUri.split('/').pop();
+  }
+  return params.get('state');
+}
+
+// ── Issue Only ────────────────────────────────────────────────────────────────
+async function issueOnly(type) {
+  if (type === 'sdjwt') {
+    document.getElementById('sdjwt-log').innerHTML = '';
+    const log = makeLog('sdjwt-log');
+    try {
+      const issuer = await onboardIssuer(log);
+      const s = log.step('Create SD-JWT VC credential offer');
+      const payload = buildSdJwtPayload(issuer.issuerKey, issuer.issuerDid);
+      const offerUri = await api('POST', I('openid4vc/sdjwt/issue'), payload);
+      s.done('Offer created');
+      document.getElementById('sdjwt-offer-uri').textContent = typeof offerUri === 'string' ? offerUri : JSON.stringify(offerUri);
+      document.getElementById('sdjwt-offer').style.display = 'block';
+    } catch(e) { console.error(e); }
+  } else {
+    document.getElementById('mdoc-log').innerHTML = '';
+    const log = makeLog('mdoc-log');
+    try {
+      const certs = await onboardMdoc(log);
+      const s = log.step('Create mDL credential offer');
+      const payload = buildMdocPayload(certs.dsKey, certs.dsCertPem, certs.iacaCertPem);
+      const offerUri = await api('POST', I('openid4vc/mdoc/issue'), payload);
+      s.done('Offer created');
+      document.getElementById('mdoc-offer-uri').textContent = typeof offerUri === 'string' ? offerUri : JSON.stringify(offerUri);
+      document.getElementById('mdoc-offer').style.display = 'block';
+    } catch(e) { console.error(e); }
+  }
+}
+
+// ── Build payloads ────────────────────────────────────────────────────────────
+function buildSdJwtPayload(issuerKey, issuerDid) {
+  const sdFields = {};
+  Object.keys(sdState).forEach(f => { sdFields[f] = { sd: sdState[f] }; });
+  return {
+    issuerKey, issuerDid,
+    credentialConfigurationId: 'identity_credential_vc+sd-jwt',
+    credentialData: {
+      given_name:   document.getElementById('sd-given_name').value,
+      family_name:  document.getElementById('sd-family_name').value,
+      birthdate:    document.getElementById('sd-birthdate').value,
+      email:        document.getElementById('sd-email').value,
+      phone_number: document.getElementById('sd-phone_number').value,
+      is_over_18:   document.getElementById('sd-is_over_18').value === 'true',
+    },
+    mapping: { id:'<uuid>', iat:'<timestamp-seconds>', nbf:'<timestamp-seconds>', exp:'<timestamp-in-seconds:365d>' },
+    selectiveDisclosure: { fields: sdFields },
+    authenticationMethod: 'PRE_AUTHORIZED',
+  };
+}
+
+function buildMdocPayload(dsKey, dsCertPem, iacaCertPem) {
+  return {
+    issuerKey: dsKey,
+    credentialConfigurationId: 'org.iso.18013.5.1.mDL',
+    mdocData: {
+      'org.iso.18013.5.1': {
+        family_name:       document.getElementById('md-family_name').value,
+        given_name:        document.getElementById('md-given_name').value,
+        birth_date:        document.getElementById('md-birth_date').value,
+        issue_date:        document.getElementById('md-issue_date').value,
+        expiry_date:       document.getElementById('md-expiry_date').value,
+        issuing_country:   document.getElementById('md-issuing_country').value,
+        issuing_authority: document.getElementById('md-issuing_authority').value,
+        document_number:   document.getElementById('md-document_number').value,
+        portrait: [141,182,121,111,238,50,120,94,54,111,113,13,241,12,12],
+        driving_privileges: [{ vehicle_category_code:'B', issue_date:'2019-10-20', expiry_date:'2030-10-20' }],
+        un_distinguishing_sign: 'USA',
+      }
+    },
+    x5Chain: [dsCertPem],
+    authenticationMethod: 'PRE_AUTHORIZED',
+  };
+}
+
+// ── Build verifier request bodies ─────────────────────────────────────────────
+function buildSdJwtVerifyPayload() {
+  const fields = [];
+  if (document.getElementById('vr-birthdate').checked)   fields.push({ path:['$.birthdate'],   filter:{type:'string',pattern:'.*'} });
+  if (document.getElementById('vr-given_name').checked)  fields.push({ path:['$.given_name'],  filter:{type:'string',pattern:'.*'} });
+  if (document.getElementById('vr-family_name').checked) fields.push({ path:['$.family_name'], filter:{type:'string',pattern:'.*'} });
+  return {
+    request_credentials: [{
+      format: 'vc+sd-jwt',
+      input_descriptor: {
+        id: 'identity-credential-request',
+        format: { 'vc+sd-jwt': {} },
+        constraints: { fields, limit_disclosure: 'required' },
+      }
+    }],
+    vp_policies: ['signature_sd-jwt-vc'],
+    vc_policies: ['not-before', 'expired'],
+  };
+}
+
+function buildMdocVerifyPayload(iacaCertPem) {
+  const NS = "org.iso.18013.5.1";
+  const fields = [];
+  ['family_name','given_name','birth_date','document_number'].forEach(f => {
+    if (document.getElementById(`mvr-${f}`) && document.getElementById(`mvr-${f}`).checked)
+      fields.push({ path:[`$['${NS}']['${f}']`], intent_to_retain: false });
+  });
+  return {
+    request_credentials: [{
+      id: 'mDL-request',
+      input_descriptor: {
+        id: NS + '.mDL',
+        format: { mso_mdoc: { alg:['ES256'] } },
+        constraints: { fields, limit_disclosure: 'required' },
+      }
+    }],
+    trusted_root_cas: [iacaCertPem],
+    openid_profile: 'ISO_18013_7_MDOC',
+  };
+}
+
+// ── Claim + present helpers ───────────────────────────────────────────────────
+async function claimCredential(log, token, walletId, offerUri) {
+  const s = log.step('Wallet claims credential via OID4VCI');
+  const offerFixed = (typeof offerUri === 'string' ? offerUri : JSON.stringify(offerUri)).replace(/localhost/g, 'host.docker.internal');
+  const claimed = await api('POST', W(`wallet/${walletId}/exchange/useOfferRequest`), offerFixed,
+    { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
+  const credId = Array.isArray(claimed) ? claimed[0]?.id : claimed?.id;
+  s.done(`Credential ID: ${(credId||'?').slice(0,30)}…`);
+  return credId;
+}
+
+async function resolveAndPresent(log, token, walletId, authRequest, credId, isMdoc) {
+  const authFixed = authRequest.replace(/localhost/g, 'host.docker.internal');
+
+  let s = log.step('Wallet resolves presentation request');
+  const resolved = await api('POST', W(`wallet/${walletId}/exchange/resolvePresentationRequest`), authFixed,
+    { Authorization: `Bearer ${token}`, 'Content-Type': 'text/plain', 'accept': 'text/plain' });
+  s.done('Resolved');
+
+  s = log.step(`Wallet presents credential${isMdoc ? ' (selective disclosure via CBOR digestID)' : ' (selective disclosure via _sd)'}` );
+  const presentPayload = { presentationRequest: resolved, selectedCredentials: [credId] };
+  const result = await api('POST', W(`wallet/${walletId}/exchange/usePresentationRequest`), presentPayload,
+    { Authorization: `Bearer ${token}` });
+  s.done('Presented successfully', typeof result === 'object' ? result : { response: String(result).slice(0,200) });
+  return resolved;
+}
+
+// ── Render final result ───────────────────────────────────────────────────────
+function renderResult(containerId, session, isMdoc) {
+  const el = document.getElementById(containerId);
+  const ok = session.verificationResult === true;
+  el.innerHTML = `
+    <div class="result-box">
+      <h3>${isMdoc ? 'mDoc' : 'SD-JWT VC'} Verification Result</h3>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <span style="font-size:32px">${ok ? '✅' : '❌'}</span>
+        <div>
+          <div style="font-size:18px;font-weight:700;color:${ok?'#4ade80':'#f87171'}">${ok ? 'VERIFIED' : 'FAILED'}</div>
+          <div style="font-size:12px;color:#94a3b8">verificationResult = ${session.verificationResult}</div>
+        </div>
+      </div>
+      ${renderSessionFields(session, isMdoc)}
+      <details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;color:#818cf8">Full session JSON</summary>
+        <pre style="margin-top:8px;font-size:11px;max-height:300px;overflow:auto;white-space:pre-wrap">${JSON.stringify(session, null, 2).slice(0,3000)}</pre>
+      </details>
+    </div>`;
+}
+
+function renderSessionFields(session, isMdoc) {
+  try {
+    let fields = [];
+    // Try to extract presented claims from various locations
+    const pd = session.presentationData || session.verifiedPresentations || session.presentations;
+    if (pd) {
+      const json = JSON.stringify(pd);
+      // Just show key-value pairs from the session
+    }
+    // Show disclosed fields section based on what we know was requested
+    const requested = isMdoc
+      ? ['family_name','given_name','birth_date','document_number']
+      : Object.keys(sdState).filter(f => sdState[f]);
+
+    let html = '<div style="margin-top:12px"><div style="font-size:11px;color:#818cf8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Presented Credential Snapshot</div>';
+    html += '<pre style="font-size:11px;color:#94a3b8;max-height:200px;overflow:auto;white-space:pre-wrap">' +
+      JSON.stringify(session, null, 2).slice(0, 2000) + '</pre></div>';
+    return html;
+  } catch { return ''; }
+}
+
+// ── Full SD-JWT Demo ──────────────────────────────────────────────────────────
+async function runSdJwtDemo() {
+  document.getElementById('sdjwt-result').innerHTML = '';
+  document.getElementById('sdjwt-offer').style.display = 'none';
+  const log = makeLog('sdjwt-log');
+  const btn = document.getElementById('btn-sdjwt-demo');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Running…';
+
+  try {
+    const { token, walletId } = await walletSetup(log);
+    const issuer = await onboardIssuer(log);
+
+    let s = log.step('Create SD-JWT VC credential offer');
+    const payload = buildSdJwtPayload(issuer.issuerKey, issuer.issuerDid);
+    const offerUri = await api('POST', I('openid4vc/sdjwt/issue'), payload);
+    s.done('Offer URI generated');
+
+    const credId = await claimCredential(log, token, walletId, offerUri);
+
+    s = log.step('Verifier creates OID4VP authorization request');
+    const authRequest = await api('POST', V('openid4vc/verify'), buildSdJwtVerifyPayload(), {
+      accept: '*/*', authorizeBaseUrl: 'openid4vp://authorize', responseMode: 'direct_post',
+    });
+    const state = extractState(typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest), false);
+    s.done(`State: ${(state||'?').slice(0,30)}…`);
+
+    await resolveAndPresent(log, token, walletId, typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest), credId, false);
+
+    s = log.step('Verifier checks session result');
+    const session = await api('GET', V(`openid4vc/session/${state}`));
+    const ok = session.verificationResult === true;
+    s.done(ok ? '✅ VERIFIED' : '❌ FAILED', session);
+    renderResult('sdjwt-result', session, false);
+  } catch(e) {
+    const s = makeLog('sdjwt-log').step('Error');
+    // already logged in individual steps
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '&#x25B6; Run Full SD-JWT Demo';
+  }
+}
+
+// ── Full mDoc Demo ────────────────────────────────────────────────────────────
+async function runMdocDemo() {
+  document.getElementById('mdoc-result').innerHTML = '';
+  document.getElementById('mdoc-offer').style.display = 'none';
+  const log = makeLog('mdoc-log');
+  const btn = document.getElementById('btn-mdoc-demo');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Running…';
+
+  try {
+    const { token, walletId } = await walletSetup(log);
+    const certs = await onboardMdoc(log);
+
+    let s = log.step('Create mDL credential offer');
+    const payload = buildMdocPayload(certs.dsKey, certs.dsCertPem, certs.iacaCertPem);
+    const offerUri = await api('POST', I('openid4vc/mdoc/issue'), payload);
+    s.done('Offer URI generated');
+
+    const credId = await claimCredential(log, token, walletId, offerUri);
+
+    s = log.step('Verifier creates ISO 18013-7 authorization request');
+    const verifyPayload = buildMdocVerifyPayload(certs.iacaCertPem);
+    const authRequest = await api('POST', V('openid4vc/verify'), verifyPayload, {
+      accept: '*/*', authorizeBaseUrl: 'openid4vp://authorize',
+      responseMode: 'direct_post_jwt', openId4VPProfile: 'ISO_18013_7_MDOC',
+    });
+    const authStr = typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest);
+    const state = extractState(authStr, true);
+    s.done(`Session ID (state): ${(state||'?').slice(0,30)}…`);
+
+    await resolveAndPresent(log, token, walletId, authStr, credId, true);
+
+    s = log.step('Verifier checks session result');
+    const session = await api('GET', V(`openid4vc/session/${state}`));
+    const ok = session.verificationResult === true;
+    s.done(ok ? '✅ VERIFIED' : '❌ FAILED', session);
+    renderResult('mdoc-result', session, true);
+  } catch(e) {
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.innerHTML = '&#x25B6; Run Full mDoc Demo';
+  }
+}
+</script>
+</body>
+</html>
