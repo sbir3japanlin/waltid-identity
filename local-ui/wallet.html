@@ -77,6 +77,12 @@ details pre{background:var(--code);color:var(--codec);padding:12px;border-radius
 .log-item.ok{border-left-color:var(--ok);background:#f0fdf4;color:#065f46}
 .log-item.err{border-left-color:var(--err);background:#fef2f2;color:#991b1b}
 .log-item.info{border-left-color:var(--primary);background:#eef2ff;color:#312e81}
+/* Auth forms */
+.auth-tabs{display:flex;gap:4px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--border);width:fit-content;margin-bottom:16px}
+.auth-tab{padding:8px 28px;border:none;border-radius:7px;cursor:pointer;font-size:14px;font-weight:500;background:transparent;color:var(--muted);transition:.15s}
+.auth-tab.active{background:var(--primary);color:#fff}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:400px}
+.auth-error{margin-top:10px;font-size:13px;color:var(--err);min-height:18px}
 </style>
 </head>
 <body>
@@ -90,10 +96,64 @@ details pre{background:var(--code);color:var(--codec);padding:12px;border-radius
   <h1>Wallet</h1>
   <p class="subtitle">Stores and presents verifiable credentials (SD-JWT VC and ISO mDoc)</p>
 
-  <div class="status-bar">
-    <div class="status-dot" id="status-dot"></div>
-    <span class="status-text" id="status-text">Connecting…</span>
-    <span class="status-sub" id="status-sub"></span>
+  <!-- ── Auth view (shown when logged out) ─────────────────────────────── -->
+  <div id="auth-view">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="showAuthTab('login')">Login</button>
+      <button class="auth-tab" id="tab-register" onclick="showAuthTab('register')">Register</button>
+    </div>
+
+    <!-- Login -->
+    <div class="auth-card" id="panel-login">
+      <div class="form-group">
+        <label>Email</label>
+        <input id="login-email" type="email" value="demo@waltid.test" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="login-password" type="password" value="demo1234" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="btn-login" onclick="doLogin()">Login</button>
+      <div id="login-error" class="auth-error"></div>
+    </div>
+
+    <!-- Register -->
+    <div class="auth-card" id="panel-register" style="display:none">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input id="reg-name" type="text" placeholder="Alice Smith">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input id="reg-email" type="email" placeholder="alice@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="reg-password" type="password" placeholder="min 8 characters">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" id="btn-register" onclick="doRegister()">Create Account</button>
+      <div id="register-error" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- ── Wallet view (shown when logged in) ────────────────────────────── -->
+  <div id="wallet-view" style="display:none">
+    <div class="status-bar">
+      <div class="status-dot ok" id="status-dot"></div>
+      <span class="status-text" id="status-text">Logged in</span>
+      <span class="status-sub" id="status-sub"></span>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()" style="margin-left:auto">Logout</button>
+    </div>
+
+  <!-- Wallet Info (keys + DIDs) -->
+  <div class="card">
+    <div class="card-header" style="cursor:pointer" onclick="toggleWalletInfo(this)">
+      <h2>&#x1F50D; Wallet Info <span style="font-size:11px;font-weight:400;color:var(--muted)">(keys &amp; DIDs)</span></h2>
+      <button class="btn btn-secondary btn-sm" tabindex="-1">Show</button>
+    </div>
+    <div id="wallet-info-body" style="display:none;margin-top:12px">
+      <div id="wallet-info-content"><div class="empty" style="padding:16px">Loading…</div></div>
+    </div>
   </div>
 
   <!-- Accept Credential Offer -->
@@ -136,12 +196,13 @@ details pre{background:var(--code);color:var(--codec);padding:12px;border-radius
     </div>
     <div id="present-log" class="log"></div>
   </div>
+
+  </div><!-- end #wallet-view -->
 </main>
 
 <script>
 // ── State ────────────────────────────────────────────────────────────────────
-let token = null, walletId = null;
-const EMAIL = 'demo@waltid.test', PASS = 'demo1234';
+let token = null, walletId = null, currentEmail = null;
 
 // ── API helper ───────────────────────────────────────────────────────────────
 async function api(method, url, body = null, headers = {}) {
@@ -163,23 +224,152 @@ async function api(method, url, body = null, headers = {}) {
 }
 const W = p => `/proxy/wallet/${p}`;
 
-// ── Status / login ───────────────────────────────────────────────────────────
-async function init() {
+// ── Auth tab toggle ──────────────────────────────────────────────────────────
+function showAuthTab(tab) {
+  document.getElementById('panel-login').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('panel-register').style.display = tab === 'register' ? '' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+
+// ── Register ─────────────────────────────────────────────────────────────────
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-password').value;
+  const errEl = document.getElementById('register-error');
+  errEl.textContent = '';
+  if (!name || !email || !pass) { errEl.textContent = 'All fields are required.'; return; }
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating…';
   try {
-    await api('POST', W('auth/register'), { type:'email', name:'Demo User', email:EMAIL, password:PASS });
-  } catch {}
+    await api('POST', W('auth/register'), { type:'email', name, email, password:pass });
+    // auto-login after register
+    document.getElementById('login-email').value = email;
+    document.getElementById('login-password').value = pass;
+    showAuthTab('login');
+    await doLogin();
+  } catch(e) {
+    errEl.textContent = e.data?.message || e.data?.detail || e.message || 'Registration failed.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Email and password are required.'; return; }
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Logging in…';
   try {
-    const login = await api('POST', W('auth/login'), { type:'email', email:EMAIL, password:PASS });
+    const login = await api('POST', W('auth/login'), { type:'email', email, password:pass });
     token = login.token;
     const wallets = await api('GET', W('wallet/accounts/wallets'), null, { Authorization:`Bearer ${token}` });
     walletId = wallets.wallets[0].id;
-    document.getElementById('status-dot').className = 'status-dot ok';
-    document.getElementById('status-text').textContent = `Logged in as ${EMAIL}`;
-    document.getElementById('status-sub').textContent = `Wallet ID: ${walletId}`;
-    loadCredentials();
+    currentEmail = email;
+    sessionStorage.setItem('waltid_token', token);
+    sessionStorage.setItem('waltid_walletId', walletId);
+    sessionStorage.setItem('waltid_email', email);
+    showWallet();
   } catch(e) {
-    document.getElementById('status-dot').className = 'status-dot err';
-    document.getElementById('status-text').textContent = 'Connection failed — is the Wallet API running on :7001?';
+    errEl.textContent = e.status === 401 ? 'Invalid email or password.' : (e.data?.message || e.message || 'Login failed.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Login';
+  }
+}
+
+// ── Logout ───────────────────────────────────────────────────────────────────
+function doLogout() {
+  token = walletId = currentEmail = null;
+  sessionStorage.removeItem('waltid_token');
+  sessionStorage.removeItem('waltid_walletId');
+  sessionStorage.removeItem('waltid_email');
+  document.getElementById('wallet-view').style.display = 'none';
+  document.getElementById('auth-view').style.display = '';
+  document.getElementById('cred-list').innerHTML = '<div class="empty">No credentials yet.</div>';
+  document.getElementById('accept-log').innerHTML = '';
+  document.getElementById('present-log').innerHTML = '';
+}
+
+// ── Show wallet after login ──────────────────────────────────────────────────
+function showWallet() {
+  document.getElementById('auth-view').style.display = 'none';
+  document.getElementById('wallet-view').style.display = '';
+  document.getElementById('status-text').textContent = `Logged in as ${currentEmail}`;
+  document.getElementById('status-sub').textContent = `Wallet ID: ${walletId}`;
+  loadCredentials();
+}
+
+// ── Restore session on page load ──────────────────────────────────────────────
+async function init() {
+  const savedToken = sessionStorage.getItem('waltid_token');
+  const savedWalletId = sessionStorage.getItem('waltid_walletId');
+  const savedEmail = sessionStorage.getItem('waltid_email');
+  if (savedToken && savedWalletId && savedEmail) {
+    // verify the token is still valid
+    try {
+      await api('GET', W('wallet/accounts/wallets'), null, { Authorization:`Bearer ${savedToken}` });
+      token = savedToken; walletId = savedWalletId; currentEmail = savedEmail;
+      showWallet();
+      return;
+    } catch { sessionStorage.clear(); }
+  }
+  // Not logged in — show auth forms
+}
+
+// ── Wallet info (keys + DIDs) ────────────────────────────────────────────────
+async function toggleWalletInfo(headerEl) {
+  const body = document.getElementById('wallet-info-body');
+  const btn = headerEl.querySelector('button');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  btn.textContent = open ? 'Show' : 'Hide';
+  if (!open) await loadWalletInfo();
+}
+
+async function loadWalletInfo() {
+  const el = document.getElementById('wallet-info-content');
+  el.innerHTML = '<div class="empty" style="padding:16px">Loading…</div>';
+  try {
+    const [keys, dids] = await Promise.all([
+      api('GET', W(`wallet/${walletId}/keys`), null, { Authorization:`Bearer ${token}` }),
+      api('GET', W(`wallet/${walletId}/dids`), null, { Authorization:`Bearer ${token}` })
+    ]);
+    const keyList = Array.isArray(keys) ? keys : [];
+    const didList = Array.isArray(dids) ? dids : [];
+
+    let html = '<div style="margin-bottom:16px">';
+    html += '<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Keys</div>';
+    if (!keyList.length) html += '<div style="font-size:13px;color:var(--muted)">No keys found.</div>';
+    keyList.forEach(k => {
+      const id = k.keyId?.id || k.id || '—';
+      const type = k.keyId?.type || k.type || '';
+      html += `<div class="log-item info" style="margin-top:4px;font-family:monospace;font-size:12px">
+        <span style="color:var(--muted);font-size:11px">ID:&nbsp;</span>${id}
+        ${type ? `<span style="background:#ede9fe;color:#7c3aed;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:6px">${type}</span>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+
+    html += '<div>';
+    html += '<div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">DIDs</div>';
+    if (!didList.length) html += '<div style="font-size:13px;color:var(--muted)">No DIDs found.</div>';
+    didList.forEach(d => {
+      html += `<div class="log-item info" style="margin-top:4px;font-size:12px;word-break:break-all">
+        <span style="font-family:monospace">${d.did}</span>
+        ${d.default ? '<span style="background:#7c3aed;color:#ede9fe;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:6px">default</span>' : ''}
+        ${d.alias ? `<span style="color:var(--muted);font-size:11px;margin-left:6px">${d.alias}</span>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="log-item err">Error loading wallet info: ${e.message}</div>`;
   }
 }
 
@@ -296,13 +486,16 @@ async function presentCredential() {
       { Authorization:`Bearer ${token}`, 'Content-Type': 'text/plain', 'accept': 'text/plain' });
     addLog(logEl, 'ok', 'Presentation request resolved');
 
-    // Find matching credential
+    // Find matching credential (prefer format matching the request type)
     addLog(logEl, 'info', 'Finding matching credential…');
     let credId = null;
     try {
       const creds = await api('GET', W(`wallet/${walletId}/credentials`), null, { Authorization:`Bearer ${token}` });
       const credList = Array.isArray(creds) ? creds : (creds.credentials || []);
-      if (credList.length) credId = credList[0].id; // use first credential
+      const isMdocRequest = authFixed.includes('request_uri=');
+      const matching = credList.filter(c => isMdocRequest ? c.format === 'mso_mdoc' : c.format !== 'mso_mdoc');
+      if (matching.length) credId = matching[0].id;
+      else if (credList.length) credId = credList[0].id; // fallback: first credential
     } catch {}
 
     if (!credId) { addLog(logEl, 'err', 'No credentials in wallet'); return; }

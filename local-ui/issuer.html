@@ -58,16 +58,6 @@ h1{font-size:22px;font-weight:700;margin-bottom:4px}
 .step-body{display:none;margin-top:10px}
 .step-body.open{display:block}
 .step-body pre{background:var(--code);color:var(--codec);padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:220px;white-space:pre-wrap;word-break:break-all;font-family:monospace}
-.result-box{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:20px;margin-top:16px}
-.result-box h3{font-size:13px;font-weight:600;color:#818cf8;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
-.field-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #1e293b;font-size:13px}
-.field-row:last-child{border-bottom:none}
-.field-name{color:#94a3b8;width:150px;font-family:monospace;font-size:12px}
-.field-value{color:#f1f5f9;flex:1}
-.field-tag{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;text-transform:uppercase}
-.tag-sd{background:#7c3aed;color:#ede9fe}
-.tag-plain{background:#065f46;color:#d1fae5}
-.tag-hash{background:#1e40af;color:#bfdbfe}
 .offer-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px;margin-top:12px;word-break:break-all;font-size:12px;font-family:monospace;color:#166534}
 .copy-btn{padding:4px 10px;font-size:12px;border:1px solid #bbf7d0;border-radius:6px;cursor:pointer;background:#fff;color:#166534;float:right;margin-top:-4px}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
@@ -89,6 +79,14 @@ h1{font-size:22px;font-weight:700;margin-bottom:4px}
   <div class="tabs">
     <button class="tab active" onclick="showTab('sdjwt')">SD-JWT VC</button>
     <button class="tab" onclick="showTab('mdoc')">mDoc / mDL (ISO 18013-5)</button>
+  </div>
+
+  <!-- Well-Known Config inspector -->
+  <div style="margin-bottom:0">
+    <button class="btn btn-secondary" style="font-size:12px;margin-bottom:4px" onclick="toggleWellKnown(this)">&#x1F4CB; Inspect Issuer Well-Known Config</button>
+    <div id="well-known-out" style="display:none;margin-top:8px;margin-bottom:12px">
+      <div id="well-known-content" style="background:var(--code);color:var(--codec);padding:14px;border-radius:8px;font-size:11px;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:280px;overflow:auto">Loading…</div>
+    </div>
   </div>
 
   <!-- ========== SD-JWT PANEL ========== -->
@@ -154,40 +152,25 @@ h1{font-size:22px;font-weight:700;margin-bottom:4px}
       </div>
     </div>
 
-    <div class="card">
-      <h2>Verifier — Requested Fields</h2>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Which fields will the verifier request? Only fields marked SD above can be selectively disclosed.</p>
-      <div id="vr-fields">
-        <div class="sd-row">
-          <span style="font-family:monospace;font-size:13px">birthdate</span>
-          <input type="checkbox" id="vr-birthdate" checked> <label for="vr-birthdate" style="font-size:13px">Request</label>
-        </div>
-        <div class="sd-row">
-          <span style="font-family:monospace;font-size:13px">given_name</span>
-          <input type="checkbox" id="vr-given_name" checked> <label for="vr-given_name" style="font-size:13px">Request</label>
-        </div>
-        <div class="sd-row">
-          <span style="font-family:monospace;font-size:13px">family_name</span>
-          <input type="checkbox" id="vr-family_name"> <label for="vr-family_name" style="font-size:13px">Request</label>
-        </div>
-      </div>
-    </div>
-
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="runSdJwtDemo()" id="btn-sdjwt-demo">
-        &#x25B6; Run Full SD-JWT Demo
-      </button>
-      <button class="btn btn-secondary" onclick="issueOnly('sdjwt')" id="btn-sdjwt-issue">
+      <button class="btn btn-primary" onclick="issueOnly('sdjwt')" id="btn-sdjwt-issue">
         Issue Only (get offer URI)
       </button>
     </div>
 
     <div id="sdjwt-offer" style="display:none">
-      <div class="offer-box" id="sdjwt-offer-uri"></div>
+      <p style="font-size:12px;color:var(--muted);margin:8px 0 4px">&#x1F4CB; Copy the offer URI below, then go to the <a href="http://localhost:8001" target="_blank">Wallet page</a> and paste it into <strong>Accept Offer URI</strong>.</p>
+      <div style="position:relative">
+        <div class="offer-box" id="sdjwt-offer-uri"></div>
+        <button class="btn btn-secondary" style="margin-top:6px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('sdjwt-offer-uri').textContent).then(()=>this.textContent='Copied!').catch(()=>{})">Copy URI</button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn btn-secondary" style="font-size:12px" onclick="toggleOfferInspect('sdjwt',this)">&#x1F50D; Inspect Offer Content</button>
+        <div id="sdjwt-offer-inspect" style="display:none;margin-top:8px;background:var(--code);color:var(--codec);padding:14px;border-radius:8px;font-size:11px;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:280px;overflow:auto">Loading…</div>
+      </div>
     </div>
 
     <div id="sdjwt-log" class="step-log"></div>
-    <div id="sdjwt-result"></div>
   </div>
 
   <!-- ========== mDOC PANEL ========== -->
@@ -206,32 +189,31 @@ h1{font-size:22px;font-weight:700;margin-bottom:4px}
       </div>
     </div>
 
-    <div class="card">
-      <h2>Verifier — Requested Fields</h2>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">mDoc uses digestID-per-field — every field is individually disclosable. The verifier requests specific fields via namespace-qualified JSONPath.</p>
-      <div>
-        <div class="sd-row"><input type="checkbox" id="mvr-family_name" checked><label for="mvr-family_name" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.family_name</code></label></div>
-        <div class="sd-row"><input type="checkbox" id="mvr-given_name" checked><label for="mvr-given_name" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.given_name</code></label></div>
-        <div class="sd-row"><input type="checkbox" id="mvr-birth_date" checked><label for="mvr-birth_date" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.birth_date</code></label></div>
-        <div class="sd-row"><input type="checkbox" id="mvr-document_number" checked><label for="mvr-document_number" style="font-size:13px;margin-left:6px"><code>org.iso.18013.5.1.document_number</code></label></div>
-      </div>
-    </div>
-
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="runMdocDemo()" id="btn-mdoc-demo">
-        &#x25B6; Run Full mDoc Demo
-      </button>
-      <button class="btn btn-secondary" onclick="issueOnly('mdoc')" id="btn-mdoc-issue">
+      <button class="btn btn-primary" onclick="issueOnly('mdoc')" id="btn-mdoc-issue">
         Issue Only (get offer URI)
       </button>
     </div>
 
     <div id="mdoc-offer" style="display:none">
-      <div class="offer-box" id="mdoc-offer-uri"></div>
+      <p style="font-size:12px;color:var(--muted);margin:8px 0 4px">&#x1F4CB; Copy the offer URI below, then go to the <a href="http://localhost:8001" target="_blank">Wallet page</a> and paste it into <strong>Accept Offer URI</strong>.</p>
+      <div style="position:relative">
+        <div class="offer-box" id="mdoc-offer-uri"></div>
+        <button class="btn btn-secondary" style="margin-top:6px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('mdoc-offer-uri').textContent).then(()=>this.textContent='Copied!').catch(()=>{})">Copy URI</button>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn btn-secondary" style="font-size:12px" onclick="toggleOfferInspect('mdoc',this)">&#x1F50D; Inspect Offer Content</button>
+        <div id="mdoc-offer-inspect" style="display:none;margin-top:8px;background:var(--code);color:var(--codec);padding:14px;border-radius:8px;font-size:11px;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:280px;overflow:auto">Loading…</div>
+      </div>
+    </div>
+
+    <div id="mdoc-iaca-out" style="display:none;margin-top:12px">
+      <p style="font-size:12px;color:var(--muted);margin:0 0 4px">&#x1F511; Paste this IACA PEM into the <a href="http://localhost:8003" target="_blank">Verifier page</a> &rarr; mDoc tab &rarr; <strong>IACA Certificate PEM</strong> field before creating the verification request.</p>
+      <textarea id="mdoc-iaca-pem-display" readonly style="width:100%;min-height:80px;font-size:11px;font-family:monospace;padding:8px;border:1px solid var(--border);border-radius:6px;resize:vertical;outline:none"></textarea>
+      <button class="btn btn-secondary" style="margin-top:4px;font-size:12px" onclick="navigator.clipboard.writeText(document.getElementById('mdoc-iaca-pem-display').value).then(()=>this.textContent='Copied!').catch(()=>{})">Copy IACA PEM</button>
     </div>
 
     <div id="mdoc-log" class="step-log"></div>
-    <div id="mdoc-result"></div>
   </div>
 </main>
 
@@ -252,6 +234,66 @@ function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(`panel-${name}`).classList.add('active');
   event.target.classList.add('active');
+}
+
+// ── Well-Known Config ────────────────────────────────────────────────────────
+async function toggleWellKnown(btn) {
+  const out = document.getElementById('well-known-out');
+  const open = out.style.display !== 'none';
+  out.style.display = open ? 'none' : '';
+  btn.textContent = open ? '📋 Inspect Issuer Well-Known Config' : '📋 Hide Well-Known Config';
+  if (!open) {
+    const el = document.getElementById('well-known-content');
+    el.textContent = 'Loading…';
+    try {
+      const data = await api('GET', I('draft13/.well-known/openid-configuration'));
+      el.textContent = JSON.stringify(data, null, 2);
+    } catch(e) {
+      el.textContent = `Error: ${e.message}`;
+    }
+  }
+}
+
+// ── Inspect Offer Content ────────────────────────────────────────────────────
+async function toggleOfferInspect(type, btn) {
+  const panel = document.getElementById(`${type}-offer-inspect`);
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : '';
+  btn.textContent = open ? '🔍 Inspect Offer Content' : '🔍 Hide Offer Content';
+  if (!open && panel.textContent === 'Loading…') {
+    // Derive offer ID from the offer URI already shown
+    const uriEl = document.getElementById(`${type}-offer-uri`);
+    const offerUri = uriEl ? uriEl.textContent.trim() : '';
+    await loadOfferContent(type, offerUri, panel);
+  }
+}
+
+async function loadOfferContent(type, offerUri, panelEl) {
+  if (!offerUri) { panelEl.textContent = 'No offer URI available yet.'; return; }
+  try {
+    // Extract credential_offer_uri param or id param from the URI
+    let offerId = null;
+    const match = offerUri.match(/[?&](?:credential_offer_uri=.*[?&]id=|id=)([^&]+)/);
+    if (match) {
+      offerId = decodeURIComponent(match[1]);
+    } else {
+      // Try extracting from credential_offer_uri value
+      const cuMatch = offerUri.match(/credential_offer_uri=([^&]+)/);
+      if (cuMatch) {
+        const cuUri = decodeURIComponent(cuMatch[1]);
+        const idMatch = cuUri.match(/[?&]id=([^&]+)/);
+        if (idMatch) offerId = idMatch[1];
+      }
+    }
+    if (!offerId) {
+      panelEl.textContent = 'Could not extract offer ID from URI:\n' + offerUri;
+      return;
+    }
+    const data = await api('GET', I(`draft13/credentialOffer?id=${offerId}`));
+    panelEl.textContent = JSON.stringify(data, null, 2);
+  } catch(e) {
+    panelEl.textContent = `Error: ${e.message}`;
+  }
 }
 
 // ── API helpers ──────────────────────────────────────────────────────────────
@@ -275,7 +317,6 @@ async function api(method, url, body = null, headers = {}) {
 }
 const W = p => `/proxy/wallet/${p}`;
 const I = p => `/proxy/issuer/${p}`;
-const V = p => `/proxy/verifier/${p}`;
 
 // ── Step logger ──────────────────────────────────────────────────────────────
 function makeLog(id) {
@@ -310,31 +351,6 @@ function makeLog(id) {
   };
 }
 
-// ── Wallet setup helper ──────────────────────────────────────────────────────
-async function walletSetup(log, email = 'demo@waltid.test', pass = 'demo1234') {
-  let s = log.step(`Register wallet (${email})`);
-  try {
-    await api('POST', W('auth/register'), { type:'email', name:'Demo User', email, password: pass });
-    s.done('Registered');
-  } catch(e) {
-    if (e.status === 409 || e.status === 400 || (e.data && JSON.stringify(e.data).includes('already')))
-      s.done('Account exists, continuing');
-    else { s.fail(e.message, e.data); throw e; }
-  }
-
-  s = log.step('Login to wallet');
-  const login = await api('POST', W('auth/login'), { type:'email', email, password: pass });
-  const token = login.token;
-  s.done(`Token: ${token.slice(0,30)}…`);
-
-  s = log.step('Get wallet ID');
-  const wallets = await api('GET', W('wallet/accounts/wallets'), null, { Authorization: `Bearer ${token}` });
-  const walletId = wallets.wallets[0].id;
-  s.done(`Wallet ID: ${walletId}`);
-
-  return { token, walletId };
-}
-
 // ── Onboard issuer ────────────────────────────────────────────────────────────
 async function onboardIssuer(log) {
   const s = log.step('Onboard issuer (create key + DID)');
@@ -359,17 +375,6 @@ async function onboardMdoc(log) {
   s.done('DS certificate created');
   return { iacaKey: iaca.iacaKey, iacaCertPem: iaca.certificatePEM, iacaCertData: iaca.certificateData,
            dsKey: ds.documentSignerKey, dsCertPem: ds.certificatePEM };
-}
-
-// ── Extract state from OID4VP auth request ────────────────────────────────────
-function extractState(authRequest, isMdoc) {
-  const qs = authRequest.includes('?') ? authRequest.split('?').slice(1).join('?') : authRequest;
-  const params = new URLSearchParams(qs);
-  if (isMdoc) {
-    const requestUri = decodeURIComponent(params.get('request_uri') || '');
-    return requestUri.split('/').pop();
-  }
-  return params.get('state');
 }
 
 // ── Issue Only ────────────────────────────────────────────────────────────────
@@ -397,6 +402,8 @@ async function issueOnly(type) {
       s.done('Offer created');
       document.getElementById('mdoc-offer-uri').textContent = typeof offerUri === 'string' ? offerUri : JSON.stringify(offerUri);
       document.getElementById('mdoc-offer').style.display = 'block';
+      document.getElementById('mdoc-iaca-pem-display').value = certs.iacaCertPem;
+      document.getElementById('mdoc-iaca-out').style.display = 'block';
     } catch(e) { console.error(e); }
   }
 }
@@ -446,200 +453,7 @@ function buildMdocPayload(dsKey, dsCertPem, iacaCertPem) {
   };
 }
 
-// ── Build verifier request bodies ─────────────────────────────────────────────
-function buildSdJwtVerifyPayload() {
-  const fields = [];
-  if (document.getElementById('vr-birthdate').checked)   fields.push({ path:['$.birthdate'],   filter:{type:'string',pattern:'.*'} });
-  if (document.getElementById('vr-given_name').checked)  fields.push({ path:['$.given_name'],  filter:{type:'string',pattern:'.*'} });
-  if (document.getElementById('vr-family_name').checked) fields.push({ path:['$.family_name'], filter:{type:'string',pattern:'.*'} });
-  return {
-    request_credentials: [{
-      format: 'vc+sd-jwt',
-      input_descriptor: {
-        id: 'identity-credential-request',
-        format: { 'vc+sd-jwt': {} },
-        constraints: { fields, limit_disclosure: 'required' },
-      }
-    }],
-    vp_policies: ['signature_sd-jwt-vc'],
-    vc_policies: ['not-before', 'expired'],
-  };
-}
 
-function buildMdocVerifyPayload(iacaCertPem) {
-  const NS = "org.iso.18013.5.1";
-  const fields = [];
-  ['family_name','given_name','birth_date','document_number'].forEach(f => {
-    if (document.getElementById(`mvr-${f}`) && document.getElementById(`mvr-${f}`).checked)
-      fields.push({ path:[`$['${NS}']['${f}']`], intent_to_retain: false });
-  });
-  return {
-    request_credentials: [{
-      id: 'mDL-request',
-      input_descriptor: {
-        id: NS + '.mDL',
-        format: { mso_mdoc: { alg:['ES256'] } },
-        constraints: { fields, limit_disclosure: 'required' },
-      }
-    }],
-    trusted_root_cas: [iacaCertPem],
-    openid_profile: 'ISO_18013_7_MDOC',
-  };
-}
-
-// ── Claim + present helpers ───────────────────────────────────────────────────
-async function claimCredential(log, token, walletId, offerUri) {
-  const s = log.step('Wallet claims credential via OID4VCI');
-  const offerFixed = (typeof offerUri === 'string' ? offerUri : JSON.stringify(offerUri)).replace(/localhost/g, 'host.docker.internal');
-  const claimed = await api('POST', W(`wallet/${walletId}/exchange/useOfferRequest`), offerFixed,
-    { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' });
-  const credId = Array.isArray(claimed) ? claimed[0]?.id : claimed?.id;
-  s.done(`Credential ID: ${(credId||'?').slice(0,30)}…`);
-  return credId;
-}
-
-async function resolveAndPresent(log, token, walletId, authRequest, credId, isMdoc) {
-  const authFixed = authRequest.replace(/localhost/g, 'host.docker.internal');
-
-  let s = log.step('Wallet resolves presentation request');
-  const resolved = await api('POST', W(`wallet/${walletId}/exchange/resolvePresentationRequest`), authFixed,
-    { Authorization: `Bearer ${token}`, 'Content-Type': 'text/plain', 'accept': 'text/plain' });
-  s.done('Resolved');
-
-  s = log.step(`Wallet presents credential${isMdoc ? ' (selective disclosure via CBOR digestID)' : ' (selective disclosure via _sd)'}` );
-  const presentPayload = { presentationRequest: resolved, selectedCredentials: [credId] };
-  const result = await api('POST', W(`wallet/${walletId}/exchange/usePresentationRequest`), presentPayload,
-    { Authorization: `Bearer ${token}` });
-  s.done('Presented successfully', typeof result === 'object' ? result : { response: String(result).slice(0,200) });
-  return resolved;
-}
-
-// ── Render final result ───────────────────────────────────────────────────────
-function renderResult(containerId, session, isMdoc) {
-  const el = document.getElementById(containerId);
-  const ok = session.verificationResult === true;
-  el.innerHTML = `
-    <div class="result-box">
-      <h3>${isMdoc ? 'mDoc' : 'SD-JWT VC'} Verification Result</h3>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-        <span style="font-size:32px">${ok ? '✅' : '❌'}</span>
-        <div>
-          <div style="font-size:18px;font-weight:700;color:${ok?'#4ade80':'#f87171'}">${ok ? 'VERIFIED' : 'FAILED'}</div>
-          <div style="font-size:12px;color:#94a3b8">verificationResult = ${session.verificationResult}</div>
-        </div>
-      </div>
-      ${renderSessionFields(session, isMdoc)}
-      <details style="margin-top:12px"><summary style="cursor:pointer;font-size:12px;color:#818cf8">Full session JSON</summary>
-        <pre style="margin-top:8px;font-size:11px;max-height:300px;overflow:auto;white-space:pre-wrap">${JSON.stringify(session, null, 2).slice(0,3000)}</pre>
-      </details>
-    </div>`;
-}
-
-function renderSessionFields(session, isMdoc) {
-  try {
-    let fields = [];
-    // Try to extract presented claims from various locations
-    const pd = session.presentationData || session.verifiedPresentations || session.presentations;
-    if (pd) {
-      const json = JSON.stringify(pd);
-      // Just show key-value pairs from the session
-    }
-    // Show disclosed fields section based on what we know was requested
-    const requested = isMdoc
-      ? ['family_name','given_name','birth_date','document_number']
-      : Object.keys(sdState).filter(f => sdState[f]);
-
-    let html = '<div style="margin-top:12px"><div style="font-size:11px;color:#818cf8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Presented Credential Snapshot</div>';
-    html += '<pre style="font-size:11px;color:#94a3b8;max-height:200px;overflow:auto;white-space:pre-wrap">' +
-      JSON.stringify(session, null, 2).slice(0, 2000) + '</pre></div>';
-    return html;
-  } catch { return ''; }
-}
-
-// ── Full SD-JWT Demo ──────────────────────────────────────────────────────────
-async function runSdJwtDemo() {
-  document.getElementById('sdjwt-result').innerHTML = '';
-  document.getElementById('sdjwt-offer').style.display = 'none';
-  const log = makeLog('sdjwt-log');
-  const btn = document.getElementById('btn-sdjwt-demo');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Running…';
-
-  try {
-    const { token, walletId } = await walletSetup(log);
-    const issuer = await onboardIssuer(log);
-
-    let s = log.step('Create SD-JWT VC credential offer');
-    const payload = buildSdJwtPayload(issuer.issuerKey, issuer.issuerDid);
-    const offerUri = await api('POST', I('openid4vc/sdjwt/issue'), payload);
-    s.done('Offer URI generated');
-
-    const credId = await claimCredential(log, token, walletId, offerUri);
-
-    s = log.step('Verifier creates OID4VP authorization request');
-    const authRequest = await api('POST', V('openid4vc/verify'), buildSdJwtVerifyPayload(), {
-      accept: '*/*', authorizeBaseUrl: 'openid4vp://authorize', responseMode: 'direct_post',
-    });
-    const state = extractState(typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest), false);
-    s.done(`State: ${(state||'?').slice(0,30)}…`);
-
-    await resolveAndPresent(log, token, walletId, typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest), credId, false);
-
-    s = log.step('Verifier checks session result');
-    const session = await api('GET', V(`openid4vc/session/${state}`));
-    const ok = session.verificationResult === true;
-    s.done(ok ? '✅ VERIFIED' : '❌ FAILED', session);
-    renderResult('sdjwt-result', session, false);
-  } catch(e) {
-    const s = makeLog('sdjwt-log').step('Error');
-    // already logged in individual steps
-    console.error(e);
-  } finally {
-    btn.disabled = false; btn.innerHTML = '&#x25B6; Run Full SD-JWT Demo';
-  }
-}
-
-// ── Full mDoc Demo ────────────────────────────────────────────────────────────
-async function runMdocDemo() {
-  document.getElementById('mdoc-result').innerHTML = '';
-  document.getElementById('mdoc-offer').style.display = 'none';
-  const log = makeLog('mdoc-log');
-  const btn = document.getElementById('btn-mdoc-demo');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Running…';
-
-  try {
-    const { token, walletId } = await walletSetup(log);
-    const certs = await onboardMdoc(log);
-
-    let s = log.step('Create mDL credential offer');
-    const payload = buildMdocPayload(certs.dsKey, certs.dsCertPem, certs.iacaCertPem);
-    const offerUri = await api('POST', I('openid4vc/mdoc/issue'), payload);
-    s.done('Offer URI generated');
-
-    const credId = await claimCredential(log, token, walletId, offerUri);
-
-    s = log.step('Verifier creates ISO 18013-7 authorization request');
-    const verifyPayload = buildMdocVerifyPayload(certs.iacaCertPem);
-    const authRequest = await api('POST', V('openid4vc/verify'), verifyPayload, {
-      accept: '*/*', authorizeBaseUrl: 'openid4vp://authorize',
-      responseMode: 'direct_post_jwt', openId4VPProfile: 'ISO_18013_7_MDOC',
-    });
-    const authStr = typeof authRequest === 'string' ? authRequest : JSON.stringify(authRequest);
-    const state = extractState(authStr, true);
-    s.done(`Session ID (state): ${(state||'?').slice(0,30)}…`);
-
-    await resolveAndPresent(log, token, walletId, authStr, credId, true);
-
-    s = log.step('Verifier checks session result');
-    const session = await api('GET', V(`openid4vc/session/${state}`));
-    const ok = session.verificationResult === true;
-    s.done(ok ? '✅ VERIFIED' : '❌ FAILED', session);
-    renderResult('mdoc-result', session, true);
-  } catch(e) {
-    console.error(e);
-  } finally {
-    btn.disabled = false; btn.innerHTML = '&#x25B6; Run Full mDoc Demo';
-  }
-}
 </script>
 </body>
 </html>
