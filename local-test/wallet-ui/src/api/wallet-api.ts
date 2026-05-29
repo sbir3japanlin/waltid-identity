@@ -1,4 +1,4 @@
-import { getApiBase, fixUrlForDocker, fixUrlForHost, getToken } from '../utils';
+import { getApiBase, fixUrlForDocker, getToken } from '../utils';
 
 async function authFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const token = getToken();

@@ -10,7 +10,7 @@ interface Props {
 export function ClaimOfferScreen({ walletId, addToast }: Props) {
   const [offerUri, setOfferUri] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<unknown>(null);
+  const [result, setResult] = useState<string>('');
 
   async function handleClaim() {
     if (!offerUri.trim()) {
@@ -18,10 +18,10 @@ export function ClaimOfferScreen({ walletId, addToast }: Props) {
       return;
     }
     setLoading(true);
-    setResult(null);
+    setResult('');
     try {
       const creds = await useOfferRequest(walletId, offerUri.trim());
-      setResult(creds);
+      setResult(JSON.stringify(creds, null, 2));
       addToast(`Credential claimed! ID: ${creds[0]?.id?.slice(0, 20)}...`, 'success');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Claim failed';
@@ -49,14 +49,14 @@ export function ClaimOfferScreen({ walletId, addToast }: Props) {
         </button>
       </div>
 
-      {result && (
+      {result ? (
         <div className="card">
           <h3 style={{ marginBottom: 8 }}>Claimed Credential</h3>
           <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, fontSize: 12, overflow: 'auto', maxHeight: 400 }}>
-            {JSON.stringify(result, null, 2)}
+            {result}
           </pre>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

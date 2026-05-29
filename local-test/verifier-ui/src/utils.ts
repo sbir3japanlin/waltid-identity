@@ -1,3 +1,5 @@
+import type { VerificationSession } from './types';
+
 const VERIFIER_API_BASE = 'http://localhost:7003';
 
 export function getApiBase(): string {
@@ -12,11 +14,11 @@ export function fixUrlForHost(url: string): string {
   return url.replace(/host\.docker\.internal/g, 'localhost');
 }
 
-export function loadSessions(): import('../types').VerificationSession[] {
+export function loadSessions(): VerificationSession[] {
   try { return JSON.parse(localStorage.getItem('verifier_sessions') || '[]'); }
   catch { return []; }
 }
 
-export function saveSessions(sessions: import('../types').VerificationSession[]): void {
+export function saveSessions(sessions: VerificationSession[]): void {
   localStorage.setItem('verifier_sessions', JSON.stringify(sessions));
 }

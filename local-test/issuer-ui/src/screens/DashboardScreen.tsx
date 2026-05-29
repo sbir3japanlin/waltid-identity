@@ -11,14 +11,14 @@ interface Props {
 export function DashboardScreen({ addToast }: Props) {
   const [state, setState] = useState<OnboardingState>(loadOnboardingState);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [wellKnown, setWellKnown] = useState<unknown>(null);
+  const [wellKnown, setWellKnown] = useState('');
 
   useEffect(() => {
     saveOnboardingState(state);
   }, [state]);
 
   useEffect(() => {
-    getWellKnown().then(setWellKnown).catch(() => {});
+    getWellKnown().then(data => setWellKnown(JSON.stringify(data, null, 2))).catch(() => {});
   }, []);
 
   async function handleOnboardMdoc() {
@@ -110,14 +110,14 @@ export function DashboardScreen({ addToast }: Props) {
         </table>
       </div>
 
-      {wellKnown && (
+      {wellKnown ? (
         <div className="card">
           <h3 style={{ marginBottom: 8 }}>Well-Known Configuration</h3>
           <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, fontSize: 12, overflow: 'auto', maxHeight: 300 }}>
-            {JSON.stringify(wellKnown, null, 2)}
+            {wellKnown}
           </pre>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

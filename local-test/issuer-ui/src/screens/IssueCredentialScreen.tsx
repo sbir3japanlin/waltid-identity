@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ToastMessage } from '../components/Toast';
-import type { CredentialFormat, IssuedOffer } from '../types';
+import type { CredentialFormat } from '../types';
 import { loadOnboardingState, loadOffers, saveOffers } from '../utils';
 import { issueMdoc, issueSdJwt, issueJwtVc, getCredentialOffer } from '../api/issuer-api';
 
@@ -12,12 +12,12 @@ export function IssueCredentialScreen({ addToast }: Props) {
   const [format, setFormat] = useState<CredentialFormat>('sd-jwt');
   const [loading, setLoading] = useState(false);
   const [resultUri, setResultUri] = useState('');
-  const [offerContent, setOfferContent] = useState<unknown>(null);
+  const [offerContent, setOfferContent] = useState('');
 
   async function handleIssue() {
     setLoading(true);
     setResultUri('');
-    setOfferContent(null);
+    setOfferContent('');
     try {
       const onboard = loadOnboardingState();
       let offerUri: string;
@@ -49,7 +49,7 @@ export function IssueCredentialScreen({ addToast }: Props) {
       if (offerId) {
         try {
           const content = await getCredentialOffer(offerId);
-          setOfferContent(content);
+          setOfferContent(JSON.stringify(content, null, 2));
         } catch { /* non-critical */ }
       }
 
@@ -111,14 +111,14 @@ export function IssueCredentialScreen({ addToast }: Props) {
         </div>
       )}
 
-      {offerContent && (
+      {offerContent ? (
         <div className="card">
           <h3 style={{ marginBottom: 8 }}>Offer Content</h3>
           <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, fontSize: 12, overflow: 'auto', maxHeight: 400 }}>
-            {JSON.stringify(offerContent, null, 2)}
+            {offerContent}
           </pre>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

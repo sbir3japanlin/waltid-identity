@@ -8,7 +8,7 @@ interface Props {
   addToast: (text: string, type: ToastMessage['type']) => void;
 }
 
-export function OffersScreen({ addToast }: Props) {
+export function OffersScreen(_props: Props) {
   const [offers, setOffers] = useState<IssuedOffer[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [offerDetails, setOfferDetails] = useState<Record<string, unknown>>({});
@@ -84,14 +84,14 @@ export function OffersScreen({ addToast }: Props) {
                   </div>
                 </div>
                 {loadingDetail && <p style={{ fontSize: 12, color: '#888' }}>Loading details...</p>}
-                {offerDetails[offer.id] && (
+                {offerDetails[offer.id] ? (
                   <div>
                     <strong style={{ fontSize: 12 }}>Offer Content:</strong>
                     <pre style={{ background: '#f5f5f5', padding: 8, borderRadius: 4, fontSize: 11, overflow: 'auto', maxHeight: 300, marginTop: 4 }}>
                       {JSON.stringify(offerDetails[offer.id], null, 2)}
                     </pre>
                   </div>
-                )}
+                ) : null}
               </div>
             )}
           </div>

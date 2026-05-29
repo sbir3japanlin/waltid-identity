@@ -65,7 +65,7 @@ export async function onboardIssuer(): Promise<{
   return res.json();
 }
 
-export async function issueMdoc(issuerKey: unknown, dsCertPem: string, iacaCertPem: string): Promise<string> {
+export async function issueMdoc(issuerKey: unknown, dsCertPem: string, _iacaCertPem: string): Promise<string> {
   const res = await apiFetch('/openid4vc/mdoc/issue', {
     method: 'POST',
     body: JSON.stringify({

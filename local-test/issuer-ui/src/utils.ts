@@ -1,3 +1,5 @@
+import type { OnboardingState, IssuedOffer } from './types';
+
 const ISSUER_API_BASE = 'http://localhost:7002';
 
 export function getApiBase(): string {
@@ -12,22 +14,22 @@ export function fixUrlForHost(url: string): string {
   return url.replace(/host\.docker\.internal/g, 'localhost');
 }
 
-export function loadOnboardingState(): import('../types').OnboardingState {
+export function loadOnboardingState(): OnboardingState {
   try {
     return JSON.parse(localStorage.getItem('issuer_onboarding') || '{}');
   } catch { return {}; }
 }
 
-export function saveOnboardingState(state: import('../types').OnboardingState): void {
+export function saveOnboardingState(state: OnboardingState): void {
   localStorage.setItem('issuer_onboarding', JSON.stringify(state));
 }
 
-export function loadOffers(): import('../types').IssuedOffer[] {
+export function loadOffers(): IssuedOffer[] {
   try {
     return JSON.parse(localStorage.getItem('issuer_offers') || '[]');
   } catch { return []; }
 }
 
-export function saveOffers(offers: import('../types').IssuedOffer[]): void {
+export function saveOffers(offers: IssuedOffer[]): void {
   localStorage.setItem('issuer_offers', JSON.stringify(offers));
 }
