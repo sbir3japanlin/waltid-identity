@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ToastMessage } from '../components/Toast';
+import type { ToastMessage } from '@shared/components/Toast';
 import { useOfferRequest } from '../api/wallet-api';
 
 interface Props {

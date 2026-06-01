@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { Screen } from './types';
 import { setToken, clearToken, getToken } from './utils';
-import { useToast, ToastContainer } from './components/Toast';
+import { useToast, ToastContainer } from '@shared/components/Toast';
 import { Layout } from './components/Layout';
 import { LoginScreen } from './screens/LoginScreen';
 import { CredentialsScreen } from './screens/CredentialsScreen';

@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Wallet accent: blue */
+  --color-accent: #3B82F6;
+  --color-accent-hover: #2563EB;
+}
+
+body {
+  @apply font-sans bg-surface-alt text-slate-800 antialiased;
+}
