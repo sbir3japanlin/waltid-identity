@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Screen } from './types';
-import { useToast, ToastContainer } from './components/Toast';
+import { useToast, ToastContainer } from '@shared/components/Toast';
 import { Layout } from './components/Layout';
 import { NewRequestScreen } from './screens/NewRequestScreen';
 import { SessionsScreen } from './screens/SessionsScreen';

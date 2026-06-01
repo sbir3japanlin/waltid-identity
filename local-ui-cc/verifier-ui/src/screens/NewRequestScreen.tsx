@@ -1,11 +1,19 @@
 import { useState } from 'react';
-import type { ToastMessage } from '../components/Toast';
+import type { ToastMessage } from '@shared/components/Toast';
 import type { CredentialFormat, VerificationSession } from '../types';
 import { loadSessions, saveSessions } from '../utils';
 import { createMdocAuthRequest, createSdJwtAuthRequest, createJwtVcAuthRequest } from '../api/verifier-api';
+import { Card, Button, Tabs, Input, Textarea } from '@shared';
+import { Copy } from 'lucide-react';
 
 const MDOC_FIELDS = ['family_name', 'given_name', 'birth_date', 'document_number', 'issue_date', 'expiry_date', 'issuing_country', 'issuing_authority'];
 const SDJWT_FIELDS = ['given_name', 'family_name', 'birthdate', 'email', 'phone_number'];
+
+const FORMAT_TABS = [
+  { key: 'mdoc', label: 'mDoc (ISO 18013-7)' },
+  { key: 'sd-jwt', label: 'SD-JWT VC' },
+  { key: 'jwt-vc', label: 'JWT VC/VP' },
+];
 
 interface Props {
   addToast: (text: string, type: ToastMessage['type']) => void;
@@ -26,8 +34,7 @@ export function NewRequestScreen({ addToast }: Props) {
   }
 
   async function handleCreate() {
-    setLoading(true);
-    setResultUrl('');
+    setLoading(true); setResultUrl('');
     try {
       let url: string;
       if (format === 'mdoc') {
@@ -37,67 +44,38 @@ export function NewRequestScreen({ addToast }: Props) {
       } else if (format === 'sd-jwt') {
         if (selectedSdJwtFields.length === 0) throw new Error('Select at least one field to request.');
         url = await createSdJwtAuthRequest(selectedSdJwtFields);
-      } else {
-        url = await createJwtVcAuthRequest(credentialType);
-      }
-
+      } else { url = await createJwtVcAuthRequest(credentialType); }
       setResultUrl(url);
-
       const stateMatch = url.match(/state=([^&]+)/) || url.match(/request_uri=.*\/([^/&?]+)/);
       const state = stateMatch ? stateMatch[1] : '';
-      const session: VerificationSession = {
-        state,
-        format,
-        timestamp: new Date().toISOString(),
-        requestUrl: url,
-      };
       const sessions = loadSessions();
-      sessions.unshift(session);
+      sessions.unshift({ state, format, timestamp: new Date().toISOString(), requestUrl: url });
       saveSessions(sessions);
-
       addToast('Authorization request created', 'success');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create request';
-      addToast(msg, 'error');
-    } finally {
-      setLoading(false);
-    }
+      addToast(err instanceof Error ? err.message : 'Failed to create request', 'error');
+    } finally { setLoading(false); }
   }
 
   return (
-    <div style={{ maxWidth: 800 }}>
-      <h1 className="section-title">New Verification Request</h1>
-
-      <div className="card">
-        <div className="format-tabs">
-          {(['mdoc', 'sd-jwt', 'jwt-vc'] as CredentialFormat[]).map(f => (
-            <button
-              key={f}
-              className={`format-tab ${format === f ? 'active' : ''}`}
-              onClick={() => setFormat(f)}
-            >
-              {f === 'mdoc' ? 'mDoc (ISO 18013-7)' : f === 'sd-jwt' ? 'SD-JWT VC' : 'JWT VC/VP'}
-            </button>
-          ))}
-        </div>
+    <div className="max-w-2xl">
+      <h1 className="text-xl font-semibold text-slate-800 mb-5">New Verification Request</h1>
+      <Card>
+        <Tabs tabs={FORMAT_TABS} activeKey={format} onChange={(k) => setFormat(k as CredentialFormat)} />
 
         {format === 'mdoc' && (
-          <div style={{ marginBottom: 16 }}>
-            <label className="label">IACA Certificate PEM</label>
-            <textarea
-              className="input"
-              rows={4}
-              value={iacaCertPem}
+          <div className="mb-4">
+            <Textarea label="IACA Certificate PEM" rows={4} value={iacaCertPem}
               onChange={e => setIacaCertPem(e.target.value)}
-              placeholder="Paste the IACA certificate PEM from the Issuer's onboarding..."
-              style={{ fontFamily: 'monospace', fontSize: 12 }}
-            />
-            <label className="label" style={{ marginTop: 8 }}>Fields to request</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              placeholder="Paste the IACA certificate PEM from the Issuer's onboarding..." />
+            <label className="block text-xs font-semibold text-slate-600 mb-2 mt-3">Fields to request</label>
+            <div className="grid grid-cols-2 gap-1.5">
               {MDOC_FIELDS.map(f => (
-                <label key={f} style={{ fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <input type="checkbox" checked={selectedMdocFields.includes(f)} onChange={() => toggle(selectedMdocFields, setSelectedMdocFields, f)} />
-                  {f}
+                <label key={f} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded-btn hover:bg-slate-50 transition-colors">
+                  <input type="checkbox" checked={selectedMdocFields.includes(f)}
+                    onChange={() => toggle(selectedMdocFields, setSelectedMdocFields, f)}
+                    className="rounded border-slate-300 text-accent focus:ring-accent/30" />
+                  {f.replace(/_/g, ' ')}
                 </label>
               ))}
             </div>
@@ -105,13 +83,15 @@ export function NewRequestScreen({ addToast }: Props) {
         )}
 
         {format === 'sd-jwt' && (
-          <div style={{ marginBottom: 16 }}>
-            <label className="label">Fields to request</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          <div className="mb-4">
+            <label className="block text-xs font-semibold text-slate-600 mb-2">Fields to request</label>
+            <div className="grid grid-cols-2 gap-1.5">
               {SDJWT_FIELDS.map(f => (
-                <label key={f} style={{ fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <input type="checkbox" checked={selectedSdJwtFields.includes(f)} onChange={() => toggle(selectedSdJwtFields, setSelectedSdJwtFields, f)} />
-                  {f}
+                <label key={f} className="flex items-center gap-2 text-sm cursor-pointer p-2 rounded-btn hover:bg-slate-50 transition-colors">
+                  <input type="checkbox" checked={selectedSdJwtFields.includes(f)}
+                    onChange={() => toggle(selectedSdJwtFields, setSelectedSdJwtFields, f)}
+                    className="rounded border-slate-300 text-accent focus:ring-accent/30" />
+                  {f.replace(/_/g, ' ')}
                 </label>
               ))}
             </div>
@@ -119,45 +99,27 @@ export function NewRequestScreen({ addToast }: Props) {
         )}
 
         {format === 'jwt-vc' && (
-          <div style={{ marginBottom: 16 }}>
-            <label className="label">Credential Type</label>
-            <input
-              className="input"
-              value={credentialType}
-              onChange={e => setCredentialType(e.target.value)}
-              style={{ maxWidth: 300 }}
-            />
+          <div className="mb-4">
+            <Input label="Credential Type" value={credentialType} onChange={e => setCredentialType(e.target.value)} />
           </div>
         )}
 
-        <button className="btn btn-primary" onClick={handleCreate} disabled={loading}>
+        <Button onClick={handleCreate} loading={loading}>
           {loading ? 'Creating...' : 'Create Authorization Request'}
-        </button>
-      </div>
+        </Button>
+      </Card>
 
       {resultUrl && (
-        <div className="card">
-          <h3 style={{ marginBottom: 8 }}>Authorization Request URL</h3>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <textarea
-              className="input"
-              rows={3}
-              value={resultUrl}
-              readOnly
-              style={{ fontFamily: 'monospace', fontSize: 12 }}
-            />
-            <button
-              className="btn btn-primary"
-              onClick={() => { navigator.clipboard.writeText(resultUrl); addToast('Copied to clipboard', 'success'); }}
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              Copy
-            </button>
+        <Card header={<span className="font-medium">Authorization Request URL</span>} className="mt-5">
+          <div className="flex gap-2">
+            <Textarea value={resultUrl} readOnly rows={3} />
+            <Button size="md" variant="secondary" className="shrink-0"
+              onClick={() => { navigator.clipboard.writeText(resultUrl); addToast('Copied to clipboard', 'success'); }}>
+              <Copy className="w-3.5 h-3.5" /> Copy
+            </Button>
           </div>
-          <p style={{ fontSize: 12, color: '#888', marginTop: 8 }}>
-            Paste this URL into the Wallet app's Presentation screen to fulfill the request.
-          </p>
-        </div>
+          <p className="text-xs text-slate-400 mt-2">Paste this URL into the Wallet app's Presentation screen to fulfill the request.</p>
+        </Card>
       )}
     </div>
   );
