@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ToastMessage } from '../components/Toast';
 import { register, login, getWallets } from '../api/wallet-api';
+import { setToken } from '../utils';
 
 interface Props {
   onLogin: (token: string, walletId: string) => void;
@@ -23,6 +24,7 @@ export function LoginScreen({ onLogin, addToast }: Props) {
 
       const token = await login(email, password);
       if (!token) throw new Error('Login returned no token');
+      setToken(token);
 
       const walletsData = await getWallets();
       const walletId = walletsData.wallets?.[0]?.id;

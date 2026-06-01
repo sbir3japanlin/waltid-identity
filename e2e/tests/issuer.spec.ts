@@ -42,7 +42,7 @@ test.describe.serial("Issuer UI", () => {
 
     // Verify offer URI is generated
     await expect(page.locator("text=Credential Offer URI")).toBeVisible({ timeout: 30000 });
-    await expect(page.locator("text=Credential offer created")).toBeVisible();
+    await expect(page.locator("text=Credential offer created").last()).toBeVisible();
   });
 
   test("issue SD-JWT credential", async () => {
@@ -53,7 +53,7 @@ test.describe.serial("Issuer UI", () => {
     await page.click("button:has-text('Issue SD-JWT Credential')");
 
     await expect(page.locator("text=Credential Offer URI")).toBeVisible({ timeout: 30000 });
-    await expect(page.locator("text=Credential offer created")).toBeVisible();
+    await expect(page.locator("text=Credential offer created").last()).toBeVisible();
   });
 
   test("view Offers page", async () => {
