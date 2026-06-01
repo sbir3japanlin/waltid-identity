@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ToastMessage } from '@shared/components/Toast';
 import { register, login, getWallets } from '../api/wallet-api';
 import { setToken } from '../utils';
+import { Button, Input, Card } from '@shared';
 
 interface Props {
   onLogin: (token: string, walletId: string) => void;
@@ -17,19 +18,13 @@ export function LoginScreen({ onLogin, addToast }: Props) {
     e.preventDefault();
     setLoading(true);
     try {
-      // Try registration first (idempotent — ok if already exists)
-      try {
-        await register('Test', email, password);
-      } catch { /* account likely exists */ }
-
+      try { await register('Test', email, password); } catch { /* account likely exists */ }
       const token = await login(email, password);
       if (!token) throw new Error('Login returned no token');
       setToken(token);
-
       const walletsData = await getWallets();
       const walletId = walletsData.wallets?.[0]?.id;
       if (!walletId) throw new Error('No wallet found');
-
       addToast('Logged in successfully', 'success');
       onLogin(token, walletId);
     } catch (err: unknown) {
@@ -41,18 +36,33 @@ export function LoginScreen({ onLogin, addToast }: Props) {
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: '60px auto' }}>
-      <div className="card">
-        <h1 className="section-title">Wallet Login</h1>
-        <form onSubmit={handleSubmit}>
-          <label className="label">Email</label>
-          <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-          <label className="label">Password</label>
-          <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-          <button className="btn btn-primary" type="submit" disabled={loading} style={{ marginTop: 12, width: '100%' }}>
-            {loading ? 'Logging in...' : 'Login / Register'}
-          </button>
-        </form>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-slate-800">Identity Wallet</h1>
+          <p className="text-sm text-slate-500 mt-1">Sign in to manage your credentials</p>
+        </div>
+        <Card>
+          <form onSubmit={handleSubmit}>
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
+            <Button type="submit" loading={loading} className="w-full mt-2">
+              {loading ? 'Signing in...' : 'Sign In / Register'}
+            </Button>
+          </form>
+        </Card>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "paths": {
+      "@shared": ["../shared/src/index.ts"],
       "@shared/*": ["../shared/src/*"]
     }
   },

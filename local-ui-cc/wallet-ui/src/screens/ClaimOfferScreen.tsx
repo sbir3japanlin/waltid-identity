@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { ToastMessage } from '@shared/components/Toast';
 import { useOfferRequest } from '../api/wallet-api';
+import { Button, Textarea, Card } from '@shared';
+import { CheckCircle } from 'lucide-react';
 
 interface Props {
   walletId: string;
@@ -32,31 +34,46 @@ export function ClaimOfferScreen({ walletId, addToast }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 700 }}>
-      <h1 className="section-title">Claim Credential Offer</h1>
-      <div className="card">
-        <label className="label">Offer URI</label>
-        <textarea
-          className="input"
-          rows={3}
-          value={offerUri}
-          onChange={e => setOfferUri(e.target.value)}
-          placeholder="Paste credential offer URI here (e.g., openid-credential-offer://...)"
-          style={{ fontFamily: 'monospace', fontSize: 12 }}
-        />
-        <button className="btn btn-primary" onClick={handleClaim} disabled={loading} style={{ marginTop: 8 }}>
-          {loading ? 'Claiming...' : 'Claim Credential'}
-        </button>
-      </div>
+    <div className="max-w-2xl">
+      <h1 className="text-xl font-semibold text-slate-800 mb-5">Claim Credential Offer</h1>
 
-      {result ? (
-        <div className="card">
-          <h3 style={{ marginBottom: 8 }}>Claimed Credential</h3>
-          <pre style={{ background: '#f5f5f5', padding: 12, borderRadius: 4, fontSize: 12, overflow: 'auto', maxHeight: 400 }}>
+      {!result ? (
+        <div className="flex items-start gap-4">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+            <span className="text-sm font-semibold text-accent">1</span>
+          </div>
+          <div className="flex-1">
+            <Card>
+              <Textarea
+                label="Offer URI"
+                rows={3}
+                value={offerUri}
+                onChange={e => setOfferUri(e.target.value)}
+                placeholder="Paste credential offer URI here (e.g., openid-credential-offer://...)"
+              />
+              <Button onClick={handleClaim} loading={loading}>
+                {loading ? 'Claiming...' : 'Claim Credential'}
+              </Button>
+            </Card>
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <CheckCircle className="w-6 h-6 text-success" />
+            <div>
+              <h3 className="font-semibold text-slate-800">Credential Claimed</h3>
+              <p className="text-sm text-slate-500">Credential has been added to your wallet</p>
+            </div>
+          </div>
+          <pre className="bg-slate-50 p-3 rounded-card text-xs overflow-auto max-h-80">
             {result}
           </pre>
-        </div>
-      ) : null}
+          <Button variant="outline" onClick={() => { setResult(''); setOfferUri(''); }} className="mt-3">
+            Claim Another
+          </Button>
+        </Card>
+      )}
     </div>
   );
 }
