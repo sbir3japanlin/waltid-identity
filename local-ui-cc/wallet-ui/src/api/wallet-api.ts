@@ -55,7 +55,7 @@ export async function useOfferRequest(walletId: string, offerUri: string): Promi
   const res = await authFetch(`/wallet/${walletId}/exchange/useOfferRequest`, {
     method: 'POST',
     headers: { 'accept': 'application/json' },
-    body: JSON.stringify(fixed),
+    body: fixed,
   });
   return res.json();
 }
