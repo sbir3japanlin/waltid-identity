@@ -191,4 +191,4 @@ iOSInjectionProject/
 /waltid-services/waltid-issuer-api/k8s/ec_device_key.pem
 
 .superpowers
-
+/test-results
