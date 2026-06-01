@@ -13,7 +13,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(getToken() ? 'credentials' : 'login');
   const [walletId, setWalletId] = useState<string>('');
   const [refreshKey, setRefreshKey] = useState(0);
-  const { toasts, addToast, dismissToast } = useToast();
+  const { toasts, addToast, dismissToast, exiting } = useToast();
 
   const handleLogin = useCallback((token: string, wid: string) => {
     setToken(token);
@@ -53,7 +53,7 @@ export default function App() {
       <Layout currentScreen={screen} onNavigate={setScreen} loggedIn={loggedIn} onLogout={handleLogout}>
         {renderScreen()}
       </Layout>
-      <ToastContainer toasts={toasts} dismissToast={dismissToast} />
+      <ToastContainer toasts={toasts} dismissToast={dismissToast} exiting={exiting} />
     </>
   );
 }

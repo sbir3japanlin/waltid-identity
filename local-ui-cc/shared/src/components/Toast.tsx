@@ -11,20 +11,37 @@ let nextId = 0;
 
 export function useToast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [exiting, setExiting] = useState<Set<number>>(new Set());
 
   const addToast = useCallback((text: string, type: ToastMessage['type'] = 'error') => {
     const id = nextId++;
     setToasts(prev => [...prev, { id, text, type }]);
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 5000);
+      setExiting(prev => new Set(prev).add(id));
+      setTimeout(() => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+        setExiting(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, 200);
+    }, 4600);
   }, []);
 
   const dismissToast = useCallback((id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setExiting(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+      setExiting(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 200);
   }, []);
 
-  return { toasts, addToast, dismissToast };
+  return { toasts, addToast, dismissToast, exiting };
 }
 
 const iconMap = {
@@ -39,9 +56,10 @@ const bgMap = {
   info: 'bg-blue-600',
 };
 
-export function ToastContainer({ toasts, dismissToast }: {
+export function ToastContainer({ toasts, dismissToast, exiting }: {
   toasts: ToastMessage[];
   dismissToast: (id: number) => void;
+  exiting: Set<number>;
 }) {
   if (toasts.length === 0) return null;
 
@@ -53,7 +71,7 @@ export function ToastContainer({ toasts, dismissToast }: {
           <div
             key={t.id}
             className={`flex items-start gap-2 px-4 py-3 rounded-card shadow-toast text-white text-sm max-w-sm
-              cursor-pointer animate-slide-in ${bgMap[t.type]}`}
+              cursor-pointer ${exiting.has(t.id) ? 'animate-slide-out' : 'animate-slide-in'} ${bgMap[t.type]}`}
             onClick={() => dismissToast(t.id)}
           >
             <Icon className="w-4 h-4 mt-0.5 shrink-0" />

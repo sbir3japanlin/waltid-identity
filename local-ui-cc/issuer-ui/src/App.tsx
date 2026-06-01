@@ -8,7 +8,7 @@ import { OffersScreen } from './screens/OffersScreen';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('dashboard');
-  const { toasts, addToast, dismissToast } = useToast();
+  const { toasts, addToast, dismissToast, exiting } = useToast();
 
   const renderScreen = () => {
     switch (screen) {
@@ -24,7 +24,7 @@ export default function App() {
       <Layout currentScreen={screen} onNavigate={setScreen}>
         {renderScreen()}
       </Layout>
-      <ToastContainer toasts={toasts} dismissToast={dismissToast} />
+      <ToastContainer toasts={toasts} dismissToast={dismissToast} exiting={exiting} />
     </>
   );
 }

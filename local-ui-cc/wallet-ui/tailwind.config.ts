@@ -38,9 +38,14 @@ const config: Config = {
           from: { transform: 'translateX(100%)', opacity: '0' },
           to: { transform: 'translateX(0)', opacity: '1' },
         },
+        'slide-out': {
+          from: { transform: 'translateX(0)', opacity: '1' },
+          to: { transform: 'translateX(100%)', opacity: '0' },
+        },
       },
       animation: {
         'slide-in': 'slide-in 0.2s ease-out',
+        'slide-out': 'slide-out 0.2s ease-in',
       },
     },
   },
