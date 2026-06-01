@@ -1,14 +1,20 @@
+/* Design tokens — single source of truth for CSS custom properties.
+   ---
+   Accent colors are the ONLY values that vary between apps.
+   wallet: #3B82F6 / #2563EB
+   issuer: #8B5CF6 / #7C3AED
+   verifier: #F59E0B / #D97706
+   Each app's main.css overrides --color-accent and --color-accent-hover.
+   ---
+   Tailwind config (tailwind.config.ts in each app) is the authoritative
+   source for radii, shadows, spacing, and font sizes — those generate
+   utility classes and are NOT duplicated here.
+*/
+
 :root {
   --color-accent: #3B82F6;
-  /* wallet: #3B82F6, issuer: #8B5CF6, verifier: #F59E0B */
   --color-accent-hover: #2563EB;
   --sidebar-bg: #1E293B;
   --sidebar-text: #E2E8F0;
   --sidebar-active-bg: #334155;
-  --radius-card: 8px;
-  --radius-btn: 6px;
-  --radius-input: 4px;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-toast: 0 4px 16px rgba(0,0,0,0.12);
 }
