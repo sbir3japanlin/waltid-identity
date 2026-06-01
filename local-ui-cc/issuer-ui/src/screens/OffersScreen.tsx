@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
-import type { ToastMessage } from '../components/Toast';
+import type { ToastMessage } from '@shared/components/Toast';
 import type { IssuedOffer } from '../types';
 import { loadOffers } from '../utils';
 import { getCredentialOffer } from '../api/issuer-api';
+import { Card, Button, Badge, EmptyState } from '@shared';
+import { ReceiptText } from 'lucide-react';
 
 interface Props {
   addToast: (text: string, type: ToastMessage['type']) => void;
 }
+
+const FORMAT_BADGE_VARIANT: Record<string, 'mdoc' | 'sd-jwt' | 'jwt-vc'> = {
+  mdoc: 'mdoc',
+  'sd-jwt': 'sd-jwt',
+  'jwt-vc': 'jwt-vc',
+};
 
 export function OffersScreen(_props: Props) {
   const [offers, setOffers] = useState<IssuedOffer[]>([]);
@@ -37,65 +45,60 @@ export function OffersScreen(_props: Props) {
     }
   }
 
-  const formatBadge = (format: string) => {
-    const map: Record<string, { cls: string; label: string }> = {
-      mdoc: { cls: 'badge-mdoc', label: 'mDoc' },
-      'sd-jwt': { cls: 'badge-sd-jwt', label: 'SD-JWT' },
-      'jwt-vc': { cls: 'badge-jwt-vc', label: 'JWT VC' },
-    };
-    const info = map[format] || { cls: '', label: format };
-    return <span className={`badge ${info.cls}`}>{info.label}</span>;
-  };
-
   return (
     <div>
-      <h1 className="section-title">Active Offers</h1>
+      <h1 className="text-xl font-semibold text-slate-800 mb-5">Active Offers</h1>
       {offers.length === 0 ? (
-        <div className="card">
-          <p style={{ color: '#888' }}>No offers generated yet. Go to Issue Credential to create one.</p>
-        </div>
+        <EmptyState
+          icon={ReceiptText as any}
+          title="No offers yet"
+          description="Go to Issue Credential to create one."
+        />
       ) : (
-        offers.map((offer, i) => (
-          <div className="card" key={i}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                {formatBadge(offer.format)}
-                <span style={{ marginLeft: 8, fontSize: 13, fontFamily: 'monospace' }}>
-                  {offer.id ? offer.id.slice(0, 30) + '...' : '(no ID)'}
-                </span>
-                <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
-                  {new Date(offer.timestamp).toLocaleString()}
+        <div className="flex flex-col gap-4">
+          {offers.map((offer, i) => (
+            <Card key={i} header={
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <Badge variant={FORMAT_BADGE_VARIANT[offer.format] || 'neutral'}>{offer.format.toUpperCase()}</Badge>
+                  <span className="text-xs font-mono text-slate-500">
+                    {offer.id ? offer.id.slice(0, 30) + '...' : '(no ID)'}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(offer.timestamp).toLocaleString()}
+                  </span>
                 </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleViewDetails(offer.id)}
+                >
+                  {expandedId === offer.id ? 'Hide' : 'View Details'}
+                </Button>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={() => handleViewDetails(offer.id)}
-                style={{ fontSize: 12, padding: '4px 12px' }}
-              >
-                {expandedId === offer.id ? 'Hide' : 'View Details'}
-              </button>
-            </div>
-            {expandedId === offer.id && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ marginBottom: 8 }}>
-                  <strong style={{ fontSize: 12 }}>Offer URI:</strong>
-                  <div style={{ fontFamily: 'monospace', fontSize: 11, wordBreak: 'break-all', background: '#f5f5f5', padding: 8, borderRadius: 4, marginTop: 4 }}>
-                    {offer.uri}
+            }>
+              {expandedId === offer.id && (
+                <div>
+                  <div className="mb-3">
+                    <p className="text-xs font-semibold text-slate-600 mb-1">Offer URI:</p>
+                    <div className="font-mono text-xs break-all bg-slate-50 p-2 rounded-card">
+                      {offer.uri}
+                    </div>
                   </div>
+                  {loadingDetail && <p className="text-xs text-slate-500">Loading details...</p>}
+                  {offerDetails[offer.id] ? (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Offer Content:</p>
+                      <pre className="bg-slate-50 p-2 rounded-card text-xs overflow-auto max-h-72">
+                        {JSON.stringify(offerDetails[offer.id], null, 2)}
+                      </pre>
+                    </div>
+                  ) : null}
                 </div>
-                {loadingDetail && <p style={{ fontSize: 12, color: '#888' }}>Loading details...</p>}
-                {offerDetails[offer.id] ? (
-                  <div>
-                    <strong style={{ fontSize: 12 }}>Offer Content:</strong>
-                    <pre style={{ background: '#f5f5f5', padding: 8, borderRadius: 4, fontSize: 11, overflow: 'auto', maxHeight: 300, marginTop: 4 }}>
-                      {JSON.stringify(offerDetails[offer.id], null, 2)}
-                    </pre>
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </div>
-        ))
+              )}
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
