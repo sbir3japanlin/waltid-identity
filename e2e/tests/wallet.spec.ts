@@ -43,4 +43,26 @@ test.describe.serial("Wallet UI", () => {
     await page.click("nav button:has-text('Credentials')");
     await expect(page.locator("h1.section-title")).toContainText("Credentials");
   });
+
+  test("navigate to Claim Offer page", async () => {
+    await page.click("nav button:has-text('Claim Offer')");
+    await expect(page.locator("h1.section-title")).toContainText("Claim Credential Offer");
+    await expect(
+      page.locator('textarea[placeholder*="credential offer"]')
+    ).toBeVisible();
+    await expect(
+      page.locator("button:has-text('Claim Credential')")
+    ).toBeVisible();
+  });
+
+  test("navigate to Presentation page", async () => {
+    await page.click("nav button:has-text('Presentation')");
+    await expect(page.locator("h1.section-title")).toContainText("Presentation Request");
+    await expect(
+      page.locator('textarea[placeholder*="authorization request"]')
+    ).toBeVisible();
+    await expect(
+      page.locator("button:has-text('Review Request')")
+    ).toBeVisible();
+  });
 });
