@@ -60,7 +60,7 @@ export function DashboardScreen({ addToast }: Props) {
                   {mdocReady ? <CheckCircle2 className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-slate-300" />}
                   <span className={`text-sm font-medium ${mdocReady ? 'text-success' : 'text-slate-500'}`}>{mdocReady ? 'Ready' : 'Not onboarded'}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">IACA: {state.iacaCertData ? 'configured' : 'missing'} &middot; DS: {state.dsKey ? 'configured' : 'missing'}</p>
+                <p className="text-xs text-slate-400 mt-0.5">IACA: {state.iacaCertData ? 'configured' : 'missing'} ·DS: {state.dsKey ? 'configured' : 'missing'}</p>
               </div>
             </div>
             <Button size="sm" variant={mdocReady ? 'outline' : 'primary'} onClick={handleOnboardMdoc} loading={loading.mdoc}>
@@ -76,7 +76,7 @@ export function DashboardScreen({ addToast }: Props) {
                   {issuerReady ? <CheckCircle2 className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-slate-300" />}
                   <span className={`text-sm font-medium ${issuerReady ? 'text-success' : 'text-slate-500'}`}>{issuerReady ? 'Ready' : 'Not onboarded'}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Key: {state.issuerKey ? 'configured' : 'missing'} &middot; DID: {state.issuerDid ? state.issuerDid.slice(0, 20) + '...' : 'missing'}</p>
+                <p className="text-xs text-slate-400 mt-0.5">Key: {state.issuerKey ? 'configured' : 'missing'} ·DID: {state.issuerDid ? state.issuerDid.slice(0, 20) + '...' : 'missing'}</p>
               </div>
             </div>
             <Button size="sm" variant={issuerReady ? 'outline' : 'primary'} onClick={handleOnboardIssuer} loading={loading.issuer}>
