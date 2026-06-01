@@ -35,8 +35,8 @@ test.describe.serial("Wallet UI", () => {
   test("navigate to Keys & DIDs page", async () => {
     await page.click("nav button:has-text('Keys & DIDs')");
     await expect(page.locator("h1.section-title")).toContainText("Keys & DIDs");
-    await expect(page.locator("text=Keys")).toBeVisible();
-    await expect(page.locator("text=DIDs")).toBeVisible();
+    await expect(page.locator("h3:has-text('Keys')")).toBeVisible();
+    await expect(page.locator("h3:has-text('DIDs')")).toBeVisible();
   });
 
   test("navigate back to Credentials page", async () => {
