@@ -28,6 +28,9 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     
     // Navigate to issuer dashboard
     await page.goto(ISSUER_URL);
+    // Disable animations for clearer video frames
+    const { disableAnimations } = await import('./test-utils');
+    await disableAnimations(page);
     await page.waitForLoadState("networkidle");
     await expect(page.locator("h1")).toContainText("Dashboard", { timeout: 10000 });
     console.log("✓ Issuer dashboard loaded");
@@ -66,6 +69,8 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     // Steps 0-2: Register account, Login, Retrieve Wallet ID
     console.log("→ Steps 0-2: Registering/logging in wallet...");
     await page.goto(WALLET_URL);
+    // Disable animations for clearer video frames
+    await disableAnimations(page);
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');
@@ -87,6 +92,8 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     // Step 9: Create mDL Authorization Request with IACA certificate
     console.log("→ Step 9: Creating mDL authorization request...");
     await page.goto(VERIFIER_URL);
+    // Disable animations for clearer video frames
+    await disableAnimations(page);
     await page.waitForLoadState("networkidle");
     await page.click("button:has-text('mDoc')");
     await page.waitForTimeout(500);
@@ -114,6 +121,8 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     
     // Re-login to wallet
     await page.goto(WALLET_URL);
+    // Disable animations for clearer video frames
+    await disableAnimations(page);
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');

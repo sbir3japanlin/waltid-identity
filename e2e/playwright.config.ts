@@ -14,7 +14,14 @@ export default defineConfig({
   use: {
     trace: "on-first-retry",
     screenshot: "on",
+    // Record video for every test. Increase viewport and deviceScaleFactor
+    // to capture clearer, higher-resolution frames.
     video: "on",
+    viewport: { width: 1280, height: 720 },
+    // Desktop Chrome device preset doesn't set deviceScaleFactor; increase
+    // rendering density for crisper video on HiDPI displays.
+    deviceScaleFactor: 2,
+    launchOptions: { args: ['--force-device-scale-factor=2', '--hide-scrollbars'] },
   },
 
   projects: [
