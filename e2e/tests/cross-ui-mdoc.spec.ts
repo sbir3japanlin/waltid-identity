@@ -26,7 +26,9 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
   test("mDoc flow: Steps 3-7 - Issuer onboard and issue credential", async ({ page }) => {
     console.log("\n=== ISSUER: Onboard mDoc and Issue Credential ===");
     
-    // Navigate to issuer dashboard
+    // Navigate to issuer dashboard (ensure page layout fills recorded frame)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(ISSUER_URL);
     // Disable animations for clearer video frames
     // Use CommonJS require to load the helper exported by test-utils.js
@@ -70,6 +72,9 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     
     // Steps 0-2: Register account, Login, Retrieve Wallet ID
     console.log("→ Steps 0-2: Registering/logging in wallet...");
+    // Ensure wallet UI fills the screen for recording
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(WALLET_URL);
     // Disable animations for clearer video frames
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -94,6 +99,9 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     
     // Step 9: Create mDL Authorization Request with IACA certificate
     console.log("→ Step 9: Creating mDL authorization request...");
+    // Ensure verifier UI fills the screen for recording
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(VERIFIER_URL);
     // Disable animations for clearer video frames
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -124,6 +132,9 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     console.log("\n=== WALLET: Respond to Presentation Request ===");
     
     // Re-login to wallet
+    // Ensure wallet UI fills the screen for recording
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(WALLET_URL);
     // Disable animations for clearer video frames
     // eslint-disable-next-line @typescript-eslint/no-var-requires

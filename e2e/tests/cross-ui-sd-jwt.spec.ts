@@ -26,7 +26,9 @@ test.describe.serial("Cross-UI SSI Flow (SD-JWT)", () => {
   test("SD-JWT flow: Steps 6-9 - Issuer onboard and issue credential", async ({ page }) => {
     console.log("\n=== ISSUER: Onboard SD-JWT and Issue Credential ===");
     
-    // Navigate to issuer dashboard
+    // Navigate to issuer dashboard (ensure UI fills recorded frame)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(ISSUER_URL);
     await page.waitForLoadState("networkidle");
     // Disable animations for clearer video frames
@@ -79,6 +81,9 @@ test.describe.serial("Cross-UI SSI Flow (SD-JWT)", () => {
     
     // Steps 0-2: Register account, Login, Retrieve Wallet ID
     console.log("→ Steps 0-2: Registering/logging in wallet...");
+    // Ensure wallet UI fills the screen for recording
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(WALLET_URL);
     // Disable animations for clearer video frames
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -106,6 +111,9 @@ test.describe.serial("Cross-UI SSI Flow (SD-JWT)", () => {
     
     // Step 11: Create OID4VP Authorization Request
     console.log("→ Step 11: Creating SD-JWT authorization request...");
+    // Ensure verifier UI fills the screen for recording
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(VERIFIER_URL);
     await page.waitForLoadState("networkidle");
     // Disable animations for clearer video frames
@@ -130,6 +138,9 @@ test.describe.serial("Cross-UI SSI Flow (SD-JWT)", () => {
     console.log("\n=== WALLET: Respond to SD-JWT Presentation Request ===");
     
     // Re-login to wallet
+    // Ensure wallet UI fills the screen for recording
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    await require('./test-utils').fillScreen(page);
     await page.goto(WALLET_URL);
     // Disable animations for clearer video frames
     // eslint-disable-next-line @typescript-eslint/no-var-requires
