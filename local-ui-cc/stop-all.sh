@@ -19,7 +19,7 @@ echo ""
 echo "Stopping Docker Compose services..."
 
 if [[ -f "$DOCKER_COMPOSE_DIR/docker-compose.yaml" ]]; then
-  (cd "$DOCKER_COMPOSE_DIR" && docker compose down)
+  (cd "$DOCKER_COMPOSE_DIR" && docker compose down -v)
   echo "  Docker Compose services stopped."
 else
   echo "  docker-compose.yaml not found at $DOCKER_COMPOSE_DIR — skipping."
