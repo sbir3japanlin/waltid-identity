@@ -7,8 +7,7 @@ test.describe.serial("Cross-UI SSI Flow", () => {
   let offerUri = "";
   let authRequestUrl = "";
 
-  test("issuer: onboard mDoc and issue mDoc credential", async ({ browser }) => {
-    const page = await browser.newPage();
+  test("issuer: onboard mDoc and issue mDoc credential", async ({ page }) => {
     await page.goto(ISSUER_URL);
     await page.waitForLoadState("networkidle");
 
@@ -37,11 +36,10 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     offerUri = await page.locator('input[readonly]').first().inputValue();
     expect(offerUri).toBeTruthy();
 
-    await page.close();
+    // page fixture will be closed by Playwright
   });
 
-  test("wallet: login and claim the mDoc offer", async ({ browser }) => {
-    const page = await browser.newPage();
+  test("wallet: login and claim the mDoc offer", async ({ page }) => {
     await page.goto(WALLET_URL);
 
     // Login
@@ -60,11 +58,10 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     // Verify success (use first() to avoid strict mode violation)
     await expect(page.locator("text=Credential claimed").first()).toBeVisible({ timeout: 30000 });
 
-    await page.close();
+    // page fixture will be closed by Playwright
   });
 
-  test("verifier: create mDoc auth request with IACA cert", async ({ browser }) => {
-    const page = await browser.newPage();
+  test("verifier: create mDoc auth request with IACA cert", async ({ page }) => {
     await page.goto(VERIFIER_URL);
     await page.waitForLoadState("networkidle");
 
@@ -89,11 +86,10 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     authRequestUrl = await page.locator('textarea[readonly]').first().inputValue();
     expect(authRequestUrl).toBeTruthy();
 
-    await page.close();
+    // page fixture will be closed by Playwright
   });
 
-  test("wallet: respond to presentation request", async ({ browser }) => {
-    const page = await browser.newPage();
+  test("wallet: respond to presentation request", async ({ page }) => {
     await page.goto(WALLET_URL);
 
     // Login with same email
@@ -112,6 +108,6 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     // Should advance to review step
     await expect(page.locator("button:has-text('Approve & Present')")).toBeVisible({ timeout: 15000 });
 
-    await page.close();
+    // page fixture will be closed by Playwright
   });
 });

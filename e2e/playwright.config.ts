@@ -13,8 +13,8 @@ export default defineConfig({
   // ‘off’, ‘on’, ‘retain-on-failure’, and ‘on-first-retry’.
   use: {
     trace: "on-first-retry",
-    screenshot: "on", 
-    video: { mode: 'on' }, 
+    screenshot: "on",
+    video: "on",
   },
 
   projects: [
