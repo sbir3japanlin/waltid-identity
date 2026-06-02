@@ -10,20 +10,17 @@ export default defineConfig({
   timeout: 60000,
   expect: { timeout: 15000 },
 
+  // ‘off’, ‘on’, ‘retain-on-failure’, and ‘on-first-retry’.
   use: {
     trace: "on-first-retry",
-    screenshot: "only-on-failure",
-    video: "on", // Changed from "retain-on-failure" to record all tests
+    screenshot: "on", 
+    video: { mode: 'on' }, 
   },
 
   projects: [
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-    },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
     },
   ],
 

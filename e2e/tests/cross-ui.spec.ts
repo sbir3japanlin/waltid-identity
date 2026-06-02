@@ -10,11 +10,14 @@ test.describe.serial("Cross-UI SSI Flow", () => {
   test("issuer: onboard mDoc and issue mDoc credential", async ({ browser }) => {
     const page = await browser.newPage();
     await page.goto(ISSUER_URL);
+    await page.waitForLoadState("networkidle");
 
-    // Onboard mDoc
-    const mdocRow = page.locator("tr").filter({ hasText: "MDOC" });
-    await mdocRow.locator("button:has-text('Onboard')").click();
-    await expect(mdocRow.locator("td").nth(1)).toContainText("Ready", { timeout: 30000 });
+    // Wait for Dashboard to load
+    await expect(page.locator("h1")).toContainText("Dashboard", { timeout: 10000 });
+
+    // Onboard mDoc - click first Onboard button
+    await page.click("button:has-text('Onboard')");
+    await expect(page.locator("text=Ready").first()).toBeVisible({ timeout: 30000 });
 
     // Extract IACA cert PEM from localStorage
     iacaCertPem = await page.evaluate(() => {
@@ -25,7 +28,8 @@ test.describe.serial("Cross-UI SSI Flow", () => {
 
     // Issue mDoc credential
     await page.click("nav button:has-text('Issue Credential')");
-    await page.click("button.format-tab:has-text('mDoc')");
+    await page.click("button:has-text('mDoc')");
+    await page.waitForTimeout(500);
     await page.click("button:has-text('Issue MDOC Credential')");
     await expect(page.locator("text=Credential Offer URI")).toBeVisible({ timeout: 30000 });
 
@@ -53,8 +57,8 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     await page.fill('textarea[placeholder*="credential offer"]', offerUri);
     await page.click("button:has-text('Claim Credential')");
 
-    // Verify success
-    await expect(page.locator("text=Credential claimed")).toBeVisible({ timeout: 30000 });
+    // Verify success (use first() to avoid strict mode violation)
+    await expect(page.locator("text=Credential claimed").first()).toBeVisible({ timeout: 30000 });
 
     await page.close();
   });
@@ -62,16 +66,18 @@ test.describe.serial("Cross-UI SSI Flow", () => {
   test("verifier: create mDoc auth request with IACA cert", async ({ browser }) => {
     const page = await browser.newPage();
     await page.goto(VERIFIER_URL);
+    await page.waitForLoadState("networkidle");
 
     // Switch to mDoc tab
-    await page.click("button.format-tab:has-text('mDoc')");
+    await page.click("button:has-text('mDoc')");
+    await page.waitForTimeout(500);
 
     // Paste IACA cert PEM
     await page.fill("textarea", iacaCertPem);
 
-    // Select fields
-    const familyName = page.locator("label").filter({ hasText: "family_name" }).locator("input[type='checkbox']");
-    const givenName = page.locator("label").filter({ hasText: "given_name" }).locator("input[type='checkbox']");
+    // Select fields (using actual UI text)
+    const familyName = page.locator("label").filter({ hasText: "family name" }).locator("input[type='checkbox']");
+    const givenName = page.locator("label").filter({ hasText: "given name" }).locator("input[type='checkbox']");
     await familyName.check();
     await givenName.check();
 

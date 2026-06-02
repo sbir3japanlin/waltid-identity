@@ -13,7 +13,7 @@ Playwright end-to-end tests for the `local-ui-cc` Vite apps (wallet, issuer, ver
 ```bash
 cd e2e
 npm install
-npx playwright install chromium firefox
+npx playwright install chromium
 
 # Run all tests
 npx playwright test
@@ -41,7 +41,7 @@ npm run report        # view HTML report
 ## Browsers
 
 - Chromium — always
-- Firefox — always
+- Firefox — disabled
 - WebKit — disabled (requires `sudo npx playwright install-deps` for `libavif16`)
 
 ## Architecture

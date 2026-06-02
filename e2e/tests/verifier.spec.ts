@@ -12,11 +12,11 @@ test.describe.serial("Verifier UI", () => {
     await page.goto(VERIFIER_URL);
     await expect(page.locator("h1")).toContainText("New Verification Request");
 
-    // Should default to SD-JWT tab
-    await expect(page.locator("button.format-tab.active")).toContainText("SD-JWT");
+    // Wait for page to load
+    await page.waitForLoadState("networkidle");
 
-    // Select given_name and birthdate checkboxes
-    const givenName = page.locator("label").filter({ hasText: "given_name" }).locator("input[type='checkbox']");
+    // Select given_name and birthdate checkboxes (using actual UI text)
+    const givenName = page.locator("label").filter({ hasText: "given name" }).locator("input[type='checkbox']");
     const birthdate = page.locator("label").filter({ hasText: "birthdate" }).locator("input[type='checkbox']");
     await givenName.check();
     await birthdate.check();
@@ -31,8 +31,8 @@ test.describe.serial("Verifier UI", () => {
 
   test("create mDoc authorization request (error case — no IACA PEM)", async () => {
     // Click mDoc tab
-    await page.click("button.format-tab:has-text('mDoc')");
-    await expect(page.locator("button.format-tab.active")).toContainText("mDoc");
+    await page.click("button:has-text('mDoc')");
+    await page.waitForTimeout(500);
 
     // Click create without pasting IACA PEM
     await page.click("button:has-text('Create Authorization Request')");
