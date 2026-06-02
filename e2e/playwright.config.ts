@@ -17,10 +17,14 @@ export default defineConfig({
     // Record video for every test. Increase viewport to 1920x1080 for HD
     // recordings and set explicit video size to ensure produced files are 1080p.
     video: { mode: "on", size: { width: 1920, height: 1080 } },
-    viewport: { width: 1920, height: 1080 },
+    // Use null viewport so the browser window controls the layout; set
+    // `screen` to match the intended recording resolution and start the
+    // browser in fullscreen mode.
+    viewport: null,
+    screen: { width: 1920, height: 1080 },
     // Use deviceScaleFactor 1 to map CSS pixels 1:1 to the recorded pixels.
     deviceScaleFactor: 1,
-    launchOptions: { args: ['--force-device-scale-factor=1', '--hide-scrollbars'] },
+    launchOptions: { args: ['--start-fullscreen', '--force-device-scale-factor=1', '--hide-scrollbars'] },
   },
 
   projects: [
