@@ -14,11 +14,18 @@ rm -f "$FILELIST"
 
 # Find video files and append to filelist (portable across macOS bash)
 found=0
-# Find all video files, sort them, and write to filelist in a portable way
+# Find all video files and sort by modification time (oldest first)
+# Using ls -1tr to order by time; works on macOS and Linux
+files=$(find "$RESULTS_DIR" -type f -name "video.*" -print0 | xargs -0 ls -1tr 2>/dev/null || true)
+if [ -z "$files" ]; then
+  echo "No video files found. Exiting." >&2
+  exit 1
+fi
+
 while IFS= read -r v; do
   echo "file '$v'" >> "$FILELIST"
   found=1
-done < <(find "$RESULTS_DIR" -type f -name "video.*" -print0 | xargs -0 -I {} printf "%s\n" "{}" | sort)
+done <<< "$files"
 
 if [ "$found" -ne 1 ]; then
   echo "No video files found. Exiting." >&2
