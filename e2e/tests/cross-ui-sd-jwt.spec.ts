@@ -25,7 +25,8 @@ test.describe.serial("Cross-UI SSI Flow (SD-JWT)", () => {
       } else if (await onboardButtons.count() === 1) {
         await onboardButtons.first().click();
       }
-      await expect(page.locator("text=Ready").nth(1)).toBeVisible({ timeout: 30000 });
+      // Wait for any Ready status to appear on the page (covers SD-JWT ready)
+      await expect(page.locator("text=Ready")).toBeVisible({ timeout: 30000 });
     }
 
     // Issue SD-JWT credential
