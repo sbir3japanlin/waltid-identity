@@ -12,7 +12,7 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     await page.goto(ISSUER_URL);
 
     // Onboard mDoc
-    const mdocRow = page.locator("tr").filter({ hasText: "mDoc" });
+    const mdocRow = page.locator("tr").filter({ hasText: "MDOC" });
     await mdocRow.locator("button:has-text('Onboard')").click();
     await expect(mdocRow.locator("td").nth(1)).toContainText("Ready", { timeout: 30000 });
 
@@ -44,7 +44,7 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');
-    await expect(page.locator("h1.section-title")).toContainText("Credentials");
+    await expect(page.locator("h1")).toContainText("Credentials");
 
     // Navigate to Claim Offer
     await page.click("nav button:has-text('Claim Offer')");
@@ -94,7 +94,7 @@ test.describe.serial("Cross-UI SSI Flow", () => {
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');
-    await expect(page.locator("h1.section-title")).toContainText("Credentials");
+    await expect(page.locator("h1")).toContainText("Credentials");
 
     // Navigate to Presentation
     await page.click("nav button:has-text('Presentation')");

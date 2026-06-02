@@ -10,7 +10,7 @@ test.describe.serial("Verifier UI", () => {
 
   test("create SD-JWT authorization request", async () => {
     await page.goto(VERIFIER_URL);
-    await expect(page.locator("h1.section-title")).toContainText("New Verification Request");
+    await expect(page.locator("h1")).toContainText("New Verification Request");
 
     // Should default to SD-JWT tab
     await expect(page.locator("button.format-tab.active")).toContainText("SD-JWT");
@@ -43,7 +43,7 @@ test.describe.serial("Verifier UI", () => {
 
   test("view Sessions page", async () => {
     await page.click("nav button:has-text('Sessions')");
-    await expect(page.locator("h1.section-title")).toContainText("Verification Sessions");
+    await expect(page.locator("h1")).toContainText("Verification Sessions");
 
     // Should have at least one session from the SD-JWT test
     await expect(page.locator("tr").filter({ hasText: "SD-JWT" })).toBeVisible();
