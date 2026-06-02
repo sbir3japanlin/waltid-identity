@@ -14,14 +14,13 @@ export default defineConfig({
   use: {
     trace: "on-first-retry",
     screenshot: "on",
-    // Record video for every test. Increase viewport and deviceScaleFactor
-    // to capture clearer, higher-resolution frames.
-    video: "on",
-    viewport: { width: 1280, height: 720 },
-    // Desktop Chrome device preset doesn't set deviceScaleFactor; increase
-    // rendering density for crisper video on HiDPI displays.
-    deviceScaleFactor: 2,
-    launchOptions: { args: ['--force-device-scale-factor=2', '--hide-scrollbars'] },
+    // Record video for every test. Increase viewport to 1920x1080 for HD
+    // recordings and set explicit video size to ensure produced files are 1080p.
+    video: { mode: "on", size: { width: 1920, height: 1080 } },
+    viewport: { width: 1920, height: 1080 },
+    // Use deviceScaleFactor 1 to map CSS pixels 1:1 to the recorded pixels.
+    deviceScaleFactor: 1,
+    launchOptions: { args: ['--force-device-scale-factor=1', '--hide-scrollbars'] },
   },
 
   projects: [
