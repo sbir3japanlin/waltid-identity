@@ -29,7 +29,9 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     // Navigate to issuer dashboard
     await page.goto(ISSUER_URL);
     // Disable animations for clearer video frames
-    const { disableAnimations } = await import('./test-utils');
+    // Use CommonJS require to load the helper exported by test-utils.js
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { disableAnimations } = require('./test-utils');
     await disableAnimations(page);
     await page.waitForLoadState("networkidle");
     await expect(page.locator("h1")).toContainText("Dashboard", { timeout: 10000 });
@@ -70,7 +72,8 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     console.log("→ Steps 0-2: Registering/logging in wallet...");
     await page.goto(WALLET_URL);
     // Disable animations for clearer video frames
-    await disableAnimations(page);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('./test-utils').disableAnimations(page);
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');
@@ -93,7 +96,8 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     console.log("→ Step 9: Creating mDL authorization request...");
     await page.goto(VERIFIER_URL);
     // Disable animations for clearer video frames
-    await disableAnimations(page);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('./test-utils').disableAnimations(page);
     await page.waitForLoadState("networkidle");
     await page.click("button:has-text('mDoc')");
     await page.waitForTimeout(500);
@@ -122,7 +126,8 @@ test.describe.serial("Cross-UI SSI Flow (mDoc)", () => {
     // Re-login to wallet
     await page.goto(WALLET_URL);
     // Disable animations for clearer video frames
-    await disableAnimations(page);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('./test-utils').disableAnimations(page);
     await page.fill('input[type="email"]', email);
     await page.fill('input[type="password"]', TEST_PASSWORD);
     await page.click('button[type="submit"]');
