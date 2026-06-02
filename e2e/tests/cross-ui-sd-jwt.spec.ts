@@ -11,9 +11,22 @@ test.describe.serial("Cross-UI SSI Flow (SD-JWT)", () => {
     await page.waitForLoadState("networkidle");
     await expect(page.locator("h1")).toContainText("Dashboard", { timeout: 10000 });
 
-    // Onboard second issuer entry (SD-JWT)
-    await page.click("button:has-text('Onboard') >> nth=1");
-    await expect(page.locator("text=Ready").nth(1)).toBeVisible({ timeout: 30000 });
+    // Ensure SD-JWT issuer is onboarded. If not onboarded, click the Onboard button; otherwise continue.
+    const sdJwtLabel = page.locator("text=SD-JWT");
+    await expect(sdJwtLabel).toBeVisible({ timeout: 10000 });
+    // Try to detect a nearby "Ready" status; if missing, click the Onboard button for SD-JWT
+    const sdJwtParent = sdJwtLabel.locator('xpath=ancestor-or-self::*[contains(@class, "")][1]');
+    const readyNearby = await sdJwtParent.locator("text=Ready").count();
+    if (readyNearby === 0) {
+      // Find Onboard button near SD-JWT and click it (fallback to first onboard if necessary)
+      const onboardButtons = page.locator("button:has-text('Onboard')");
+      if (await onboardButtons.count() > 1) {
+        await onboardButtons.nth(1).click();
+      } else if (await onboardButtons.count() === 1) {
+        await onboardButtons.first().click();
+      }
+      await expect(page.locator("text=Ready").nth(1)).toBeVisible({ timeout: 30000 });
+    }
 
     // Issue SD-JWT credential
     await page.click("nav button:has-text('Issue Credential')");
