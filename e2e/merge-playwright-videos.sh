@@ -14,17 +14,19 @@ rm -f "$FILELIST"
 
 # Find video files and append to filelist (portable across macOS bash)
 found=0
-while IFS= read -r -d '' v; do
+# Find all video files, sort them, and write to filelist in a portable way
+while IFS= read -r v; do
   echo "file '$v'" >> "$FILELIST"
   found=1
-done < <(find "$RESULTS_DIR" -type f -name "video.*" -print0 | sort -z)
+done < <(find "$RESULTS_DIR" -type f -name "video.*" -print0 | xargs -0 -I {} printf "%s\n" "{}" | sort)
 
 if [ "$found" -ne 1 ]; then
   echo "No video files found. Exiting." >&2
   exit 1
 fi
 
-echo "Merging ${#videos[@]} videos into $OUT_FILE"
+count=$(wc -l < "$FILELIST" || true)
+echo "Merging $count videos into $OUT_FILE"
 ffmpeg -y -f concat -safe 0 -i "$FILELIST" -c copy "$OUT_FILE"
 
 echo "Combined video created at: $OUT_FILE"
