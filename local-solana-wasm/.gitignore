@@ -1,0 +1,10 @@
+# Go build artifacts
+demo-binary
+
+# Rust build artifacts
+wasm/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
