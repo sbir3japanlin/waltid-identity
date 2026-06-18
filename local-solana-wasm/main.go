@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gagliardetto/solana-go"
@@ -145,7 +147,7 @@ func toSolanaInstructions(wasmInstrs []WasmInstruction) ([]solana.Instruction, e
 	return out, nil
 }
 
-// --- Mint keypair derivation (matches Rust derive_mint) ---
+// --- Mint keypair derivation ---
 
 func deriveMintKeypair(wallet *solana.Wallet, name string) *solana.Wallet {
 	h := sha256.New()
@@ -154,9 +156,8 @@ func deriveMintKeypair(wallet *solana.Wallet, name string) *solana.Wallet {
 	h.Write([]byte("mint-seed-v1"))
 	seed := h.Sum(nil)
 
-	var pk solana.PrivateKey
-	copy(pk[:], seed)
-	return &solana.Wallet{PrivateKey: pk}
+	priv := ed25519.NewKeyFromSeed(seed)
+	return &solana.Wallet{PrivateKey: solana.PrivateKey(priv)}
 }
 
 // --- Flag parsing ---
@@ -218,12 +219,55 @@ func cmdMint(ctx context.Context) {
 	}
 	defer wasm.Close(ctx)
 
-	// 4. Build input and call WASM build_mint_nft
+	// 4. Derive mint keypair deterministically
+	mintKP := deriveMintKeypair(wallet, name)
+	mintPubkey := mintKP.PublicKey()
+	fmt.Fprintf(os.Stderr, "Mint:       %s\n", mintPubkey.String())
+
+	// 5. Derive PDAs using solana-go (verified on-chain implementation)
+	metaProgID := solana.MustPublicKeyFromBase58("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
+	tokenProgID := solana.MustPublicKeyFromBase58("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+	ataProgID := solana.MustPublicKeyFromBase58("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
+
+	metadataPDA, _, err := solana.FindProgramAddress(
+		[][]byte{[]byte("metadata"), metaProgID.Bytes(), mintPubkey.Bytes()},
+		metaProgID,
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "derive metadata PDA: %v\n", err)
+		os.Exit(1)
+	}
+
+	editionPDA, _, err := solana.FindProgramAddress(
+		[][]byte{[]byte("metadata"), metaProgID.Bytes(), mintPubkey.Bytes(), []byte("edition")},
+		metaProgID,
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "derive edition PDA: %v\n", err)
+		os.Exit(1)
+	}
+
+	ataAddr, _, err := solana.FindProgramAddress(
+		[][]byte{wallet.PublicKey().Bytes(), tokenProgID.Bytes(), mintPubkey.Bytes()},
+		ataProgID,
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "derive ATA: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stderr, "ATA:        %s\n", ataAddr.String())
+	fmt.Fprintf(os.Stderr, "Metadata:   %s\n", metadataPDA.String())
+
+	// 6. Build input and call WASM build_mint_nft
 	inputMap := map[string]string{
-		"wallet_pubkey": wallet.PublicKey().String(),
-		"name":          name,
-		"symbol":        symbol,
-		"uri":           uri,
+		"wallet_pubkey":        wallet.PublicKey().String(),
+		"mint_pubkey":          mintPubkey.String(),
+		"ata":                  ataAddr.String(),
+		"metadata_pda":         metadataPDA.String(),
+		"master_edition_pda":   editionPDA.String(),
+		"name":                 name,
+		"symbol":               symbol,
+		"uri":                  uri,
 	}
 	inputJSON, err := json.Marshal(inputMap)
 	if err != nil {
@@ -237,27 +281,22 @@ func cmdMint(ctx context.Context) {
 		os.Exit(1)
 	}
 
-	// 5. Parse the BuildResultJSON
+	// 6. Parse the BuildResultJSON
 	var result BuildResultJSON
 	if err := json.Unmarshal(output, &result); err != nil {
 		fmt.Fprintf(os.Stderr, "parse wasm output: %v\n", err)
 		os.Exit(1)
 	}
 
-	// 6. Convert WASM instructions to solana-go types
+	// 7. Convert WASM instructions to solana-go types
 	solInstrs, err := toSolanaInstructions(result.Instructions)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "convert instructions: %v\n", err)
 		os.Exit(1)
 	}
 
-	// 7. Create RPC client
+	// 8. Create RPC client
 	rpcClient := rpc.New(rpc.DevNet_RPC)
-
-	// 8. Derive mint keypair deterministically from wallet seed + name
-	mintKP := deriveMintKeypair(wallet, name)
-	mintPubkey := mintKP.PublicKey()
-	fmt.Fprintf(os.Stderr, "Derived mint keypair: %s\n", mintPubkey.String())
 
 	// 9. Fetch recent blockhash
 	recent, err := rpcClient.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
@@ -278,16 +317,14 @@ func cmdMint(ctx context.Context) {
 	}
 
 	// 11. Sign with wallet and mint keypair
-	walletPubkey := wallet.PublicKey()
 	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
-		switch key {
-		case walletPubkey:
+		if key.Equals(wallet.PublicKey()) {
 			return &wallet.PrivateKey
-		case mintPubkey:
-			return &mintKP.PrivateKey
-		default:
-			return nil
 		}
+		if key.Equals(mintKP.PublicKey()) {
+			return &mintKP.PrivateKey
+		}
+		return nil
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "sign transaction: %v\n", err)
@@ -430,9 +467,9 @@ func cmdGet(ctx context.Context) {
 	fmt.Printf("key: %d\n", resultJSON.Key)
 	fmt.Printf("update_authority: %s\n", resultJSON.UpdateAuthority)
 	fmt.Printf("mint: %s\n", resultJSON.Mint)
-	fmt.Printf("name: %s\n", resultJSON.Name)
-	fmt.Printf("symbol: %s\n", resultJSON.Symbol)
-	fmt.Printf("uri: %s\n", resultJSON.Uri)
+	fmt.Printf("name: %s\n", strings.TrimRight(resultJSON.Name, "\x00"))
+	fmt.Printf("symbol: %s\n", strings.TrimRight(resultJSON.Symbol, "\x00"))
+	fmt.Printf("uri: %s\n", strings.TrimRight(resultJSON.Uri, "\x00"))
 	fmt.Printf("seller_fee_basis_points: %d\n", resultJSON.SellerFeeBasisPoints)
 	fmt.Printf("primary_sale_happened: %t\n", resultJSON.PrimarySaleHappened)
 	fmt.Printf("is_mutable: %t\n", resultJSON.IsMutable)

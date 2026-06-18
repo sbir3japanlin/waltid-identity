@@ -27,11 +27,12 @@ pub struct InstructionOut {
 // --- SPL Token Instructions ---
 
 /// InitializeMint (tag = 0)
-pub fn initialize_mint(mint: &[u8; 32], mint_authority: &[u8; 32], decimals: u8) -> InstructionOut {
+pub fn initialize_mint(mint: &[u8; 32], mint_authority: &[u8; 32], freeze_authority: &[u8; 32], decimals: u8) -> InstructionOut {
     let mut data = vec![0u8]; // tag
     data.push(decimals);
     data.extend_from_slice(mint_authority);
-    data.push(0); // COption::None for freeze_authority
+    data.push(1); // COption::Some for freeze_authority (required by Metaplex for NFTs)
+    data.extend_from_slice(freeze_authority);
     InstructionOut {
         program_id: TOKEN_PROGRAM_ID.to_string(),
         accounts: vec![

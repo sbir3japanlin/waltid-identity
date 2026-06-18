@@ -1,10 +1,13 @@
-use crate::instructions::{self, InstructionOut, decode_b58_32, METADATA_PROGRAM_ID, TOKEN_PROGRAM_ID, ASSOC_TOKEN_PROGRAM_ID};
-use crate::pda;
+use crate::instructions::{self, InstructionOut, decode_b58_32};
 use serde::{Serialize, Deserialize};
 
 #[derive(Deserialize)]
 pub struct MintInput {
-    pub wallet_pubkey: String, // base58
+    pub wallet_pubkey: String,       // base58
+    pub mint_pubkey: String,         // base58 — Go generates this keypair
+    pub ata: String,                 // base58 — Go derives this PDA
+    pub metadata_pda: String,        // base58 — Go derives this PDA
+    pub master_edition_pda: String,  // base58 — Go derives this PDA
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -18,50 +21,22 @@ pub struct BuildResult {
     pub master_edition: String,
 }
 
-/// Deterministic mint keypair derived from wallet + name.
-/// In a real app Go would pass the mint pubkey; for a demo this is fine.
-fn derive_mint(wallet: &[u8; 32], name: &str) -> [u8; 32] {
-    use sha2::{Sha256, Digest};
-    let mut h = Sha256::new();
-    h.update(wallet);
-    h.update(name.as_bytes());
-    h.update(b"mint-seed-v1");
-    h.finalize().into()
-}
-
 pub fn build(input: &MintInput) -> BuildResult {
     let wallet = decode_b58_32(&input.wallet_pubkey);
-    let mint = derive_mint(&wallet, &input.name);
+    let mint = decode_b58_32(&input.mint_pubkey);
+    let ata = decode_b58_32(&input.ata);
+    let metadata_pda = decode_b58_32(&input.metadata_pda);
+    let edition_pda = decode_b58_32(&input.master_edition_pda);
 
-    let meta_prog_id = decode_b58_32(METADATA_PROGRAM_ID);
-    let token_prog_id = decode_b58_32(TOKEN_PROGRAM_ID);
-    let ata_prog_id = decode_b58_32(ASSOC_TOKEN_PROGRAM_ID);
-
-    // Derive metadata PDA
-    let (metadata_pda, _) = pda::find_program_address(
-        &[b"metadata", &meta_prog_id, &mint],
-        &meta_prog_id,
-    );
-
-    // Derive master edition PDA
-    let (edition_pda, _) = pda::find_program_address(
-        &[b"metadata", &meta_prog_id, &mint, b"edition"],
-        &meta_prog_id,
-    );
-
-    // Derive ATA for wallet
-    let (ata, _) = pda::find_program_address(
-        &[&wallet, &token_prog_id, &mint],
-        &ata_prog_id,
-    );
+    let token_prog_id = decode_b58_32(instructions::TOKEN_PROGRAM_ID);
 
     let mint_rent = 1_461_600u64; // 82 bytes mint account
 
     let instructions = vec![
         // 1. Create mint account
         instructions::system_create_account(&wallet, &mint, mint_rent, 82, &token_prog_id),
-        // 2. Initialize mint (0 decimals = NFT)
-        instructions::initialize_mint(&mint, &wallet, 0),
+        // 2. Initialize mint (0 decimals = NFT, freeze_authority = wallet)
+        instructions::initialize_mint(&mint, &wallet, &wallet, 0),
         // 3. Create ATA
         instructions::create_ata(&wallet, &wallet, &mint, &ata),
         // 4. Mint 1 token

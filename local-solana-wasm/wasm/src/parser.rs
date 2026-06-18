@@ -30,9 +30,9 @@ struct MetadataData {
     symbol: String,
     uri: String,
     seller_fee_basis_points: u16,
-    creators: Option<Vec<CreatorRaw>>, // don't need full parse, just consume
-    collection: Option<CollectionRaw>,
-    uses: Option<UsesRaw>,
+    creators: Option<Vec<CreatorRaw>>,
+    // Note: collection and uses are NOT part of Data; they're separate fields
+    // in the TokenMetadataAccount struct after primary_sale_happened/is_mutable.
 }
 
 #[derive(BorshDeserialize)]
@@ -77,17 +77,16 @@ pub fn parse(input: &ParseInput) -> ParseResult {
     let primary_sale_happened: bool = BorshDeserialize::deserialize(&mut cursor).unwrap();
     let is_mutable: bool = BorshDeserialize::deserialize(&mut cursor).unwrap();
 
-    // edition_nonce: Option<u8> — present if there's remaining data
+    // edition_nonce: Option<u8>
     let edition_nonce: Option<u8> = if cursor.len() >= 1 {
-        let val: u8 = BorshDeserialize::deserialize(&mut cursor).unwrap();
-        if val == 0 { None } else { Some(val) }
+        BorshDeserialize::deserialize(&mut cursor).unwrap()
     } else {
         None
     };
 
     // token_standard: Option<u8>
     let token_standard: Option<u8> = if cursor.len() >= 1 {
-        Some(<u8 as BorshDeserialize>::deserialize(&mut cursor).unwrap())
+        BorshDeserialize::deserialize(&mut cursor).unwrap()
     } else {
         None
     };
