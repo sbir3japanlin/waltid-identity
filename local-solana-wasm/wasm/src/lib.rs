@@ -24,8 +24,11 @@ pub extern "C" fn build_mint_nft(ptr: *const u8, len: u32) -> u64 {
 }
 
 #[no_mangle]
-pub extern "C" fn parse_metadata(_ptr: *const u8, _len: u32) -> u64 {
-    write_json_return(r#"{"error":"not implemented"}"#)
+pub extern "C" fn parse_metadata(ptr: *const u8, len: u32) -> u64 {
+    let input: parser::ParseInput = read_input(ptr, len);
+    let result = parser::parse(&input);
+    let json = serde_json::to_string(&result).unwrap();
+    write_json_return(&json)
 }
 
 fn read_input<'a, T: serde::Deserialize<'a>>(ptr: *const u8, len: u32) -> T {
