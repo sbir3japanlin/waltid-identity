@@ -1,0 +1,50 @@
+<h2>Verifier App — Design</h2>
+<p class="subtitle">Request credential presentations and verify results</p>
+
+<div class="section">
+  <h3>Features &amp; Screens</h3>
+  <div class="mockup">
+    <div class="mockup-header">Verifier — Application Shell</div>
+    <div class="mockup-body" style="padding: 20px;">
+      <div class="mock-nav">Verifier App &nbsp;|&nbsp; New Request &nbsp;|&nbsp; Sessions &nbsp;|&nbsp; Config</div>
+      <div style="display: flex; gap: 15px; margin-top: 15px;">
+        <div style="flex: 2; background: #f5f5f5; padding: 12px; border-radius: 4px;">
+          <strong>Create Verification Request</strong>
+          <p style="font-size: 12px; margin: 5px 0;">Select format, specify which fields to request. For mDoc: namespace + field paths. For SD-JWT/JWT VC: JSON paths. Optionally add trusted root CAs (for mDoc) or VP policies (for SD-JWT).</p>
+          <div style="display: flex; gap: 10px; margin: 10px 0;">
+            <div class="mock-button" style="background:#e3f2fd;color:#1565c0;border:1px solid #1565c0;">mDoc (ISO 18013-7)</div>
+            <div class="mock-button" style="background:#e8f5e9;color:#2e7d32;border:1px solid #2e7d32;">SD-JWT</div>
+            <div class="mock-button" style="background:#fff3e0;color:#e65100;border:1px solid #e65100;">JWT VC</div>
+          </div>
+          <p style="font-size: 11px; color: #888;">Each format shows the appropriate request builder: mDoc has namespace field picker + trusted_root_cas, SD-JWT has path fields + vp_policies, JWT VC has type selector + format</p>
+        </div>
+        <div style="flex: 1; background: #f5f5f5; padding: 12px; border-radius: 4px;">
+          <strong>Generated Request</strong>
+          <p style="font-size: 12px; margin: 5px 0;">Auth request URL ready to paste into the Wallet app. Copy button.</p>
+          <div class="placeholder">openid4vp://authorize?...</div>
+          <button class="mock-button">Copy Request URL</button>
+        </div>
+      </div>
+      <div style="display: flex; gap: 15px; margin-top: 15px;">
+        <div style="flex: 2; background: #f5f5f5; padding: 12px; border-radius: 4px;">
+          <strong>Verification Sessions</strong>
+          <p style="font-size: 12px; margin: 5px 0;">Table of active/past verification sessions. Each row shows format, state ID, creation time, and status. Click to poll session and see verification result (GET /openid4vc/session/{state}).</p>
+          <table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:8px;">
+            <tr style="background:#e0e0e0;"><th style="padding:4px 8px;">Format</th><th style="padding:4px 8px;">State</th><th style="padding:4px 8px;">Created</th><th style="padding:4px 8px;">Result</th></tr>
+            <tr><td style="padding:4px 8px;">mDoc</td><td style="padding:4px 8px;">abc123...</td><td style="padding:4px 8px;">2 min ago</td><td style="padding:4px 8px;color:#2e7d32;">✓ Verified</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:4px 8px;">SD-JWT</td><td style="padding:4px 8px;">def456...</td><td style="padding:4px 8px;">5 min ago</td><td style="padding:4px 8px;color:#888;">Pending...</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>API Mapping</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <tr style="background: #fff3e0;"><th style="padding: 8px; text-align: left;">Feature</th><th style="padding: 8px; text-align: left;">API</th><th style="padding: 8px; text-align: left;">Key Headers / Params</th></tr>
+    <tr><td style="padding: 8px;">Create Request</td><td style="padding: 8px;"><code>POST /openid4vc/verify</code></td><td style="padding: 8px;">authorizeBaseUrl, responseMode, openId4VPProfile (mdoc)</td></tr>
+    <tr style="background: #fafafa;"><td style="padding: 8px;">Check Result</td><td style="padding: 8px;"><code>GET /openid4vc/session/{state}</code></td><td style="padding: 8px;">—</td></tr>
+  </table>
+</div>

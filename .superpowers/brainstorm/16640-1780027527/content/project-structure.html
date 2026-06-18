@@ -1,0 +1,83 @@
+<h2>Project Structure &amp; Shared Patterns</h2>
+<p class="subtitle">Three standalone Vite/React apps with consistent patterns</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Directory Layout</div>
+    <div class="mockup-body" style="font-size: 12px; font-family: monospace; padding: 15px;">
+      local-test/<br>
+      &emsp;wallet-ui/<br>
+      &emsp;&emsp;index.html<br>
+      &emsp;&emsp;vite.config.ts<br>
+      &emsp;&emsp;package.json<br>
+      &emsp;&emsp;src/<br>
+      &emsp;&emsp;&emsp;main.tsx<br>
+      &emsp;&emsp;&emsp;App.tsx<br>
+      &emsp;&emsp;&emsp;api/<br>
+      &emsp;&emsp;&emsp;&emsp;wallet-api.ts<br>
+      &emsp;&emsp;&emsp;screens/<br>
+      &emsp;&emsp;&emsp;&emsp;Login.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;Credentials.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;ClaimOffer.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;Presentation.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;KeysDids.tsx<br>
+      &emsp;&emsp;&emsp;components/<br>
+      &nbsp;&nbsp;<br>
+      &emsp;issuer-ui/<br>
+      &emsp;&emsp;index.html<br>
+      &emsp;&emsp;vite.config.ts<br>
+      &emsp;&emsp;package.json<br>
+      &emsp;&emsp;src/<br>
+      &emsp;&emsp;&emsp;main.tsx<br>
+      &emsp;&emsp;&emsp;App.tsx<br>
+      &emsp;&emsp;&emsp;api/<br>
+      &emsp;&emsp;&emsp;&emsp;issuer-api.ts<br>
+      &emsp;&emsp;&emsp;screens/<br>
+      &emsp;&emsp;&emsp;&emsp;Dashboard.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;IssueCredential.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;Offers.tsx<br>
+      &emsp;&emsp;&emsp;components/<br>
+      &nbsp;&nbsp;<br>
+      &emsp;verifier-ui/<br>
+      &emsp;&emsp;(same pattern)<br>
+      &emsp;&emsp;src/<br>
+      &emsp;&emsp;&emsp;api/<br>
+      &emsp;&emsp;&emsp;&emsp;verifier-api.ts<br>
+      &emsp;&emsp;&emsp;screens/<br>
+      &emsp;&emsp;&emsp;&emsp;NewRequest.tsx<br>
+      &emsp;&emsp;&emsp;&emsp;Sessions.tsx<br>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Shared Conventions</div>
+    <div class="mockup-body" style="padding: 15px;">
+      <h3>API Client Pattern</h3>
+      <p style="font-size: 12px;">Each app has its own <code>src/api/</code> with typed fetch functions mirroring the shell scripts. All use the same pattern:</p>
+      <ul style="font-size: 12px;">
+        <li>Base URL from <code>.env</code> (defaults to localhost)</li>
+        <li>Token from localStorage, auto-attached as Bearer</li>
+        <li>Consistent error handling with toast notifications</li>
+        <li>Format-specific payload builders (mdoc / sd-jwt / jwt-vc)</li>
+      </ul>
+      <h3 style="margin-top: 15px;">UI Conventions</h3>
+      <ul style="font-size: 12px;">
+        <li>Minimal CSS — no framework, just clean design</li>
+        <li>Each app on its own port (5173, 5174, 5175)</li>
+        <li>Start script: <code>npm run dev</code> in each dir</li>
+        <li>Shell script to start all three: <code>start-all.sh</code></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>What's Shared (by Convention, not by Package)</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <tr style="background: #f0f0f0;"><th style="padding: 8px; text-align: left;">What</th><th style="padding: 8px; text-align: left;">How</th></tr>
+    <tr><td style="padding: 8px;"><strong>API base URLs</strong></td><td style="padding: 8px;"><code>.env</code> files: VITE_WALLET_API, VITE_ISSUER_API, VITE_VERIFIER_API</td></tr>
+    <tr style="background: #fafafa;"><td style="padding: 8px;"><strong>Token storage</strong></td><td style="padding: 8px;">localStorage key <code>"wallet_token"</code> — same convention in wallet and issuer apps</td></tr>
+    <tr><td style="padding: 8px;"><strong>Format types</strong></td><td style="padding: 8px;">Each app defines the same TypeScript types: <code>CredentialFormat = 'mdoc' | 'sd-jwt' | 'jwt-vc'</code></td></tr>
+    <tr style="background: #fafafa;"><td style="padding: 8px;"><strong>Error handling</strong></td><td style="padding: 8px;">Toast-style errors for API failures, inline form validation</td></tr>
+    <tr><td style="padding: 8px;"><strong>Docker hostname fix</strong></td><td style="padding: 8px;">Same <code>localhost ↔ host.docker.internal</code> rewriting as the scripts</td></tr>
+  </table>
+</div>
