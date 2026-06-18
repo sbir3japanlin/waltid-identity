@@ -335,7 +335,120 @@ func cmdMint(ctx context.Context) {
 	fmt.Printf("Mint address: %s\n", result.Mint)
 }
 
+// ParseResultJSON mirrors the Rust ParseResult struct from the WASM module.
+type ParseResultJSON struct {
+	Key                  uint8  `json:"key"`
+	UpdateAuthority      string `json:"update_authority"`
+	Mint                 string `json:"mint"`
+	Name                 string `json:"name"`
+	Symbol               string `json:"symbol"`
+	Uri                  string `json:"uri"`
+	SellerFeeBasisPoints uint16 `json:"seller_fee_basis_points"`
+	PrimarySaleHappened  bool   `json:"primary_sale_happened"`
+	IsMutable            bool   `json:"is_mutable"`
+	EditionNonce         *uint8 `json:"edition_nonce"`
+	TokenStandard        *uint8 `json:"token_standard"`
+}
+
 func cmdGet(ctx context.Context) {
-	fmt.Fprintln(os.Stderr, "not implemented yet")
-	os.Exit(1)
+	// 1. Parse --mint flag
+	mintB58 := flagArg("--mint")
+	if mintB58 == "" {
+		fmt.Fprintln(os.Stderr, "Usage: go run . get --mint <mint_address>")
+		os.Exit(1)
+	}
+
+	// 2. Load WASM
+	wasm, err := loadWasm(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load wasm: %v\n", err)
+		os.Exit(1)
+	}
+	defer wasm.Close(ctx)
+
+	// 3. Create RPC client
+	rpcClient := rpc.New(devnetRPC)
+
+	// 4. Parse mint public key
+	mintPK, err := solana.PublicKeyFromBase58(mintB58)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "parse mint pubkey: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 5. Derive metadata PDA
+	metaProgID := solana.MustPublicKeyFromBase58("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
+	metadataPDA, _, err := solana.FindProgramAddress(
+		[][]byte{[]byte("metadata"), metaProgID.Bytes(), mintPK.Bytes()},
+		metaProgID,
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "derive metadata PDA: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stderr, "Metadata PDA: %s\n", metadataPDA.String())
+
+	// 6. Fetch metadata account data
+	result, err := rpcClient.GetAccountInfo(ctx, metadataPDA)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "get account info: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 7. Get binary data and base64-encode it for WASM
+	data := result.GetBinary()
+	if data == nil {
+		fmt.Fprintln(os.Stderr, "account data is empty")
+		os.Exit(1)
+	}
+	dataB64 := base64.StdEncoding.EncodeToString(data)
+
+	// 8. Build input and call WASM parse_metadata
+	inputMap := map[string]string{
+		"metadata_account_data": dataB64,
+	}
+	inputJSON, err := json.Marshal(inputMap)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "marshal input: %v\n", err)
+		os.Exit(1)
+	}
+
+	output, err := wasm.callWasm(ctx, "parse_metadata", inputJSON)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "wasm call: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 9. Parse the result
+	var resultJSON ParseResultJSON
+	if err := json.Unmarshal(output, &resultJSON); err != nil {
+		fmt.Fprintf(os.Stderr, "parse wasm output: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 10. Print all fields
+	fmt.Printf("key: %d\n", resultJSON.Key)
+	fmt.Printf("update_authority: %s\n", resultJSON.UpdateAuthority)
+	fmt.Printf("mint: %s\n", resultJSON.Mint)
+	fmt.Printf("name: %s\n", resultJSON.Name)
+	fmt.Printf("symbol: %s\n", resultJSON.Symbol)
+	fmt.Printf("uri: %s\n", resultJSON.Uri)
+	fmt.Printf("seller_fee_basis_points: %d\n", resultJSON.SellerFeeBasisPoints)
+	fmt.Printf("primary_sale_happened: %t\n", resultJSON.PrimarySaleHappened)
+	fmt.Printf("is_mutable: %t\n", resultJSON.IsMutable)
+
+	if resultJSON.EditionNonce != nil {
+		fmt.Printf("edition_nonce: %d\n", *resultJSON.EditionNonce)
+	} else {
+		fmt.Printf("edition_nonce: null\n")
+	}
+
+	if resultJSON.TokenStandard != nil {
+		fmt.Printf("token_standard: %d\n", *resultJSON.TokenStandard)
+	} else {
+		fmt.Printf("token_standard: null\n")
+	}
+
+	// 11. Print explorer link
+	fmt.Printf("Explorer: https://explorer.solana.com/address/%s?cluster=devnet\n", metadataPDA.String())
 }
