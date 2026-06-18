@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
@@ -191,8 +193,146 @@ func main() {
 }
 
 func cmdMint(ctx context.Context) {
-	fmt.Fprintln(os.Stderr, "not implemented yet")
-	os.Exit(1)
+	// 1. Parse flags
+	name := flagArg("--name")
+	symbol := flagArg("--symbol")
+	uri := flagArg("--uri")
+
+	if name == "" || uri == "" {
+		fmt.Fprintln(os.Stderr, "Usage: go run . mint --name <name> --symbol <symbol> --uri <uri>")
+		os.Exit(1)
+	}
+
+	// 2. Load wallet
+	wallet, err := loadWallet()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load wallet: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 3. Load WASM module
+	wasm, err := loadWasm(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load wasm: %v\n", err)
+		os.Exit(1)
+	}
+	defer wasm.Close(ctx)
+
+	// 4. Build input and call WASM build_mint_nft
+	inputMap := map[string]string{
+		"wallet_pubkey": wallet.PublicKey().String(),
+		"name":          name,
+		"symbol":        symbol,
+		"uri":           uri,
+	}
+	inputJSON, err := json.Marshal(inputMap)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "marshal input: %v\n", err)
+		os.Exit(1)
+	}
+
+	output, err := wasm.callWasm(ctx, "build_mint_nft", inputJSON)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "wasm call: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 5. Parse the BuildResultJSON
+	var result BuildResultJSON
+	if err := json.Unmarshal(output, &result); err != nil {
+		fmt.Fprintf(os.Stderr, "parse wasm output: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 6. Convert WASM instructions to solana-go types
+	solInstrs, err := toSolanaInstructions(result.Instructions)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "convert instructions: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 7. Create RPC client
+	rpcClient := rpc.New(rpc.DevNet_RPC)
+
+	// 8. Derive mint keypair deterministically from wallet seed + name
+	mintKP := deriveMintKeypair(wallet, name)
+	mintPubkey := mintKP.PublicKey()
+	fmt.Fprintf(os.Stderr, "Derived mint keypair: %s\n", mintPubkey.String())
+
+	// 9. Fetch recent blockhash
+	recent, err := rpcClient.GetLatestBlockhash(ctx, rpc.CommitmentFinalized)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "get recent blockhash: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 10. Build transaction
+	tx, err := solana.NewTransaction(
+		solInstrs,
+		recent.Value.Blockhash,
+		solana.TransactionPayer(wallet.PublicKey()),
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "build transaction: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 11. Sign with wallet and mint keypair
+	walletPubkey := wallet.PublicKey()
+	_, err = tx.Sign(func(key solana.PublicKey) *solana.PrivateKey {
+		switch key {
+		case walletPubkey:
+			return &wallet.PrivateKey
+		case mintPubkey:
+			return &mintKP.PrivateKey
+		default:
+			return nil
+		}
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "sign transaction: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 12. Send transaction (with preflight checks)
+	sig, err := rpcClient.SendTransaction(ctx, tx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "send transaction: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Fprintf(os.Stderr, "Transaction sent: %s\n", sig.String())
+	fmt.Fprintf(os.Stderr, "Explorer: https://explorer.solana.com/tx/%s?cluster=devnet\n", sig.String())
+
+	// 13. Confirm by polling GetSignatureStatuses
+	fmt.Fprintf(os.Stderr, "Waiting for confirmation")
+	for i := 0; i < 30; i++ {
+		time.Sleep(1 * time.Second)
+
+		status, err := rpcClient.GetSignatureStatuses(ctx, false, sig)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, ".")
+			continue
+		}
+
+		if len(status.Value) > 0 && status.Value[0] != nil {
+			s := status.Value[0]
+			if s.Err != nil {
+				fmt.Fprintf(os.Stderr, "\nTransaction failed: %v\n", s.Err)
+				os.Exit(1)
+			}
+			if s.ConfirmationStatus == rpc.ConfirmationStatusConfirmed ||
+				s.ConfirmationStatus == rpc.ConfirmationStatusFinalized {
+				fmt.Fprintf(os.Stderr, "\nTransaction confirmed in slot %d!\n", s.Slot)
+				fmt.Printf("Mint address: %s\n", result.Mint)
+				return
+			}
+		}
+		fmt.Fprintf(os.Stderr, ".")
+	}
+
+	fmt.Fprintln(os.Stderr, "\nTransaction not confirmed after 30 seconds")
+	fmt.Printf("Mint address: %s\n", result.Mint)
 }
 
 func cmdGet(ctx context.Context) {
