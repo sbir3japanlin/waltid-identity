@@ -16,8 +16,11 @@ pub extern "C" fn dealloc(ptr: *mut u8, len: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn build_mint_nft(_ptr: *const u8, _len: u32) -> u64 {
-    write_json_return(r#"{"error":"not implemented"}"#)
+pub extern "C" fn build_mint_nft(ptr: *const u8, len: u32) -> u64 {
+    let input: nft::MintInput = read_input(ptr, len);
+    let result = nft::build(&input);
+    let json = serde_json::to_string(&result).unwrap();
+    write_json_return(&json)
 }
 
 #[no_mangle]
