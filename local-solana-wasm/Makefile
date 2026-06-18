@@ -21,3 +21,14 @@ get: $(WASM_BIN)
 
 clean:
 	rm -rf wasm/target demo-binary
+
+demo: clean build-wasm
+	@echo "=== Minting NFT ==="; \
+	mint_addr=$$(go run . mint \
+		--name "Demo NFT" \
+		--symbol "DEMO" \
+		--uri "https://example.com/nft.json" | sed -n 's/^Mint address: //p'); \
+	echo ""; \
+	echo "=== Retrieving NFT ==="; \
+	go run . get --mint "$$mint_addr"
+

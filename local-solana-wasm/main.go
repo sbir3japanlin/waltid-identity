@@ -224,6 +224,15 @@ func cmdMint(ctx context.Context) {
 	mintPubkey := mintKP.PublicKey()
 	fmt.Fprintf(os.Stderr, "Mint:       %s\n", mintPubkey.String())
 
+	// 4b. Check if mint already exists on-chain (make demo re-runnable)
+	checkClient := rpc.New(rpc.DevNet_RPC)
+	acctInfo, _ := checkClient.GetAccountInfo(ctx, mintPubkey)
+	if acctInfo != nil && acctInfo.GetBinary() != nil {
+		fmt.Fprintf(os.Stderr, "Mint already exists, skipping creation.\n")
+		fmt.Printf("Mint address: %s\n", mintPubkey.String())
+		return
+	}
+
 	// 5. Derive PDAs using solana-go (verified on-chain implementation)
 	metaProgID := solana.MustPublicKeyFromBase58("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 	tokenProgID := solana.MustPublicKeyFromBase58("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
