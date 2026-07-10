@@ -1,0 +1,8 @@
+services:
+  verifier-api:
+    image: waltid/verifier-api:stable
+    pull_policy: missing
+    ports:
+      - "7003:7003"
+    volumes:
+      - ./config:/waltid-verifier-api/config
