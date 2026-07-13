@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Verifier API Integration — SD-JWT VC Verification Example (Python)
+Verifier API Integration -- SD-JWT VC Verification Example (Python)
 
-Demonstrates the OID4VP verification flow using the walt.id verifier-api.
-The mock wallet generates a valid SD-JWT VC dynamically and presents it
-to the verifier — no external wallet or issuer needed.
+Demonstrates the OID4VP verification flow using the walt.id verifier-api2
+with DCQL (Digital Credentials Query Language). The mock wallet generates
+a valid SD-JWT VC dynamically and presents it to the verifier -- no
+external wallet or issuer needed.
 
 Prerequisites:
     pip install cryptography
@@ -21,9 +22,10 @@ import hashlib
 import base64
 import secrets
 import urllib.request
+import urllib.parse
 from typing import Any, Dict, List, Union
 
-# ── Crypto imports ──────────────────────────────────────────────────────────
+# -- Crypto imports --
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes
 
@@ -35,12 +37,34 @@ def b64url(data: Union[bytes, str]) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
 
-def b64url_decode(s: str) -> bytes:
-    """Base64url-decode a string (adds padding if needed)."""
-    padding = 4 - len(s) % 4
-    if padding != 4:
-        s += "=" * padding
-    return base64.urlsafe_b64decode(s)
+def der_to_raw_ecdsa(der_sig: bytes, key_size_bytes: int = 32) -> bytes:
+    """Convert DER-encoded ECDSA signature to raw r||s format."""
+    # DER: 0x30 <len> 0x02 <r_len> <r> 0x02 <s_len> <s>
+    # Skip 0x30, total_len
+    r_len = der_sig[3]
+    r = der_sig[4:4 + r_len]
+    s_len = der_sig[4 + r_len + 1]  # +1 to skip 0x02
+    s = der_sig[4 + r_len + 2:4 + r_len + 2 + s_len]
+    # Ensure r and s are exactly key_size_bytes (pad with leading zeros)
+    r = r.rjust(key_size_bytes, b'\x00') if len(r) < key_size_bytes else r[-key_size_bytes:]
+    s = s.rjust(key_size_bytes, b'\x00') if len(s) < key_size_bytes else s[-key_size_bytes:]
+    return r + s
+
+
+def sign_jwt(
+    payload: Dict[str, Any], key: ec.EllipticCurvePrivateKey, kid: str = None,
+    typ: str = "vc+sd-jwt"
+) -> str:
+    """Create a compact JWS with ES256 signature."""
+    header_dict: Dict[str, str] = {"alg": "ES256", "typ": typ}
+    if kid:
+        header_dict["kid"] = kid
+    header = json.dumps(header_dict, separators=(",", ":"))
+    payload_str = json.dumps(payload, separators=(",", ":"))
+    signing_input = f"{b64url(header)}.{b64url(payload_str)}"
+    der_sig = key.sign(signing_input.encode(), ec.ECDSA(hashes.SHA256()))
+    raw_sig = der_to_raw_ecdsa(der_sig)
+    return f"{signing_input}.{b64url(raw_sig)}"
 
 
 def to_jwk(public_key: ec.EllipticCurvePublicKey) -> Dict[str, str]:
@@ -54,51 +78,22 @@ def to_jwk(public_key: ec.EllipticCurvePublicKey) -> Dict[str, str]:
     }
 
 
-def to_jwk_private(key: ec.EllipticCurvePrivateKey) -> Dict[str, str]:
-    """Convert an EC private key to JWK format (includes 'd')."""
-    pub = to_jwk(key.public_key())
-    nums = key.private_numbers()
-    pub["d"] = b64url(nums.private_value.to_bytes(32, "big"))
-    return pub
-
-
-def sign_jwt(
-    payload: Dict[str, Any], key: ec.EllipticCurvePrivateKey, kid: str
-) -> str:
-    """Create a compact JWS with ES256 signature."""
-    header = json.dumps({"alg": "ES256", "kid": kid, "typ": "vc+sd-jwt"})
-    signing_input = f"{b64url(header)}.{b64url(json.dumps(payload))}"
-    sig = key.sign(signing_input.encode(), ec.ECDSA(hashes.SHA256()))
-    return f"{signing_input}.{b64url(sig)}"
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Mock Wallet — SD-JWT VC Generation
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===========================================================================
+# Mock Wallet -- SD-JWT VC Generation
+# ===========================================================================
 #
 # INTEGRATION POINT:
-# In your application, you would replace this class with calls to your wallet.
-# Your wallet already holds the user's credentials (SD-JWT VCs issued by your
-# issuer) and cryptographic keys. The mock wallet below generates everything
-# from scratch so the example runs with zero external dependencies.
-#
-# The key operations your wallet must perform:
-#   1. Parse the OID4VP authorization request URI
-#   2. Fetch the Presentation Definition
-#   3. Match credentials against the definition's input descriptors
-#   4. Create a VP token: select disclosures, build KB-JWT, sign with holder key
-#   5. POST the VP token to the verifier's response_uri
+# In your application, replace this class with calls to your wallet.
+# Your wallet already holds the user's credentials (SD-JWT VCs) and keys.
+# The mock wallet generates everything from scratch so the example runs
+# with zero external dependencies.
 
 
 class MockWallet:
-    """Simulates a wallet for demonstration purposes.
-
-    Generates fresh keys and a valid SD-JWT VC on initialization.
-    In a real application, these would come from your wallet's storage.
-    """
+    """Simulates a wallet for demonstration purposes."""
 
     def __init__(self):
-        # Generate issuer key (in reality, your issuer signs the credential)
+        # Issuer key
         self.issuer_key = ec.generate_private_key(ec.SECP256R1())
         issuer_jwk = to_jwk(self.issuer_key.public_key())
         self.issuer_kid = b64url(hashlib.sha256(
@@ -106,40 +101,36 @@ class MockWallet:
         ).digest())
         self.issuer_did = f"did:jwk:{b64url(json.dumps(issuer_jwk))}"
 
-        # Generate holder key (your wallet's actual key)
+        # Holder key
         self.holder_key = ec.generate_private_key(ec.SECP256R1())
         holder_jwk = to_jwk(self.holder_key.public_key())
         self.holder_kid = b64url(hashlib.sha256(
             json.dumps(holder_jwk).encode()
         ).digest())
 
-        # Build the SD-JWT VC
         self._build_credential(holder_jwk)
 
     def _build_credential(self, holder_jwk: Dict[str, str]):
         """Build an SD-JWT VC with selective disclosure claims."""
         iat = int(time.time())
-        exp = iat + 365 * 86400  # 1 year
+        exp = iat + 365 * 86400
 
-        # Claims with selective disclosure (sd: true)
         sd_claims = {
             "birthdate": "1940-01-01",
             "family_name": "Doe",
         }
 
-        # Generate disclosures and their hashes
         self.disclosures: List[str] = []
         sd_hashes: List[str] = []
         for name, value in sd_claims.items():
             salt = secrets.token_hex(16)
             disc = json.dumps([salt, name, value])
+            disc_b64 = b64url(disc)
             self.disclosures.append(disc)
-            sd_hashes.append(b64url(hashlib.sha256(disc.encode()).digest()))
+            sd_hashes.append(b64url(hashlib.sha256(disc_b64.encode()).digest()))
 
-        # Sort disclosures (SD-JWT convention for deterministic order)
         self.disclosures.sort()
 
-        # Always-visible claims
         jwt_payload = {
             "given_name": "John",
             "email": "johndoe@example.com",
@@ -164,235 +155,215 @@ class MockWallet:
             "_sd": sd_hashes,
         }
 
-        # Sign the SD-JWT
         self.sd_jwt_vc = sign_jwt(
             jwt_payload, self.issuer_key, f"{self.issuer_did}#{self.issuer_kid}"
         )
-        # Append disclosures
+        # Append disclosures: SD-JWT = <JWT>~<disc1>~<disc2>
         for d in self.disclosures:
             self.sd_jwt_vc += f"~{b64url(d)}"
 
-    def create_vp_token(self, nonce: str, aud: str) -> str:
-        """Create a Verifiable Presentation token.
+    def create_vp_token(self, nonce: str, aud: str, query_id: str = "pid") -> Dict[str, List[str]]:
+        """Create a VP token as a DCQL vp_token map.
 
-        Assembles: <SD-JWT>~<disclosure1>~<disclosure2>~...~<KB-JWT>~
-
-        Args:
-            nonce: The nonce from the verifier's auth request (replay protection).
-            aud: The audience (verifier's client_id).
-
-        Returns:
-            A compact SD-JWT VP token string.
+        Returns: {query_id: ["<SD-JWT>~<KB-JWT>"]}
         """
-        # Compute sd_hash over all disclosed claims
-        sd_hash_input = "".join(self.disclosures)
-        sd_hash = b64url(hashlib.sha256(sd_hash_input.encode()).digest())
+        # sd_hash: SHA-256 of the SD-JWT part (without KB-JWT) ending with ~
+        # Format: <JWT>~<b64url(disc1)>~<b64url(disc2)>~
+        disclosed = self.sd_jwt_vc + "~"
+        sd_hash = b64url(hashlib.sha256(disclosed.encode()).digest())
 
-        # Build and sign KB-JWT
         kb_payload = {
             "aud": aud,
             "nonce": nonce,
             "iat": int(time.time()),
             "sd_hash": sd_hash,
         }
-        kb_jwt = sign_jwt(kb_payload, self.holder_key, self.holder_kid)
+        kb_jwt = sign_jwt(kb_payload, self.holder_key, typ="kb+jwt")
 
-        # Assemble: SD-JWT VC + all disclosures + KB-JWT
-        vp_token = self.sd_jwt_vc + kb_jwt + "~"
-        return vp_token
+        # VP token = <SD-JWT-VC>~<KB-JWT>
+        # Elements separated by ~: JWT~disc1~disc2~KB-JWT
+        vp_token_credential = self.sd_jwt_vc + "~" + kb_jwt
+
+        return {query_id: [vp_token_credential]}
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 # Main Flow
-# ═══════════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 
 VERIFIER_API = "http://localhost:7003"
 VERBOSE = "--verbose" in sys.argv
 
 
 def log(msg: str):
-    """Print a log message."""
-    print(f"  → {msg}")
+    print(f"  -> {msg}")
 
 
 def ok(msg: str):
-    """Print a success message."""
-    print(f"  ✓ {msg}")
+    print(f"  OK {msg}")
 
 
 def fail(msg: str):
-    """Print a failure message and exit."""
-    print(f"  ✗ {msg}")
+    print(f"  FAIL {msg}")
     sys.exit(1)
 
 
 def section(title: str):
-    """Print a section header."""
     print(f"\n{'=' * 60}")
     print(f"  {title}")
     print(f"{'=' * 60}")
 
 
+def http_post_json(url: str, body: dict, headers: dict = None) -> dict:
+    """POST JSON and return parsed JSON response."""
+    all_headers = {"Content-Type": "application/json"}
+    if headers:
+        all_headers.update(headers)
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(url, data=data, headers=all_headers, method="POST")
+    with urllib.request.urlopen(req) as resp:
+        return json.loads(resp.read())
+
+
+def http_get_json(url: str) -> dict:
+    """GET and return parsed JSON response."""
+    with urllib.request.urlopen(url) as resp:
+        return json.loads(resp.read())
+
+
 def main():
-    print("SD-JWT VC Verification Example")
+    print("SD-JWT VC Verification Example (verifier-api2 / DCQL)")
     print(f"Verifier API: {VERIFIER_API}")
 
-    # ── Phase A: Create Verification Request ──────────────────────────────────
-    section("Phase A: Create Verification Request")
+    # -- Phase A: Create Verification Session --
+    section("Phase A: Create Verification Session")
 
-    request_body = {
-        "request_credentials": [
-            {
-                "format": "vc+sd-jwt",
-                "input_descriptor": {
-                    "id": "identity-credential-request",
-                    "format": {"vc+sd-jwt": {}},
-                    "constraints": {
-                        "fields": [
-                            {
-                                "path": ["$.birthdate"],
-                                "filter": {"type": "string", "pattern": ".*"},
-                            },
-                            {
-                                "path": ["$.given_name"],
-                                "filter": {"type": "string", "pattern": ".*"},
-                            },
+    create_body = {
+        "flow_type": "cross_device",
+        "core_flow": {
+            "dcql_query": {
+                "credentials": [
+                    {
+                        "id": "pid",
+                        "format": "dc+sd-jwt",
+                        "meta": {
+                            "vct_values": ["http://localhost:7002/identity_credential"]
+                        },
+                        "claims": [
+                            {"path": ["given_name"]},
+                            {"path": ["birthdate"]},
                         ],
-                        "limit_disclosure": "required",
-                    },
-                },
-            }
-        ],
-        "vp_policies": ["signature_sd-jwt-vc"],
-        "vc_policies": ["not-before", "expired"],
+                    }
+                ]
+            },
+        },
+        "url_config": {},
+        "redirects": {},
     }
 
-    req = urllib.request.Request(
-        f"{VERIFIER_API}/openid4vc/verify",
-        data=json.dumps(request_body).encode(),
-        headers={
-            "Content-Type": "application/json",
-            "authorizeBaseUrl": "openid4vp://authorize",
-            "responseMode": "direct_post",
-        },
-        method="POST",
-    )
+    create_resp = http_post_json(f"{VERIFIER_API}/verification-session/create", create_body)
+    session_id = create_resp["sessionId"]
+    auth_url = create_resp["fullAuthorizationRequestUrl"]
+    log(f"Session ID: {session_id}")
+    log(f"Auth URL: {auth_url[:100]}...")
 
-    with urllib.request.urlopen(req) as resp:
-        auth_uri = resp.read().decode()
-
-    log(f"Auth request: {auth_uri[:100]}...")
-
-    # Parse the auth URI
-    from urllib.parse import urlparse, parse_qs
-
-    parsed = urlparse(auth_uri)
-    params = parse_qs(parsed.query)
+    # Parse auth URL
+    parsed = urllib.parse.urlparse(auth_url)
+    params = urllib.parse.parse_qs(parsed.query)
 
     def first(key):
         return params.get(key, [""])[0]
 
     state = first("state")
     nonce = first("nonce")
-    pd_uri = first("presentation_definition_uri")
     response_uri = first("response_uri")
     client_id = first("client_id")
 
     if not state:
         fail("Could not extract state from auth request")
+
+    # Rewrite response_uri to match VERIFIER_API host/port (container uses its
+    # internal port; the host may access it on a different port)
+    api_parsed = urllib.parse.urlparse(VERIFIER_API)
+    resp_parsed = urllib.parse.urlparse(response_uri)
+    response_uri = urllib.parse.urlunparse(
+        (resp_parsed.scheme, api_parsed.netloc, resp_parsed.path, "", "", "")
+    )
+
     ok(f"State: {state}")
 
     if VERBOSE:
         log(f"Nonce: {nonce}")
-        log(f"PD URI: {pd_uri}")
         log(f"Response URI: {response_uri}")
         log(f"Client ID: {client_id}")
 
-    # ── Phase B: Mock Wallet ──────────────────────────────────────────────────
-    section("Phase B: Mock Wallet — Fetch PD and Create VP Token")
+    # -- Phase B: Mock Wallet --
+    section("Phase B: Mock Wallet -- Create and Submit VP Token")
 
-    # Fetch Presentation Definition
-    log(f"Fetching Presentation Definition: {pd_uri}")
-    with urllib.request.urlopen(pd_uri) as resp:
-        pd = json.loads(resp.read())
-
-    if VERBOSE:
-        print(json.dumps(pd, indent=2))
-
-    # Initialize mock wallet and create VP token
     log("Generating mock SD-JWT VC and creating VP token...")
     wallet = MockWallet()
-    vp_token = wallet.create_vp_token(nonce, client_id)
-    ok(f"VP token created ({len(vp_token)} chars)")
+    vp_token_map = wallet.create_vp_token(nonce, client_id, query_id="pid")
+    vp_token_json = json.dumps(vp_token_map)
+    ok(f"VP token created ({len(vp_token_json)} chars)")
 
-    # POST VP token to verifier (form-encoded per OID4VP direct_post spec)
+    if VERBOSE:
+        log(f"VP token keys: {list(vp_token_map.keys())}")
+        log(f"VP token credential count: {len(vp_token_map['pid'])}")
+
+    # Submit VP token (form-encoded per OID4VP direct_post)
     log(f"Posting VP token to: {response_uri}")
-    import urllib.parse as urlparse
-    import secrets as rand
-    pd_id = pd.get("id", "")
-    input_desc_id = pd.get("input_descriptors", [{}])[0].get("id", "")
-    presentation_submission = json.dumps({
-        "id": f"ps-{rand.token_hex(8)}",
-        "definition_id": pd_id,
-        "descriptor_map": [{
-            "id": input_desc_id,
-            "format": "vc+sd-jwt",
-            "path": "$",
-        }],
-    })
-    vp_body = urlparse.urlencode({
-        "vp_token": vp_token,
-        "presentation_submission": presentation_submission,
+    form_data = urllib.parse.urlencode({
+        "vp_token": vp_token_json,
         "state": state,
     }).encode()
 
     req = urllib.request.Request(
         response_uri,
-        data=vp_body,
+        data=form_data,
         headers={"Content-Type": "application/x-www-form-urlencoded"},
         method="POST",
     )
-    with urllib.request.urlopen(req) as resp:
-        post_result = resp.read().decode()
+    try:
+        with urllib.request.urlopen(req) as resp:
+            submit_result = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode()
+        try:
+            error_json = json.loads(error_body)
+            fail(f"VP token submission failed: {error_json.get('error_description', error_body)}")
+        except json.JSONDecodeError:
+            fail(f"VP token submission failed (HTTP {e.code}): {error_body[:500]}")
 
     if VERBOSE:
-        print(f"Response: {post_result}")
+        log(f"Submit response: {json.dumps(submit_result)}")
     ok("VP token submitted")
 
-    # ── Phase C: Poll Verification Result ─────────────────────────────────────
+    # -- Phase C: Poll Verification Result --
     section("Phase C: Poll Verification Result")
 
-    session_url = f"{VERIFIER_API}/openid4vc/session/{state}"
-    log(f"Checking session: {session_url}")
+    info_url = f"{VERIFIER_API}/verification-session/{session_id}/info"
+    log(f"Checking session: {info_url}")
 
-    with urllib.request.urlopen(session_url) as resp:
-        result = json.loads(resp.read())
-
+    result = http_get_json(info_url)
     print(json.dumps(result, indent=2))
 
-    verify_result = result.get("verificationResult")
-    if verify_result == "true":
+    status = result.get("status", "")
+    if status == "SUCCESSFUL":
         ok("Verification SUCCESS")
     else:
-        fail(f"Verification failed: {verify_result}")
+        failure = result.get("failure", {})
+        reason = failure.get("reason", status) if failure else status
+        fail(f"Verification failed: {reason}")
 
-    # ── Integration Notes ────────────────────────────────────────────────────
-    print(f"\n{'─' * 60}")
+    # -- Integration Notes --
+    print(f"\n{'--' * 30}")
     print("Integration Notes:")
     print(f"  Issuer DID: {wallet.issuer_did}")
     print(f"  VCT: http://localhost:7002/identity_credential")
     print(f"  Holder key type: EC P-256 (secp256r1)")
-    print(f"  Credential format: vc+sd-jwt")
-    print(f"{'─' * 60}")
-
-    if VERBOSE:
-        print("\nMock Wallet Details:")
-        print(f"  Issuer key JWK: {json.dumps(to_jwk(wallet.issuer_key.public_key()))}")
-        print(f"  Holder key JWK: {json.dumps(to_jwk(wallet.holder_key.public_key()))}")
-        print(f"  SD-JWT VC token ({len(wallet.sd_jwt_vc)} chars)")
-        print(f"  Disclosures: {len(wallet.disclosures)}")
-        for disc in wallet.disclosures:
-            print(f"    {disc}")
+    print(f"  Credential format: dc+sd-jwt (SD-JWT VC)")
+    print(f"  Query format: DCQL")
+    print(f"{'--' * 30}")
 
 
 if __name__ == "__main__":

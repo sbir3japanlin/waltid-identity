@@ -14,7 +14,7 @@ docker compose up -d
 
 echo "Waiting for verifier-api to become healthy..."
 for i in $(seq 1 30); do
-  if curl -s -o /dev/null -w '%{http_code}' http://localhost:7003/openid4vc/verify 2>/dev/null | grep -qE '^(200|400|404)'; then
+  if curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:7003/verification-session/create -H "Content-Type: application/json" -d '{}' 2>/dev/null | grep -qE '^(200|201|400)'; then
     echo ""
     echo "Verifier API is ready at http://localhost:7003"
     echo ""
