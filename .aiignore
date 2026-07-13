@@ -190,3 +190,4 @@ iOSInjectionProject/
 
 **/*.pyc
 **/__pycache__/
+vp-verifier/examples/python/output/

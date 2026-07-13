@@ -16,6 +16,7 @@ Usage:
 """
 
 import sys
+import os
 import json
 import time
 import hashlib
@@ -192,6 +193,8 @@ class MockWallet:
 # ===========================================================================
 
 VERIFIER_API = "http://localhost:7005"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
 VERBOSE = "--verbose" in sys.argv
 
 
@@ -208,10 +211,79 @@ def fail(msg: str):
     sys.exit(1)
 
 
+def b64url_decode(s: str) -> bytes:
+    """Base64url-decode a string (adds padding if needed)."""
+    padding = 4 - len(s) % 4
+    if padding != 4:
+        s += "=" * padding
+    return base64.urlsafe_b64decode(s)
+
+
+def _decode_vp_token(vp_token_map: Dict[str, List[str]]) -> Dict[str, Any]:
+    """Decode a DCQL vp_token map into readable parts for inspection."""
+    result = {}
+    for query_id, credentials in vp_token_map.items():
+        creds = []
+        for cred in credentials:
+            parts = cred.split("~")
+            # Part 0: SD-JWT (JWT)
+            jwt_parts = parts[0].split(".")
+            decoded = {
+                "sd_jwt": {
+                    "raw": parts[0],
+                    "header": json.loads(b64url_decode(jwt_parts[0])) if len(jwt_parts) > 0 else None,
+                    "payload": json.loads(b64url_decode(jwt_parts[1])) if len(jwt_parts) > 1 else None,
+                    "signature": jwt_parts[2] if len(jwt_parts) > 2 else None,
+                },
+                "disclosures": [],
+                "kb_jwt": None,
+            }
+            # Disclosures (between JWT and KB-JWT)
+            disc_parts = parts[1:-1] if len(parts) > 2 else []
+            for dp in disc_parts:
+                if not dp:
+                    continue
+                try:
+                    disc_data = json.loads(b64url_decode(dp))
+                    decoded["disclosures"].append({
+                        "raw": dp,
+                        "decoded": {
+                            "salt": disc_data[0] if len(disc_data) > 0 else None,
+                            "claim": disc_data[1] if len(disc_data) > 1 else None,
+                            "value": disc_data[2] if len(disc_data) > 2 else None,
+                        },
+                    })
+                except Exception:
+                    decoded["disclosures"].append({"raw": dp})
+            # Last part: KB-JWT
+            kb = parts[-1]
+            if kb and "." in kb:
+                kb_parts = kb.split(".")
+                decoded["kb_jwt"] = {
+                    "raw": kb,
+                    "header": json.loads(b64url_decode(kb_parts[0])) if len(kb_parts) > 0 else None,
+                    "payload": json.loads(b64url_decode(kb_parts[1])) if len(kb_parts) > 1 else None,
+                    "signature": kb_parts[2] if len(kb_parts) > 2 else None,
+                }
+            creds.append(decoded)
+        result[query_id] = creds
+    return result
+
+
 def section(title: str):
     print(f"\n{'=' * 60}")
     print(f"  {title}")
     print(f"{'=' * 60}")
+
+
+def write_json(session_id: str, name: str, data):
+    """Write JSON data to output/{session_id}-{name}.json."""
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    filename = f"{session_id}-{name}.json"
+    filepath = os.path.join(OUTPUT_DIR, filename)
+    with open(filepath, "w") as f:
+        json.dump(data, f, indent=2)
+    log(f"Saved: output/{filename}")
 
 
 def http_post_json(url: str, body: dict, headers: dict = None) -> dict:
@@ -264,8 +336,8 @@ def main():
     create_resp = http_post_json(f"{VERIFIER_API}/verification-session/create", create_body)
     session_id = create_resp["sessionId"]
     auth_url = create_resp["fullAuthorizationRequestUrl"]
+    write_json(session_id, "session", create_resp)
     log(f"Session ID: {session_id}")
-    log(f"Auth URL: {auth_url[:100]}...")
 
     # Parse auth URL
     parsed = urllib.parse.urlparse(auth_url)
@@ -303,6 +375,12 @@ def main():
     log("Generating mock SD-JWT VC and creating VP token...")
     wallet = MockWallet()
     vp_token_map = wallet.create_vp_token(nonce, client_id, query_id="pid")
+    write_json(session_id, "vp-token", vp_token_map)
+
+    # Decode VP token parts for inspection
+    vp_content = _decode_vp_token(vp_token_map)
+    write_json(session_id, "vp-content", vp_content)
+
     vp_token_json = json.dumps(vp_token_map)
     ok(f"VP token created ({len(vp_token_json)} chars)")
 
@@ -334,8 +412,7 @@ def main():
         except json.JSONDecodeError:
             fail(f"VP token submission failed (HTTP {e.code}): {error_body[:500]}")
 
-    if VERBOSE:
-        log(f"Submit response: {json.dumps(submit_result)}")
+    write_json(session_id, "submit", submit_result)
     ok("VP token submitted")
 
     # -- Phase C: Poll Verification Result --
@@ -345,7 +422,7 @@ def main():
     log(f"Checking session: {info_url}")
 
     result = http_get_json(info_url)
-    print(json.dumps(result, indent=2))
+    write_json(session_id, "verification", result)
 
     status = result.get("status", "")
     if status == "SUCCESSFUL":
