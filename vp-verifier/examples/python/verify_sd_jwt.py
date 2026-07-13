@@ -21,14 +21,14 @@ import hashlib
 import base64
 import secrets
 import urllib.request
-from typing import Any
+from typing import Any, Dict, List, Union
 
 # ── Crypto imports ──────────────────────────────────────────────────────────
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import hashes
 
 
-def b64url(data: bytes | str) -> str:
+def b64url(data: Union[bytes, str]) -> str:
     """Base64url-encode data (no padding)."""
     if isinstance(data, str):
         data = data.encode("utf-8")
@@ -43,7 +43,7 @@ def b64url_decode(s: str) -> bytes:
     return base64.urlsafe_b64decode(s)
 
 
-def to_jwk(public_key: ec.EllipticCurvePublicKey) -> dict[str, str]:
+def to_jwk(public_key: ec.EllipticCurvePublicKey) -> Dict[str, str]:
     """Convert an EC public key to JWK format."""
     nums = public_key.public_numbers()
     return {
@@ -54,7 +54,7 @@ def to_jwk(public_key: ec.EllipticCurvePublicKey) -> dict[str, str]:
     }
 
 
-def to_jwk_private(key: ec.EllipticCurvePrivateKey) -> dict[str, str]:
+def to_jwk_private(key: ec.EllipticCurvePrivateKey) -> Dict[str, str]:
     """Convert an EC private key to JWK format (includes 'd')."""
     pub = to_jwk(key.public_key())
     nums = key.private_numbers()
@@ -63,7 +63,7 @@ def to_jwk_private(key: ec.EllipticCurvePrivateKey) -> dict[str, str]:
 
 
 def sign_jwt(
-    payload: dict[str, Any], key: ec.EllipticCurvePrivateKey, kid: str
+    payload: Dict[str, Any], key: ec.EllipticCurvePrivateKey, kid: str
 ) -> str:
     """Create a compact JWS with ES256 signature."""
     header = json.dumps({"alg": "ES256", "kid": kid, "typ": "vc+sd-jwt"})
@@ -116,7 +116,7 @@ class MockWallet:
         # Build the SD-JWT VC
         self._build_credential(holder_jwk)
 
-    def _build_credential(self, holder_jwk: dict[str, str]):
+    def _build_credential(self, holder_jwk: Dict[str, str]):
         """Build an SD-JWT VC with selective disclosure claims."""
         iat = int(time.time())
         exp = iat + 365 * 86400  # 1 year
@@ -128,8 +128,8 @@ class MockWallet:
         }
 
         # Generate disclosures and their hashes
-        self.disclosures: list[str] = []
-        sd_hashes: list[str] = []
+        self.disclosures: List[str] = []
+        sd_hashes: List[str] = []
         for name, value in sd_claims.items():
             salt = secrets.token_hex(16)
             disc = json.dumps([salt, name, value])
