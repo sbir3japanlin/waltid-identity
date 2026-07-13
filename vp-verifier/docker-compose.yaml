@@ -3,6 +3,6 @@ services:
     image: waltid/verifier-api2:latest
     pull_policy: missing
     ports:
-      - "7003:7003"
+      - "7005:7003"
     volumes:
       - ./config:/app/config

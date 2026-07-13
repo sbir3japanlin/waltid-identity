@@ -191,7 +191,7 @@ class MockWallet:
 # Main Flow
 # ===========================================================================
 
-VERIFIER_API = "http://localhost:7003"
+VERIFIER_API = "http://localhost:7005"
 VERBOSE = "--verbose" in sys.argv
 
 

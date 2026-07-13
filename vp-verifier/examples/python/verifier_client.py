@@ -78,7 +78,7 @@ class VerifierClient:
     expire when the container stops. No authentication is required.
     """
 
-    def __init__(self, base_url: str = "http://localhost:7003"):
+    def __init__(self, base_url: str = "http://localhost:7005"):
         self.base_url = base_url.rstrip("/")
 
     def _post(self, path: str, body: dict, headers: dict | None = None) -> str:
