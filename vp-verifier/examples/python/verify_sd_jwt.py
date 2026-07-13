@@ -325,14 +325,31 @@ def main():
     vp_token = wallet.create_vp_token(nonce, client_id)
     ok(f"VP token created ({len(vp_token)} chars)")
 
-    # POST VP token to verifier
+    # POST VP token to verifier (form-encoded per OID4VP direct_post spec)
     log(f"Posting VP token to: {response_uri}")
-    vp_body = json.dumps({"vp_token": vp_token, "state": state}).encode()
+    import urllib.parse as urlparse
+    import secrets as rand
+    pd_id = pd.get("id", "")
+    input_desc_id = pd.get("input_descriptors", [{}])[0].get("id", "")
+    presentation_submission = json.dumps({
+        "id": f"ps-{rand.token_hex(8)}",
+        "definition_id": pd_id,
+        "descriptor_map": [{
+            "id": input_desc_id,
+            "format": "vc+sd-jwt",
+            "path": "$",
+        }],
+    })
+    vp_body = urlparse.urlencode({
+        "vp_token": vp_token,
+        "presentation_submission": presentation_submission,
+        "state": state,
+    }).encode()
 
     req = urllib.request.Request(
         response_uri,
         data=vp_body,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
         method="POST",
     )
     with urllib.request.urlopen(req) as resp:

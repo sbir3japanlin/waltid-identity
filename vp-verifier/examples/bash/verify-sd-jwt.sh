@@ -97,6 +97,9 @@ PRESENTATION_DEF=$(curl -s "$PD_URI")
 echo "$PRESENTATION_DEF" | jq .
 vlog "GET" "$PD_URI" "" "$PRESENTATION_DEF"
 
+PD_ID=$(echo "$PRESENTATION_DEF" | jq -r '.id')
+INPUT_DESCRIPTOR_ID=$(echo "$PRESENTATION_DEF" | jq -r '.input_descriptors[0].id')
+
 step "Mock Wallet: Generate SD-JWT VC and Create VP Token"
 
 # The mock wallet uses Python with the cryptography library to:
@@ -239,9 +242,24 @@ step "Mock Wallet: POST VP Token to Verifier"
 RESPONSE_URI=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))" "$AUTH_RESPONSE_URI")
 info "Response URI: $RESPONSE_URI"
 
+PRESENTATION_SUBMISSION=$(jq -n \
+  --arg pd_id "$PD_ID" \
+  --arg desc_id "$INPUT_DESCRIPTOR_ID" \
+  '{
+    id: ("ps-" + (now | tostring | gsub("\\.";""))),
+    definition_id: $pd_id,
+    descriptor_map: [{
+      id: $desc_id,
+      format: "vc+sd-jwt",
+      path: "$"
+    }]
+  }')
+vlog "Presentation Submission" "" "" "$PRESENTATION_SUBMISSION"
+
 VP_RESPONSE=$(curl -s -X POST "$RESPONSE_URI" \
-  -H 'Content-Type: application/json' \
-  -d "{\"vp_token\": \"$VP_TOKEN\", \"state\": \"$AUTH_STATE\"}")
+  --data-urlencode "vp_token=$VP_TOKEN" \
+  --data-urlencode "presentation_submission=$PRESENTATION_SUBMISSION" \
+  --data-urlencode "state=$AUTH_STATE")
 echo "$VP_RESPONSE" | jq . 2>/dev/null || echo "$VP_RESPONSE"
 vlog "POST" "$RESPONSE_URI" "{\"vp_token\":\"...\",\"state\":\"$AUTH_STATE\"}" "$VP_RESPONSE"
 
