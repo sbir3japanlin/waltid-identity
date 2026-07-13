@@ -4,7 +4,7 @@
 
 ### Symptom
 
-Both example scripts (`examples/bash/verify-sd-jwt.sh` and `examples/python/verify_sd_jwt.py`) fail when POSTing the VP token to the verifier's response endpoint:
+The example script (`examples/python/verify_sd_jwt.py`) fails when POSTing the VP token to the verifier's response endpoint:
 
 ```json
 {
@@ -27,13 +27,6 @@ This is a standard OID4VP `direct_post` convention — the wallet posts the VP t
 
 ### Where the Error Occurs
 
-**Bash** (`examples/bash/verify-sd-jwt.sh`, line ~244):
-```bash
-VP_RESPONSE=$(curl -s -X POST "$RESPONSE_URI" \
-  -H 'Content-Type: application/json' \
-  -d "{\"vp_token\": \"$VP_TOKEN\", \"state\": \"$AUTH_STATE\"}")
-```
-
 **Python** (`examples/python/verify_sd_jwt.py`, line ~332):
 ```python
 vp_body = json.dumps({"vp_token": vp_token, "state": state}).encode()
@@ -48,13 +41,6 @@ req = urllib.request.Request(
 ### Fix
 
 Send the VP token as form-encoded data instead of JSON.
-
-**Bash fix** — remove the `Content-Type: application/json` header and use `--data-urlencode`:
-```bash
-VP_RESPONSE=$(curl -s -X POST "$RESPONSE_URI" \
-  --data-urlencode "vp_token=$VP_TOKEN" \
-  --data-urlencode "state=$AUTH_STATE")
-```
 
 **Python fix** — use `urllib.parse.urlencode` and set the correct content type:
 ```python
@@ -82,7 +68,7 @@ After applying the fix, re-run the example:
 bash scripts/start-verifier.sh
 
 # Run the example
-bash examples/bash/verify-sd-jwt.sh
+python3 examples/python/verify_sd_jwt.py
 ```
 
 If successful, you will see `Verification SUCCESS` at the end of the output.

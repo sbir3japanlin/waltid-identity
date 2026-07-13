@@ -1,17 +1,14 @@
 # Verifier API Examples
 
-Two functionally equivalent example scripts (bash + Python) that demonstrate
-the OID4VP verification flow end-to-end using a mock wallet. Both scripts are
-self-contained — no external wallet or issuer required.
+Python example script demonstrating the OID4VP verification flow end-to-end
+using a mock wallet. The script is self-contained — no external wallet or
+issuer required.
 
 ## Files
 
 ```
 examples/
 ├── readme.md                    # This file
-├── bash/
-│   ├── common.sh               # Shared utilities (colors, logging, URI parsing)
-│   └── verify-sd-jwt.sh        # Bash example script
 └── python/
     ├── verifier_client.py      # Reusable Python client library (stdlib only)
     └── verify_sd_jwt.py        # Python example script
@@ -19,12 +16,10 @@ examples/
 
 ## Prerequisites
 
-| Dependency | Needed By | Install |
-|---|---|---|
-| Docker + Docker Compose | Both (verifier) | [docker.com](https://docs.docker.com/get-docker/) |
-| `jq` | Bash | `apt install jq` |
-| `curl` | Bash | Pre-installed on most systems |
-| Python 3.9+ with `cryptography` | Both (mock wallet crypto) | `pip install cryptography` |
+| Dependency | Install |
+|---|---|
+| Docker + Docker Compose | [docker.com](https://docs.docker.com/get-docker/) |
+| Python 3.9+ with `cryptography` | `pip install cryptography` |
 
 ## Quick Start
 
@@ -32,9 +27,7 @@ examples/
 # From the vp-verifier/ directory
 bash scripts/start-verifier.sh
 
-# Run either example
-bash examples/bash/verify-sd-jwt.sh
-# or
+# Run the example
 python3 examples/python/verify_sd_jwt.py
 ```
 
@@ -42,7 +35,7 @@ python3 examples/python/verify_sd_jwt.py
 
 ## Flow Overview (3 Phases)
 
-Both scripts follow the same OID4VP direct_post flow:
+The script follows the OID4VP direct_post flow:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -74,19 +67,18 @@ Both scripts follow the same OID4VP direct_post flow:
 
 ---
 
-## Detailed Walkthrough (Bash)
+## Detailed Walkthrough
 
 ### Setup
 
 ```
-Source: common.sh
-Env var: VERIFIER_API (default: http://localhost:7003)
-Deps checked: jq, curl, Python cryptography
+Hardcoded default: VERIFIER_API = "http://localhost:7003"
+CLI flag: --verbose (prints PD, response details, and mock wallet internals)
 ```
 
 ### Phase A — Create Verification Request
 
-**Step 1:** POST to `/openid4vc/verify`
+**API call:** `POST /openid4vc/verify`
 
 **Input (JSON body):**
 ```json
@@ -119,146 +111,22 @@ Deps checked: jq, curl, Python cryptography
 | `responseMode` | `direct_post` | Wallet POSTs VP token directly to verifier |
 | `Content-Type` | `application/json` | Request body format |
 
-**Output:** OpenID4VP authorization request URI string.
-
-**Parsed from URI into globals:**
-| Variable | Source Field | Example |
-|---|---|---|
-| `AUTH_STATE` | `state` | `"AbCdEf1234"` |
-| `AUTH_NONCE` | `nonce` | `"<UUID>"` |
-| `AUTH_PD_URI` | `presentation_definition_uri` | `http://localhost:7003/openid4vc/pd/AbCdEf1234` |
-| `AUTH_RESPONSE_URI` | `response_uri` | `http://localhost:7003/openid4vc/verify/AbCdEf1234` |
-| `AUTH_CLIENT_ID` | `client_id` | `http://localhost:7003/openid4vc/verify` |
-
-**Verification point:** `AUTH_STATE` must be non-empty. Script exits with error if missing.
-
----
-
-### Phase B — Mock Wallet
-
-**Step 2:** GET `$AUTH_PD_URI` — fetch the Presentation Definition.
-
-**Verification point:** The response is parsed with `jq` and printed. Must contain
-`.id` and `.input_descriptors[0].id`. These are extracted into `PD_ID` and
-`INPUT_DESCRIPTOR_ID`.
-
-**Step 3:** Generate SD-JWT VC and VP token.
-
-The bash script calls a Python inline script that:
-1. Generates issuer and holder EC P-256 key pairs
-2. Derives `did:jwk` for the issuer and holder
-3. Builds an SD-JWT VC with:
-   - **Always-visible claims:** `given_name`, `email`, `phone_number`, `address` (object), `is_over_18`, `is_over_21`, `is_over_65`
-   - **Selective-disclosure claims:** `birthdate` (`"1940-01-01"`), `family_name` (`"Doe"`)
-4. Signs the SD-JWT payload with the issuer key (ES256)
-5. Appends disclosure objects (salt + claim name + claim value, base64url-encoded, `~`-separated)
-6. Builds a KB-JWT (Key Binding JWT) signed with the holder key containing:
-   - `aud`: client_id from auth request
-   - `nonce`: nonce from auth request
-   - `iat`: issued-at timestamp
-   - `sd_hash`: SHA-256 of concatenated disclosure strings
-7. Assembles VP token: `<SD-JWT>~<KB-JWT>~`
-
-**Arguments passed:** `$AUTH_NONCE $AUTH_CLIENT_ID`
-
-**Output:** VP token string (~2270 characters).
-
-**Verification point:** VP token length printed. Must be > 0.
-
-**Step 4:** POST VP token to `$RESPONSE_URI`.
-
-**Input (form-encoded, per OID4VP direct_post spec):**
-| Field | Value |
-|---|---|
-| `vp_token` | Assembled SD-JWT VP token |
-| `presentation_submission` | JSON: `{id, definition_id, descriptor_map}` |
-| `state` | State from Phase A |
-
-**Presentation submission structure:**
-```json
-{
-  "id": "ps-<timestamp>",
-  "definition_id": "<pd_id>",
-  "descriptor_map": [
-    {
-      "id": "<input_descriptor_id>",
-      "format": "vc+sd-jwt",
-      "path": "$"
-    }
-  ]
-}
-```
-
-**Verification point:** Response is printed via `jq`. On success this is empty or
-a confirmation; on failure it contains an error object.
-
----
-
-### Phase C — Poll Verification Result
-
-**Step 5:** GET `/openid4vc/session/{AUTH_STATE}`
-
-**Output:** Session JSON containing:
-```json
-{
-  "id": "<state>",
-  "presentationDefinition": { ... },
-  "verificationResult": "true" | "false",
-  ...
-}
-```
-
-**Verification point:** `$.verificationResult` must equal `"true"`. Script prints
-`Verification SUCCESS` or `Verification failed: <value>` and exits with the
-appropriate code.
-
----
-
-## Detailed Walkthrough (Python)
-
-Same 3-phase flow as bash, implemented in pure Python (stdlib + `cryptography`).
-
-### Setup
-
-```
-Env var: VERIFIER_API (hardcoded default: http://localhost:7003)
-CLI flag: --verbose (prints PD, response details, and mock wallet internals)
-```
-
-### Phase A — Create Verification Request
-
-**Input:** Same JSON body and headers as the bash version (see above).
-
-**API call:**
-```python
-req = urllib.request.Request(
-    f"{VERIFIER_API}/openid4vc/verify",
-    data=json.dumps(request_body).encode(),
-    headers={
-        "Content-Type": "application/json",
-        "authorizeBaseUrl": "openid4vp://authorize",
-        "responseMode": "direct_post",
-    },
-    method="POST",
-)
-```
-
 **Output:** Auth URI string, parsed via `urllib.parse.urlparse` + `parse_qs` into:
 `state`, `nonce`, `pd_uri` (presentation_definition_uri), `response_uri`, `client_id`.
 
-**Verification point:** `state` must be non-empty (`fail()` otherwise).
+**Verification point:** `state` must be non-empty (`fail()` otherwise, line 301).
 
 ---
 
 ### Phase B — Mock Wallet
 
 **Step 1:** GET `pd_uri` → parse JSON → extract `pd["id"]` and
-`pd["input_descriptors"][0]["id"]`.
+`pd["input_descriptors"][0]["id"]` (lines 332-333).
 
 **Step 2:** Instantiate `MockWallet()` which generates:
 - Issuer EC P-256 key → `did:jwk` + kid
 - Holder EC P-256 key → JWK + kid
-- SD-JWT VC with same claims as the bash version
+- SD-JWT VC with selective-disclosure claims (see Mock Wallet Internals below)
 - Disclosures for `birthdate` and `family_name`
 
 **Step 3:** `wallet.create_vp_token(nonce, client_id)` assembles:
@@ -266,7 +134,7 @@ req = urllib.request.Request(
 <SD-JWT-VC>~<KB-JWT>~
 ```
 
-**Step 4:** POST to `response_uri` with form-encoded body:
+**Step 4:** POST to `response_uri` with form-encoded body (per OID4VP direct_post):
 ```python
 urlencode({
     "vp_token": vp_token,
@@ -280,7 +148,7 @@ urlencode({
 ```
 
 **Verification point:** `urllib.request.urlopen` raises `HTTPError` on non-2xx.
-Success is a 2xx response (or the absence of an exception).
+Success is a 2xx response (line 355).
 
 ---
 
@@ -288,10 +156,18 @@ Success is a 2xx response (or the absence of an exception).
 
 **API call:** `GET /openid4vc/session/{state}`
 
-**Output:** Session JSON. `result["verificationResult"]` is checked for `"true"`.
+**Output:** Session JSON:
+```json
+{
+  "id": "<state>",
+  "presentationDefinition": { ... },
+  "verificationResult": "true" | "false",
+  ...
+}
+```
 
-**Verification point:** Must equal `"true"`. Prints `Verification SUCCESS` or
-`Verification failed: <value>`.
+**Verification point:** `result["verificationResult"]` must equal `"true"`
+(line 374). Prints `Verification SUCCESS` or `Verification failed: <value>`.
 
 **Integration notes** (always printed, even on failure):
 - Issuer DID
@@ -299,11 +175,8 @@ Success is a 2xx response (or the absence of an exception).
 - Holder key type (EC P-256)
 - Credential format (vc+sd-jwt)
 
-With `--verbose`, also prints:
-- Issuer key JWK
-- Holder key JWK
-- Full SD-JWT VC token
-- Full disclosure list
+With `--verbose`, also prints issuer JWK, holder JWK, full SD-JWT VC token, and
+all disclosures.
 
 ---
 
@@ -398,13 +271,13 @@ print(result.verification_result)  # True or False
 
 ## Verification Points Summary
 
-| Phase | Check | Bash | Python |
-|---|---|---|---|
-| A — Auth Request | `state` extracted and non-empty | line 73 | line 301 |
-| B — PD Fetch | PD response contains `.id` and `.input_descriptors` | lines 100-101 | lines 332-333 |
-| B — VP Token | Token length > 0 | line 235 | line 326 |
-| B — VP Submit | POST to response_uri returns 2xx (no error body) | line 263 | lines 355-356 |
-| C — Poll | `$.verificationResult == "true"` | line 278 | line 374 |
+| Phase | Check | Line |
+|---|---|---|
+| A — Auth Request | `state` extracted and non-empty | 301 |
+| B — PD Fetch | PD response contains `.id` and `.input_descriptors` | 332-333 |
+| B — VP Token | Token length > 0 | 326 |
+| B — VP Submit | POST to response_uri returns 2xx | 355 |
+| C — Poll | `$.verificationResult == "true"` | 374 |
 
 ---
 
@@ -464,8 +337,6 @@ print(result.verification_result)  # True or False
 ---
 
 ## Mock Wallet Internals
-
-Both scripts implement the same cryptographic operations:
 
 ### Keys
 
@@ -535,15 +406,14 @@ Both scripts implement the same cryptographic operations:
 
 ### What to Replace
 
-The `MockWallet` class (Python) and the inline Python script (bash) simulate a
-wallet holding credentials. In your application, replace these with:
+The `MockWallet` class simulates a wallet holding credentials. In your
+application, replace it with:
 1. Your wallet's credential store (already-issued SD-JWT VCs)
 2. Your wallet's holder key (for KB-JWT signing)
 3. Your own disclosure selection logic
 
-### Key Integration Points
+### Key Integration Point
 
-**Python** — replace `MockWallet()` with your wallet:
 ```python
 # Instead of:
 wallet = MockWallet()
@@ -556,15 +426,6 @@ vp_token = my_wallet.create_vp(
     aud=client_id,
     disclosed_claims=["birthdate", "family_name"],
 )
-```
-
-**Bash** — replace the `_CRYPTO_PY` heredoc with a call to your wallet:
-```bash
-# Instead of generating the mock credential inline, call your wallet:
-VP_TOKEN=$(your-wallet-cli create-vp \
-  --nonce "$AUTH_NONCE" \
-  --aud "$AUTH_CLIENT_ID" \
-  --credential-id "user-credential-1")
 ```
 
 The rest of the flow (auth request creation, PD fetching, result polling)

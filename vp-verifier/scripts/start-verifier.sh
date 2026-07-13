@@ -18,8 +18,7 @@ for i in $(seq 1 30); do
     echo ""
     echo "Verifier API is ready at http://localhost:7003"
     echo ""
-    echo "Run an example:"
-    echo "  bash examples/bash/verify-sd-jwt.sh"
+    echo "Run the example:"
     echo "  python3 examples/python/verify_sd_jwt.py"
     exit 0
   fi

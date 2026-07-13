@@ -12,18 +12,15 @@ verification end-to-end.
 | `docker-compose.yaml` | Standalone verifier-api deployment (single container, no dependencies) |
 | `config/` | Verifier configuration files |
 | `api-reference.md` | Complete API reference with request/response schemas |
-| `examples/bash/verify-sd-jwt.sh` | Bash script: full OID4VP verification flow with mock wallet |
-| `examples/bash/common.sh` | Shared bash utilities (sourced by verify-sd-jwt.sh) |
 | `examples/python/verify_sd_jwt.py` | Python script: full OID4VP verification flow with mock wallet |
 | `examples/python/verifier_client.py` | Reusable Python client library for the verifier API |
+| `examples/readme.md` | Detailed walkthrough, parameter reference, and integration guide |
 | `scripts/start-verifier.sh` | One-command startup with health check |
 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- [jq](https://jqlang.github.io/jq/) — JSON processor (for bash examples)
-- [curl](https://curl.se/) — HTTP client (for bash examples)
-- Python 3.9+ with `cryptography` (for Python examples and bash crypto)
+- Python 3.9+ with `cryptography`
 
 ```bash
 pip install cryptography
@@ -35,9 +32,7 @@ pip install cryptography
 # 1. Start the verifier
 bash scripts/start-verifier.sh
 
-# 2. Run an example (bash or Python — both do the same thing)
-bash examples/bash/verify-sd-jwt.sh
-# or
+# 2. Run the example
 python3 examples/python/verify_sd_jwt.py
 ```
 
@@ -82,8 +77,7 @@ Use `POST /openid4vc/verify` as shown in the examples. Customize the
 credential types and requirements.
 
 **3. In your wallet, handle the OID4VP flow:**
-Replace the `MockWallet` class (Python) or the mock wallet section (bash)
-with calls to your actual wallet. Your wallet must:
+Replace the `MockWallet` class with calls to your actual wallet. Your wallet must:
 - Parse the `openid4vp://` URI
 - Fetch the Presentation Definition
 - Match credentials against the input descriptors
@@ -115,21 +109,6 @@ auth = client.create_verification_request(
 # Check result
 result = client.get_session(auth.state)
 print(result.verification_result)  # True or False
-```
-
-**Bash (`common.sh`):**
-```bash
-source examples/bash/common.sh
-
-# Create request
-AUTH_REQUEST=$(curl -s -X POST "$VERIFIER_API/openid4vc/verify" ...)
-parse_auth_uri "$AUTH_REQUEST"
-
-# $AUTH_STATE, $AUTH_NONCE, $AUTH_PD_URI, $AUTH_RESPONSE_URI are now set
-# Your wallet processes these values
-
-# Check result
-VERIFICATION=$(curl -s "$VERIFIER_API/openid4vc/session/$AUTH_STATE")
 ```
 
 ## Configuration
